@@ -136,7 +136,7 @@ export function RishiCockpit() {
               href="https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG"
             />
               <StatCard label="Escalations open" value="0" tone="primary" />
-              <StatCard label="83(b) deadline" value="22d" tone="urgent" />
+              <StatCard label="AHTX 83(b) election" value="9d" tone="urgent" />  
             </div>
           </motion.section>
 
@@ -300,7 +300,12 @@ export function RishiCockpit() {
                   </SectionHeading>
                   <div className="mt-4 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
                     <OpenItem
-                      label="AHTX 83(b) election, July 30 (10 days out)"
+                      label={
+                        <>
+                          AHTX 83(b) election, July 30{" "}
+                          <span className="text-[#D95717]">(9 days out)</span>
+                        </>
+                      }
                       status="Jul 30"
                       tone="urgent"
                     />
@@ -388,7 +393,7 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
 }
 
 type OpenItemProps = {
-  label: string;
+  label: React.ReactNode;
   status: string;
   tone: "urgent" | "neutral";
 };
