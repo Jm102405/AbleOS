@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+@layer base {
+  html {
+    background: #eef2f6;
+  }
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #eef2f6;
+    color: #1a1a2e;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  }
+  button {
+    font: inherit;
+  }
+}
+@layer utilities {
+  .font-display {
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
