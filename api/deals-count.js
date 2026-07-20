@@ -1,6 +1,6 @@
-const { Client } = require('@notionhq/client');
+import { Client } from '@notionhq/client';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
     try {
         const notion = new Client({ auth: process.env.NOTION_API_KEY });
         const databaseId = process.env.NOTION_DATABASE_ID;
@@ -27,4 +27,4 @@ module.exports = async function handler(req, res) {
         console.error('Notion API error:', error);
         res.status(500).json({ error: 'Failed to fetch deal count from Notion' });
     }
-};
+}

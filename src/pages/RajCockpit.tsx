@@ -300,7 +300,7 @@ export function RishiCockpit() {
                   </SectionHeading>
                   <div className="mt-4 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
                     <OpenItem
-                      label="83(b) elections()"
+                      label="AHTX 83(b) election, July 30 (10 days out)"
                       status="Jul 30"
                       tone="urgent"
                     />
