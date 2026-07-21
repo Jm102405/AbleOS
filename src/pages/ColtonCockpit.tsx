@@ -7,13 +7,6 @@ type ChecklistItem = {
   done: boolean;
 };
 
-const checklistItems: ChecklistItem[] = [
-  { label: "Insulation photo uploaded", done: false },
-  { label: "Drywall photo uploaded", done: false },
-  { label: "Paint photo uploaded", done: false },
-  { label: "Submit for Jeremiah's approval", done: false },
-];
-
 const phaseDots = [
   { color: "#16A34A" },
   { color: "#F59E0B" },
@@ -27,6 +20,25 @@ const reveal = {
 };
 
 export function ColtonCockpit() {
+  const [checklistItems, setChecklistItems] = React.useState<ChecklistItem[]>(
+    [],
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/rehab-stages?side=Side%20A")
+      .then((res) => res.json())
+      .then((data) => {
+        const items: ChecklistItem[] = data.stages.map((stage: any) => ({
+          label: stage.stageName,
+          done: stage.photoUploaded,
+        }));
+        setChecklistItems(items);
+      })
+      .catch((err) => console.error("Failed to fetch rehab stages:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
@@ -146,13 +158,19 @@ export function ColtonCockpit() {
               This phase&apos;s checklist
             </SectionHeading>
             <div className="mt-4 space-y-3">
-              {checklistItems.map((item) => (
-                <ChecklistRow
-                  key={item.label}
-                  label={item.label}
-                  done={item.done}
-                />
-              ))}
+              {loading ? (
+                <p className="text-[12px] font-medium text-[#8A99AC]">
+                  Loading checklist…
+                </p>
+              ) : (
+                checklistItems.map((item) => (
+                  <ChecklistRow
+                    key={item.label}
+                    label={item.label}
+                    done={item.done}
+                  />
+                ))
+              )}
             </div>
           </section>
 
