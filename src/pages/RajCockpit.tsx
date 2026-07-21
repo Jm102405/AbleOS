@@ -17,8 +17,8 @@ type ApprovalRequest = {
 
 const approvalRequests: ApprovalRequest[] = [
   {
-    title: "Deal-submission form for client automation",
-    detail: "Requested by Dane · August 20",
+    title: "Colton's and Jeremiah Cockpit",
+    detail: "Requested by Dane · July 21 -24",
   },
   {
     title: "Landing page for the Able OS website",

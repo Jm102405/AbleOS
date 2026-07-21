@@ -32,9 +32,11 @@ export default async function handler(req, res) {
             for (const page of response.results) {
                 const props = page.properties;
                 stages.push({
+                    notionPageId: page.id,
                     stageName: props['Stage Name']?.rich_text?.[0]?.plain_text || '',
                     workDone: props['Work Done']?.checkbox || false,
                     photoUploaded: props['Photo Uploaded']?.checkbox || false,
+                    drivePhotoLink: props['Drive Photo Link']?.url || null,
                     status: props['Status']?.select?.name || 'Not Started',
                 });
             }
