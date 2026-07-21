@@ -8,15 +8,15 @@ type ChecklistItem = {
 };
 
 const checklistItems: ChecklistItem[] = [
-  { label: "Demo complete, debris hauled", done: true },
-  { label: "Pre-framing photos uploaded", done: false },
-  { label: "Materials confirmed on-site", done: false },
+  { label: "Insulation photo uploaded", done: false },
+  { label: "Drywall photo uploaded", done: false },
+  { label: "Paint photo uploaded", done: false },
   { label: "Submit for Jeremiah's approval", done: false },
 ];
 
 const phaseDots = [
+  { color: "#16A34A" },
   { color: "#F59E0B" },
-  { color: "#CBD5E1" },
   { color: "#CBD5E1" },
   { color: "#CBD5E1" },
 ];
@@ -98,13 +98,13 @@ export function ZoCockpit() {
           variants={reveal}
         >
           <span className="text-[68px] font-extrabold leading-[0.8] tracking-[-0.075em] text-[#FF7832] sm:text-[80px] lg:text-[92px]">
-            1/4
+            2/4
           </span>
           <h2
             className="mt-2 text-[16px] font-extrabold tracking-[-0.02em] text-[#1A1A2E] sm:text-[18px]"
             id="phase-heading"
           >
-            Demo &amp; Prep
+            Ready to Lay Flooring
           </h2>
 
           <div className="mt-4 flex items-center justify-center gap-2">

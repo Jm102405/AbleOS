@@ -8,9 +8,9 @@ type ChecklistItem = {
 };
 
 const checklistItems: ChecklistItem[] = [
-  { label: "Framing inspection passed", done: true },
-  { label: "Rough electrical photos uploaded", done: false },
-  { label: "Rough plumbing photos uploaded", done: false },
+  { label: "Insulation photo uploaded", done: false },
+  { label: "Drywall photo uploaded", done: false },
+  { label: "Paint photo uploaded", done: false },
   { label: "Submit for Jeremiah's approval", done: false },
 ];
 
@@ -104,7 +104,7 @@ export function ColtonCockpit() {
             className="mt-2 text-[16px] font-extrabold tracking-[-0.02em] text-[#1A1A2E] sm:text-[18px]"
             id="phase-heading"
           >
-            Framing &amp; Rough-In
+            Ready to Lay Flooring
           </h2>
 
           <div className="mt-4 flex items-center justify-center gap-2">
