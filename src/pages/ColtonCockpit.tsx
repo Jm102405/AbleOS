@@ -1,10 +1,32 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { BellIcon, CheckIcon } from "lucide-react";
+import {
+  BellIcon,
+  CheckIcon,
+  UploadCloudIcon,
+  LoaderIcon,
+  ExternalLinkIcon,
+} from "lucide-react";
 
-type ChecklistItem = {
-  label: string;
-  done: boolean;
+const N8N_WEBHOOK_URL =
+  "https://ablebuyshomes.app.n8n.cloud/webhook/1c50c4bc-1b39-480d-8645-eefc57f6e1c5";
+const SIDE_A_FOLDER_ID = "1GCgpD8uJ1K-84NBkzZNs-ATp1clCUevB";
+
+type Stage = {
+  notionPageId: string;
+  stageName: string;
+  workDone: boolean;
+  photoUploaded: boolean;
+  drivePhotoLink: string | null;
+  status: string;
+};
+
+type UploadState = {
+  uploading: boolean;
+  driveUrl: string;
+  saving: boolean;
+  saved: boolean;
+  error: string;
 };
 
 const phaseDots = [
@@ -20,24 +42,90 @@ const reveal = {
 };
 
 export function ColtonCockpit() {
-  const [checklistItems, setChecklistItems] = React.useState<ChecklistItem[]>(
-    [],
-  );
+  const [stages, setStages] = React.useState<Stage[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [uploadStates, setUploadStates] = React.useState<
+    Record<string, UploadState>
+  >({});
 
   React.useEffect(() => {
     fetch("/api/rehab-stages?side=Side%20A")
       .then((res) => res.json())
       .then((data) => {
-        const items: ChecklistItem[] = data.stages.map((stage: any) => ({
-          label: stage.stageName,
-          done: stage.photoUploaded,
-        }));
-        setChecklistItems(items);
+        setStages(data.stages);
+        const initial: Record<string, UploadState> = {};
+        data.stages.forEach((s: Stage) => {
+          initial[s.notionPageId] = {
+            uploading: false,
+            driveUrl: s.drivePhotoLink || "",
+            saving: false,
+            saved: s.photoUploaded,
+            error: "",
+          };
+        });
+        setUploadStates(initial);
       })
       .catch((err) => console.error("Failed to fetch rehab stages:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  function updateOne(pageId: string, patch: Partial<UploadState>) {
+    setUploadStates((prev) => ({
+      ...prev,
+      [pageId]: { ...prev[pageId], ...patch },
+    }));
+  }
+
+  async function handleUpload(pageId: string, file: File) {
+    updateOne(pageId, { uploading: true, error: "" });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folderId", SIDE_A_FOLDER_ID);
+
+      const res = await fetch(N8N_WEBHOOK_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      updateOne(pageId, { uploading: false, driveUrl: data.driveUrl });
+    } catch {
+      updateOne(pageId, {
+        uploading: false,
+        error: "Upload failed. Try again.",
+      });
+    }
+  }
+
+  async function handleDone(pageId: string) {
+    const url = uploadStates[pageId]?.driveUrl;
+    if (!url) return;
+
+    updateOne(pageId, { saving: true, error: "" });
+    try {
+      const res = await fetch("/api/update-stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notionPageId: pageId, driveUrl: url }),
+      });
+
+      if (!res.ok) throw new Error("Save failed");
+
+      updateOne(pageId, { saving: false, saved: true });
+      setStages((prev) =>
+        prev.map((s) =>
+          s.notionPageId === pageId
+            ? { ...s, photoUploaded: true, drivePhotoLink: url }
+            : s,
+        ),
+      );
+    } catch {
+      updateOne(pageId, { saving: false, error: "Save failed. Try again." });
+    }
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
@@ -163,11 +251,13 @@ export function ColtonCockpit() {
                   Loading checklist…
                 </p>
               ) : (
-                checklistItems.map((item) => (
-                  <ChecklistRow
-                    key={item.label}
-                    label={item.label}
-                    done={item.done}
+                stages.map((stage) => (
+                  <StageRow
+                    key={stage.notionPageId}
+                    stage={stage}
+                    uploadState={uploadStates[stage.notionPageId]}
+                    onUpload={handleUpload}
+                    onDone={handleDone}
                   />
                 ))
               )}
@@ -195,6 +285,8 @@ export function ColtonCockpit() {
   );
 }
 
+/* ── Subcomponents ──────────────────────────────────────── */
+
 type SectionHeadingProps = {
   id: string;
   children: React.ReactNode;
@@ -211,28 +303,138 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
   );
 }
 
-type ChecklistRowProps = {
-  label: string;
-  done: boolean;
+type StageRowProps = {
+  stage: Stage;
+  uploadState: UploadState | undefined;
+  onUpload: (pageId: string, file: File) => void;
+  onDone: (pageId: string) => void;
 };
 
-function ChecklistRow({ label, done }: ChecklistRowProps) {
-  return (
-    <article className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
-      {done ? (
+function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const us = uploadState || {
+    uploading: false,
+    driveUrl: "",
+    saving: false,
+    saved: false,
+    error: "",
+  };
+
+  const isComplete = stage.photoUploaded || us.saved;
+
+  // ── COMPLETE STATE ──
+  if (isComplete) {
+    return (
+      <article className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#16A34A] text-white">
           <CheckIcon aria-hidden="true" size={14} strokeWidth={3} />
         </span>
-      ) : (
+        <p className="flex-1 text-[13px] font-bold leading-snug text-[#93A3B8] line-through sm:text-[14px]">
+          {stage.stageName}
+        </p>
+        {(stage.drivePhotoLink || us.driveUrl) && (
+          <a
+            href={stage.drivePhotoLink || us.driveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
+          >
+            View photo
+            <ExternalLinkIcon size={12} strokeWidth={2.5} />
+          </a>
+        )}
+      </article>
+    );
+  }
+
+  // ── ACTIVE STATE (needs upload) ──
+  return (
+    <article className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
+      <div className="flex items-center gap-3">
         <span className="h-6 w-6 shrink-0 rounded-md border-2 border-[#93A3B8]" />
-      )}
-      <p
-        className={`text-[13px] font-bold leading-snug sm:text-[14px] ${
-          done ? "text-[#93A3B8] line-through" : "text-[#1A1A2E]"
-        }`}
-      >
-        {label}
-      </p>
+        <p className="flex-1 text-[13px] font-bold leading-snug text-[#1A1A2E] sm:text-[14px]">
+          {stage.stageName}
+        </p>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 pl-9">
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onUpload(stage.notionPageId, file);
+          }}
+        />
+
+        {/* Upload button */}
+        {!us.driveUrl && !us.uploading && (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-3 text-[12px] font-bold text-[#418BFF] transition-colors hover:bg-[#DBEAFE] sm:text-[13px]"
+            type="button"
+          >
+            <UploadCloudIcon size={16} strokeWidth={2.5} />
+            Upload Photo
+          </button>
+        )}
+
+        {/* Uploading spinner */}
+        {us.uploading && (
+          <div className="flex items-center gap-2 rounded-xl bg-[#F1F5F9] px-4 py-3">
+            <LoaderIcon
+              size={16}
+              strokeWidth={2.5}
+              className="animate-spin text-[#418BFF]"
+            />
+            <span className="text-[12px] font-bold text-[#5B6B82]">
+              Uploading to Google Drive…
+            </span>
+          </div>
+        )}
+
+        {/* URL textbox + Done button (after upload completes) */}
+        {us.driveUrl && !us.saved && (
+          <>
+            <input
+              type="text"
+              readOnly
+              value={us.driveUrl}
+              className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] sm:text-[12px]"
+            />
+            <button
+              onClick={() => onDone(stage.notionPageId)}
+              disabled={us.saving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[12px] font-bold text-white transition-colors hover:bg-[#15803D] disabled:opacity-60 sm:text-[13px]"
+              type="button"
+            >
+              {us.saving ? (
+                <>
+                  <LoaderIcon
+                    size={14}
+                    strokeWidth={2.5}
+                    className="animate-spin"
+                  />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <CheckIcon size={14} strokeWidth={3} />
+                  Done
+                </>
+              )}
+            </button>
+          </>
+        )}
+
+        {/* Error message */}
+        {us.error && (
+          <p className="text-[11px] font-bold text-red-500">{us.error}</p>
+        )}
+      </div>
     </article>
   );
 }
