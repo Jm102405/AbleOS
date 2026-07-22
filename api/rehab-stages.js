@@ -37,6 +37,7 @@ export default async function handler(req, res) {
                     workDone: props['Work Done']?.checkbox || false,
                     photoUploaded: props['Photo Uploaded']?.checkbox || false,
                     drivePhotoLink: props['Drive Photo Link']?.url || null,
+                    phase: props['Phase']?.select?.name || '',
                     status: props['Status']?.select?.name || 'Not Started',
                 });
             }

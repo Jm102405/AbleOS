@@ -18,6 +18,7 @@ type Stage = {
   workDone: boolean;
   photoUploaded: boolean;
   drivePhotoLink: string | null;
+  phase: string;
   status: string;
 };
 
@@ -198,13 +199,34 @@ export function ColtonCockpit() {
           variants={reveal}
         >
           <span className="text-[68px] font-extrabold leading-[0.8] tracking-[-0.075em] text-[#FF7832] sm:text-[80px] lg:text-[92px]">
-            2/4
+            {(() => {
+              const phases = ["Phase 1", "Phase 2", "Phase 3", "Phase 4"];
+              const currentIdx = phases.findIndex((p) =>
+                stages.some((s) => s.phase === p && !s.photoUploaded),
+              );
+              return `${currentIdx === -1 ? 4 : currentIdx + 1}/4`;
+            })()}
           </span>
           <h2
             className="mt-2 text-[16px] font-extrabold tracking-[-0.02em] text-[#1A1A2E] sm:text-[18px]"
             id="phase-heading"
           >
-            Ready to Lay Flooring
+            {
+              [
+                "Drywall Ready",
+                "Ready to Lay Flooring",
+                "Inside Done",
+                "Exterior / Curb Appeal",
+              ][
+                (() => {
+                  const phases = ["Phase 1", "Phase 2", "Phase 3", "Phase 4"];
+                  const idx = phases.findIndex((p) =>
+                    stages.some((s) => s.phase === p && !s.photoUploaded),
+                  );
+                  return idx === -1 ? 3 : idx;
+                })()
+              ]
+            }
           </h2>
 
           <div className="mt-4 flex items-center justify-center gap-2">
@@ -245,21 +267,41 @@ export function ColtonCockpit() {
             <SectionHeading id="checklist-heading">
               This phase&apos;s checklist
             </SectionHeading>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-6">
               {loading ? (
                 <p className="text-[12px] font-medium text-[#8A99AC]">
                   Loading checklist…
                 </p>
               ) : (
-                stages.map((stage) => (
-                  <StageRow
-                    key={stage.notionPageId}
-                    stage={stage}
-                    uploadState={uploadStates[stage.notionPageId]}
-                    onUpload={handleUpload}
-                    onDone={handleDone}
-                  />
-                ))
+                [
+                  { key: "Phase 1", label: "Phase 1 — Drywall Ready" },
+                  { key: "Phase 2", label: "Phase 2 — Ready to Lay Flooring" },
+                  { key: "Phase 3", label: "Phase 3 — Inside Done" },
+                  { key: "Phase 4", label: "Phase 4 — Exterior / Curb Appeal" },
+                ].map((phase) => {
+                  const phaseStages = stages.filter(
+                    (s) => s.phase === phase.key,
+                  );
+                  if (phaseStages.length === 0) return null;
+                  return (
+                    <div key={phase.key}>
+                      <h3 className="mb-3 text-[14px] font-extrabold uppercase tracking-[0.06em] text-[#5B6B82] sm:text-[15px]">
+                        {phase.label}
+                      </h3>
+                      <div className="space-y-3">
+                        {phaseStages.map((stage) => (
+                          <StageRow
+                            key={stage.notionPageId}
+                            stage={stage}
+                            uploadState={uploadStates[stage.notionPageId]}
+                            onUpload={handleUpload}
+                            onDone={handleDone}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </section>
