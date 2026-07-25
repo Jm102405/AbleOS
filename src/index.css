@@ -38,6 +38,16 @@
 /* iOS notch / status bar: keep cockpit headers below the safe area.
    env(safe-area-inset-top) resolves to 0 on Android and desktop, so this
    only shifts things on devices that need it. */
+/* iOS notch / status bar.
+   viewport-fit=cover + black-translucent means the web view extends under
+   the status bar, so headers need to be pushed down. The max() guarantees
+   a usable offset even if env() reports 0. */
 header {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media all and (display-mode: standalone) {
+  header {
+    padding-top: max(env(safe-area-inset-top, 0px), 44px);
+  }
 }
