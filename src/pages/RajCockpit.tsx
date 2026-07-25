@@ -6,7 +6,7 @@ import {
   MoreHorizontalIcon,
   XIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { AccountSwitcher } from "../components/AccountSwitcher";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -27,49 +27,15 @@ const approvalRequests: ApprovalRequest[] = [
   },
 ];
 
-const SWITCH_USERS = [
-  { name: "Karen", role: "Operations", path: "/karen", initial: "K" },
-  { name: "Jeremiah", role: "Field ops · VP Able Builds", path: "/jeremiah", initial: "J" },
-  { name: "Colton", role: "Crew lead · Side A", path: "/colton", initial: "C" },
-  { name: "Zo", role: "Crew lead · Side B", path: "/zo", initial: "Z" },
-];
-
 const reveal = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0 },
 };
 
 export function RishiCockpit() {
-  const navigate = useNavigate();
   const [dealsCount, setDealsCount] = React.useState<number | null>(null);
   const [selectedRequest, setSelectedRequest] =
     React.useState<ApprovalRequest | null>(null);
-  const [switcherOpen, setSwitcherOpen] = React.useState(false);
-  const switcherRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (!switcherOpen) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        switcherRef.current &&
-        !switcherRef.current.contains(event.target as Node)
-      ) {
-        setSwitcherOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setSwitcherOpen(false);
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [switcherOpen]);
 
   React.useEffect(() => {
     fetch("/api/deals-count")
@@ -95,59 +61,7 @@ export function RishiCockpit() {
                 >
                   <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
                 </button>
-                <div className="relative" ref={switcherRef}>
-                  <button
-                    aria-expanded={switcherOpen}
-                    aria-haspopup="menu"
-                    aria-label="Switch account"
-                    className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/70 bg-[#1E3A8A] text-xs font-extrabold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                    onClick={() => setSwitcherOpen((open) => !open)}
-                    type="button"
-                  >
-                    R
-                  </button>
-
-                  <AnimatePresence>
-                    {switcherOpen && (
-                      <motion.div
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_16px_32px_rgba(30,58,138,0.18)]"
-                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                        role="menu"
-                        transition={{ duration: 0.16, ease: "easeOut" }}
-                      >
-                        <p className="border-b border-[#E6ECF2] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
-                          Switch account
-                        </p>
-                        {SWITCH_USERS.map((user) => (
-                          <button
-                            className="flex w-full items-center gap-3 border-b border-[#F1F5F9] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#F8FAFC]"
-                            key={user.path}
-                            onClick={() => {
-                              setSwitcherOpen(false);
-                              navigate(user.path);
-                            }}
-                            role="menuitem"
-                            type="button"
-                          >
-                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1E3A8A] text-[11px] font-extrabold text-white">
-                              {user.initial}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-[13px] font-extrabold tracking-[-0.015em] text-[#1A1A2E]">
-                                {user.name}
-                              </span>
-                              <span className="block text-[11px] font-medium text-[#6B7A90]">
-                                {user.role}
-                              </span>
-                            </span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <AccountSwitcher current="raj" />
               </div>
             </div>
 

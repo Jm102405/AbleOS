@@ -7,6 +7,7 @@ import {
   LoaderIcon,
   ExternalLinkIcon,
 } from "lucide-react";
+import { AccountSwitcher } from "../components/AccountSwitcher";
 
 const SIDE = "B" as const;
 
@@ -200,9 +201,7 @@ export function ZoCockpit() {
               >
                 <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
               </button>
-              <div className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/70 bg-[#1E3A8A] text-xs font-extrabold">
-                Z
-              </div>
+              <AccountSwitcher current="zo" />
             </div>
           </div>
 

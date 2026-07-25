@@ -34,3 +34,10 @@
     display: none;
   }
 }
+
+/* iOS notch / status bar: keep cockpit headers below the safe area.
+   env(safe-area-inset-top) resolves to 0 on Android and desktop, so this
+   only shifts things on devices that need it. */
+header {
+  padding-top: env(safe-area-inset-top, 0px);
+}

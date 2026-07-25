@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { BellIcon, CheckIcon } from "lucide-react";
+import { AccountSwitcher } from "../components/AccountSwitcher";
 
 type ChecklistItem = {
   label: string;
@@ -36,9 +37,7 @@ export function KarenCockpit() {
               >
                 <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
               </button>
-              <div className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/70 bg-[#1E3A8A] text-xs font-extrabold">
-                K
-              </div>
+              <AccountSwitcher current="karen" />
             </div>
           </div>
 
