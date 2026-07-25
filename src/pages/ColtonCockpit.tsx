@@ -8,9 +8,7 @@ import {
   ExternalLinkIcon,
 } from "lucide-react";
 
-const N8N_WEBHOOK_URL =
-  "https://ablebuyshomes.app.n8n.cloud/webhook/1c50c4bc-1b39-480d-8645-eefc57f6e1c5";
-const SIDE_A_FOLDER_ID = "1GCgpD8uJ1K-84NBkzZNs-ATp1clCUevB";
+const SIDE = "A" as const;
 
 type Stage = {
   notionPageId: string;
@@ -20,7 +18,7 @@ type Stage = {
   drivePhotoLink: string | null;
   phase: string;
   status: string;
-};
+};  
 
 type UploadState = {
   uploading: boolean;
@@ -77,26 +75,76 @@ export function ColtonCockpit() {
     }));
   }
 
-  async function handleUpload(pageId: string, file: File) {
+  async function handleUpload(pageId: string, stageName: string, file: File) {
+    if (!file.type.startsWith("image/")) {
+      updateOne(pageId, { error: "That file isn't a photo. Pick an image." });
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      updateOne(pageId, { error: "Photo is over 50MB. Try a smaller one." });
+      return;
+    }
+
     updateOne(pageId, { uploading: true, error: "" });
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folderId", SIDE_A_FOLDER_ID);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
 
-      const res = await fetch(N8N_WEBHOOK_URL, {
+      // 1. Ask our server for a Drive upload session (folder resolved server-side)
+      const sessionRes = await fetch("/api/drive-upload-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          side: SIDE,
+          stageName,
+          mimeType: file.type,
+          ext,
+        }),
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      const sessionRaw = await sessionRes.text();
+      if (!sessionRes.ok) {
+        let msg = `Upload setup failed (${sessionRes.status})`;
+        try {
+          const parsed = JSON.parse(sessionRaw);
+          if (parsed?.error) msg = parsed.error;
+        } catch {
+          /* keep default message */
+        }
+        throw new Error(msg);
+      }
 
-      const data = await res.json();
-      updateOne(pageId, { uploading: false, driveUrl: data.driveUrl });
-    } catch {
+      const { uploadUrl } = JSON.parse(sessionRaw);
+      if (!uploadUrl) throw new Error("No upload URL returned by the server.");
+
+      // 2. Send the bytes straight to Google Drive
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "image/jpeg" },
+        body: file,
+      });
+
+      if (!putRes.ok) {
+        const detail = await putRes.text();
+        throw new Error(
+          `Drive upload failed (${putRes.status}): ${detail.slice(0, 160)}`,
+        );
+      }
+
+      const uploaded = await putRes.json();
+      const driveUrl =
+        uploaded?.webViewLink ||
+        (uploaded?.id
+          ? `https://drive.google.com/file/d/${uploaded.id}/view`
+          : "");
+
+      if (!driveUrl) throw new Error("Drive did not return a link for the photo.");
+
+      updateOne(pageId, { uploading: false, driveUrl });
+    } catch (err) {
+      console.error("Upload failed:", err);
       updateOne(pageId, {
         uploading: false,
-        error: "Upload failed. Try again.",
+        error: err instanceof Error ? err.message : "Upload failed. Try again.",
       });
     }
   }
@@ -113,7 +161,10 @@ export function ColtonCockpit() {
         body: JSON.stringify({ notionPageId: pageId, driveUrl: url }),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const detail = await res.text();
+        throw new Error(`Save failed (${res.status}): ${detail.slice(0, 160)}`);
+      }
 
       updateOne(pageId, { saving: false, saved: true });
       setStages((prev) =>
@@ -123,8 +174,12 @@ export function ColtonCockpit() {
             : s,
         ),
       );
-    } catch {
-      updateOne(pageId, { saving: false, error: "Save failed. Try again." });
+    } catch (err) {
+      console.error("Save failed:", err);
+      updateOne(pageId, {
+        saving: false,
+        error: err instanceof Error ? err.message : "Save failed. Try again.",
+      });
     }
   }
 
@@ -348,7 +403,7 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
 type StageRowProps = {
   stage: Stage;
   uploadState: UploadState | undefined;
-  onUpload: (pageId: string, file: File) => void;
+  onUpload: (pageId: string, stageName: string, file: File) => void;
   onDone: (pageId: string) => void;
 };
 
@@ -408,19 +463,20 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) onUpload(stage.notionPageId, file);
+            if (file) onUpload(stage.notionPageId, stage.stageName, file);
+            e.target.value = "";
           }}
         />
 
-        {/* Upload button */}
-        {!us.driveUrl && !us.uploading && (
+        {/* Upload / Replace button */}
+        {!us.uploading && (
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-3 text-[12px] font-bold text-[#418BFF] transition-colors hover:bg-[#DBEAFE] sm:text-[13px]"
             type="button"
           >
             <UploadCloudIcon size={16} strokeWidth={2.5} />
-            Upload Photo
+            {us.driveUrl ? "Replace Photo" : "Upload Photo"}
           </button>
         )}
 
@@ -438,19 +494,20 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
           </div>
         )}
 
-        {/* URL textbox + Done button (after upload completes) */}
-        {us.driveUrl && !us.saved && (
+        {/* URL textbox + Done button — always visible, Done gated on URL */}
+        {!us.saved && (
           <>
             <input
               type="text"
               readOnly
               value={us.driveUrl}
-              className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] sm:text-[12px]"
+              placeholder="Drive link appears here after upload"
+              className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] placeholder:text-[#A3B0C0] sm:text-[12px]"
             />
             <button
               onClick={() => onDone(stage.notionPageId)}
-              disabled={us.saving}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[12px] font-bold text-white transition-colors hover:bg-[#15803D] disabled:opacity-60 sm:text-[13px]"
+              disabled={!us.driveUrl || us.saving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[12px] font-bold text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC] sm:text-[13px]"
               type="button"
             >
               {us.saving ? (

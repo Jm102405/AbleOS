@@ -14,12 +14,6 @@ const leasingItems: ChecklistItem[] = [
   { label: "Unit 12 — Craigslist post pending", done: false },
 ];
 
-const lockdownItems: ChecklistItem[] = [
-  { label: "Notion — 2FA confirmed", done: true },
-  { label: "Doppler — admin audit pending", done: false },
-  { label: "Shared password rotation", done: false },
-];
-
 const reveal = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0 },
@@ -115,21 +109,6 @@ export function KarenCockpit() {
             </SectionHeading>
             <div className="mt-4 space-y-3">
               {leasingItems.map((item) => (
-                <ChecklistRow
-                  key={item.label}
-                  label={item.label}
-                  done={item.done}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section aria-labelledby="lockdown-heading" className="pt-9">
-            <SectionHeading id="lockdown-heading">
-              Account lock-down
-            </SectionHeading>
-            <div className="mt-4 space-y-3">
-              {lockdownItems.map((item) => (
                 <ChecklistRow
                   key={item.label}
                   label={item.label}
