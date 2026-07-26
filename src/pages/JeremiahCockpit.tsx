@@ -39,9 +39,7 @@ export function JeremiahCockpit() {
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
         <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
           <div className="flex items-center justify-between">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1A1A1A] text-lg font-extrabold shadow-sm">
-              A
-            </div>
+            <img src="/able-logo.png" alt="Able Buys Homes" className="h-10 w-10 rounded-xl shadow-sm" />
             <div className="flex items-center gap-3">
               <button
                 aria-label="View notifications"

@@ -1,24 +1,55 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { BellIcon, CheckIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BellIcon, CheckIcon, PlusIcon } from "lucide-react";
 import { AccountSwitcher } from "../components/AccountSwitcher";
+import { AddOrderModal } from "../components/AddOrderModal";
 
-type PriorityItem = {
-  number: number;
-  text: string;
-  highlighted?: boolean;
+type Order = {
+  id: string;
+  order_name: string;
+  description: string;
+  date_needed: string;
+  priority: "Low" | "Normal" | "Urgent";
+  estimated_cost: string | number | null;
+  requested_by: string;
+  status: "Pending" | "Approved" | "Declined";
+  created_at: string;
+  decided_at: string | null;
+  decided_by: string | null;
 };
 
-const priorityItems: PriorityItem[] = [
-  { number: 1, text: "Audit live state vs. handoff claims", highlighted: true },
-  { number: 2, text: "Raj's access grants (Deals DB, Main Brain)" },
-  { number: 3, text: "Zo's cockpit" },
-  { number: 4, text: "Your own cockpit" },
-  {
-    number: 5,
-    text: "Cockpit-to-Deals-DB wiring — blocked until audit confirmed",
-  },
-];
+function formatDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatCost(value: string | number | null) {
+  if (value === null || value === undefined || value === "") return null;
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount === 0) return null;
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  });
+}
+
+const statusStyles: Record<Order["status"], string> = {
+  Pending: "bg-[#FEF3C7] text-[#B45309]",
+  Approved: "bg-[#EAF8EF] text-[#16A34A]",
+  Declined: "bg-[#FFF1E9] text-[#D95717]",
+};
+
+const priorityStyles: Record<Order["priority"], string> = {
+  Low: "bg-[#EEF2F6] text-[#526176]",
+  Normal: "bg-[#EEF5FF] text-[#418BFF]",
+  Urgent: "bg-[#FFF1E9] text-[#D95717]",
+};
 
 type KnownGap = {
   label: string;
@@ -37,14 +68,70 @@ const reveal = {
 };
 
 export function DaneCockpit() {
+  const [addOrderOpen, setAddOrderOpen] = React.useState(false);
+  const [toast, setToast] = React.useState("");
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = React.useState(true);
+  const [ordersError, setOrdersError] = React.useState("");
+
+  const loadOrders = React.useCallback(async () => {
+    setOrdersError("");
+    try {
+      const res = await fetch("/api/orders?requestedBy=Dane");
+      if (!res.ok) throw new Error(`Failed to load orders (${res.status})`);
+      const data = await res.json();
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setOrdersError(
+        err instanceof Error ? err.message : "Could not load your orders",
+      );
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  // Poll every 30s, but only while the tab is actually visible — no point
+  // burning requests on a phone in someone's pocket. Also refresh the moment
+  // the tab regains focus, so switching back shows current data immediately.
+  React.useEffect(() => {
+    const REFRESH_MS = 30_000;
+
+    const timer = setInterval(() => {
+      if (!document.hidden) loadOrders();
+    }, REFRESH_MS);
+
+    function handleVisibility() {
+      if (!document.hidden) loadOrders();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadOrders]);
+
+  React.useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   return (
     <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
         <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
           <div className="flex items-center justify-between">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1A1A1A] text-lg font-extrabold shadow-sm">
-              A
-            </div>
+            <img
+              src="/able-logo.png"
+              alt="Able Buys Homes"
+              className="h-10 w-10 rounded-xl shadow-sm"
+            />
             <div className="flex items-center gap-3">
               <button
                 aria-label="View notifications"
@@ -94,6 +181,14 @@ export function DaneCockpit() {
                 Audits · Access grants · Main Brain integration
               </p>
             </div>
+            <button
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2 sm:text-[12px]"
+              onClick={() => setAddOrderOpen(true)}
+              type="button"
+            >
+              <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
+              Add Order
+            </button>
           </div>
         </motion.section>
 
@@ -135,30 +230,77 @@ export function DaneCockpit() {
           variants={reveal}
         >
           <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
-            <section aria-labelledby="priority-heading" className="pt-9">
-              <SectionHeading id="priority-heading">
-                Your priority order
-              </SectionHeading>
+            <section aria-labelledby="orders-heading" className="pt-9">
+              <SectionHeading id="orders-heading">Your orders</SectionHeading>
               <div className="mt-4 space-y-3">
-                {priorityItems.map((item) => (
-                  <article
-                    className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5"
-                    key={item.number}
-                  >
-                    <span
-                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-extrabold ${
-                        item.highlighted
-                          ? "bg-[#F59E0B] text-white"
-                          : "border border-[#1A1A2E]/60 bg-white text-[#1A1A2E]"
-                      }`}
-                    >
-                      {item.number}
-                    </span>
-                    <p className="text-[13px] font-bold leading-snug text-[#1A1A2E] sm:text-[14px]">
-                      {item.text}
+                {ordersLoading && (
+                  <p className="text-[12px] font-medium text-[#8A99AC]">
+                    Loading orders…
+                  </p>
+                )}
+
+                {!ordersLoading && ordersError && (
+                  <div className="rounded-2xl border border-dashed border-[#FFC9AE] bg-[#FFF6F1] px-5 py-4">
+                    <p className="text-[12px] font-bold leading-snug text-[#D95717]">
+                      {ordersError}
                     </p>
-                  </article>
-                ))}
+                    <button
+                      className="mt-2 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+                      onClick={loadOrders}
+                      type="button"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {!ordersLoading && !ordersError && orders.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
+                    <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                      No orders yet — use Add Order to send one to Rishi.
+                    </p>
+                  </div>
+                )}
+
+                {orders.map((order) => {
+                  const cost = formatCost(order.estimated_cost);
+                  return (
+                    <article
+                      className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5"
+                      key={order.id}
+                    >
+                      <div className="flex items-start gap-2">
+                        <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                          {order.order_name}
+                        </h3>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${statusStyles[order.status]}`}
+                        >
+                          {order.status}
+                        </span>
+                      </div>
+
+                      <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                        {order.description}
+                      </p>
+
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold uppercase tracking-wide text-[#8A99AC]">
+                        <span
+                          className={`rounded-full px-2 py-0.5 ${priorityStyles[order.priority]}`}
+                        >
+                          {order.priority}
+                        </span>
+                        <span>Needed {formatDate(order.date_needed)}</span>
+                        {cost && <span>· {cost}</span>}
+                        {order.decided_at && (
+                          <span>
+                            · {order.status} {formatDate(order.decided_at)}
+                          </span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
 
@@ -182,6 +324,44 @@ export function DaneCockpit() {
           Mockup · Not live data · Able OS Netlify cockpits
         </footer>
       </main>
+
+      <AddOrderModal
+        open={addOrderOpen}
+        onClose={() => setAddOrderOpen(false)}
+        onCreated={() => {
+          setToast("Order sent to Rishi for approval");
+          loadOrders();
+        }}
+        requestedBy="Dane"
+      />
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-x-0 bottom-6 z-[60] mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-2xl bg-[#1A1A2E] px-5 py-3.5 shadow-[0_16px_32px_rgba(26,26,46,0.28)]"
+            exit={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 12 }}
+            role="status"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#16A34A] text-white">
+              <CheckIcon aria-hidden="true" size={14} strokeWidth={3} />
+            </span>
+            <p className="text-[12px] font-bold text-white sm:text-[13px]">
+              {toast}
+            </p>
+            <button
+              aria-label="Dismiss"
+              className="ml-1 shrink-0 text-[10px] font-extrabold uppercase tracking-wide text-white/60 transition-colors hover:text-white"
+              onClick={() => setToast("")}
+              type="button"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

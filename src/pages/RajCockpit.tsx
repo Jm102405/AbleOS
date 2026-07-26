@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BellIcon,
   ChevronRightIcon,
+  LoaderIcon,
   MoreHorizontalIcon,
   XIcon,
 } from "lucide-react";
@@ -11,21 +12,45 @@ import { AccountSwitcher } from "../components/AccountSwitcher";
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
 
-type ApprovalRequest = {
-  title: string;
-  detail: string;
+type Order = {
+  id: string;
+  order_name: string;
+  description: string;
+  date_needed: string;
+  priority: "Low" | "Normal" | "Urgent";
+  estimated_cost: string | number | null;
+  requested_by: string;
+  status: "Pending" | "Approved" | "Declined";
+  created_at: string;
 };
 
-const approvalRequests: ApprovalRequest[] = [
-  {
-    title: "Colton's and Jeremiah Cockpit",
-    detail: "Requested by Dane · July 21 -24",
-  },
-  {
-    title: "Landing page for the Able OS website",
-    detail: "Requested by Dane · August 18",
-  },
-];
+function formatDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/** Returns null for empty or zero cost, so "no cost" renders as nothing. */
+function formatCost(value: string | number | null) {
+  if (value === null || value === undefined || value === "") return null;
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount === 0) return null;
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  });
+}
+
+const priorityStyles: Record<Order["priority"], string> = {
+  Low: "bg-[#EEF2F6] text-[#526176]",
+  Normal: "bg-[#EEF5FF] text-[#418BFF]",
+  Urgent: "bg-[#FFF1E9] text-[#D95717]",
+};
 
 const reveal = {
   hidden: { opacity: 0, y: 12 },
@@ -34,8 +59,10 @@ const reveal = {
 
 export function RishiCockpit() {
   const [dealsCount, setDealsCount] = React.useState<number | null>(null);
-  const [selectedRequest, setSelectedRequest] =
-    React.useState<ApprovalRequest | null>(null);
+  const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = React.useState(true);
+  const [ordersError, setOrdersError] = React.useState("");
 
   React.useEffect(() => {
     fetch("/api/deals-count")
@@ -44,15 +71,58 @@ export function RishiCockpit() {
       .catch((err) => console.error("Failed to fetch deals count:", err));
   }, []);
 
+  const loadOrders = React.useCallback(async () => {
+    setOrdersError("");
+    try {
+      const res = await fetch("/api/orders?status=Pending");
+      if (!res.ok) throw new Error(`Failed to load orders (${res.status})`);
+      const data = await res.json();
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setOrdersError(
+        err instanceof Error ? err.message : "Could not load approval requests",
+      );
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  // Poll every 30s, but only while the tab is visible. Also refresh on focus
+  // so switching back to this tab shows current data immediately.
+  React.useEffect(() => {
+    const REFRESH_MS = 30_000;
+
+    const timer = setInterval(() => {
+      if (!document.hidden) loadOrders();
+    }, REFRESH_MS);
+
+    function handleVisibility() {
+      if (!document.hidden) loadOrders();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadOrders]);
+
   return (
     <>
       <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
         <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
           <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
             <div className="flex items-center justify-between">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#1A1A1A] text-lg font-extrabold shadow-sm">
-                A
-              </div>
+              <img
+                src="/able-logo.png"
+                alt="Able Buys Homes"
+                className="h-10 w-10 rounded-xl shadow-sm"
+              />
               <div className="flex items-center gap-3">
                 <button
                   aria-label="View notifications"
@@ -120,7 +190,6 @@ export function RishiCockpit() {
             transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
             variants={reveal}
           >
-
             <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
               <StatCard
                 label="Deals in pipe"
@@ -129,13 +198,13 @@ export function RishiCockpit() {
                 href={NOTION_DEALS_URL}
               />
               <StatCard
-              label="Gate stalled"
-              value="2"
-              tone="urgent"
-              href="https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG"
-            />
+                label="Gate stalled"
+                value="2"
+                tone="urgent"
+                href="https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG"
+              />
               <StatCard label="Escalations open" value="0" tone="primary" />
-              <StatCard label="AHTX 83(b) election" value="9d" tone="urgent" />  
+              <StatCard label="AHTX 83(b) election" value="9d" tone="urgent" />
             </div>
           </motion.section>
 
@@ -164,8 +233,7 @@ export function RishiCockpit() {
                           HTM Duplex · Side A
                         </h3>
                         <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                          Phase 2 final stage photo in · Colton → Karen →
-                          you
+                          Phase 2 final stage photo in · Colton to Karen to you
                         </p>
                       </div>
                       <ChevronRightIcon
@@ -186,7 +254,7 @@ export function RishiCockpit() {
                           HTM Duplex · Side B
                         </h3>
                         <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                          Phase 2 final stage photo in · Jeremiah → Karen →
+                          Phase 2 final stage photo in · Jeremiah to Karen to
                           you
                         </p>
                       </div>
@@ -216,29 +284,70 @@ export function RishiCockpit() {
                     Approval requests
                   </SectionHeading>
                   <div className="mt-4 space-y-3">
-                    {approvalRequests.map((request) => (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRequest(request)}
-                        className="group flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] sm:px-5"
-                        key={request.title}
-                      >
-                        <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                            {request.title}
-                          </h3>
-                          <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                            {request.detail}
-                          </p>
-                        </div>
-                        <ChevronRightIcon
-                          aria-hidden="true"
-                          className="shrink-0 text-[#93A3B8] transition-transform group-hover:translate-x-0.5"
-                          size={18}
-                        />
-                      </button>
-                    ))}
+                    {ordersLoading && (
+                      <p className="text-[12px] font-medium text-[#8A99AC]">
+                        Loading requests…
+                      </p>
+                    )}
+
+                    {!ordersLoading && ordersError && (
+                      <div className="rounded-2xl border border-dashed border-[#FFC9AE] bg-[#FFF6F1] px-5 py-4">
+                        <p className="text-[12px] font-bold leading-snug text-[#D95717]">
+                          {ordersError}
+                        </p>
+                        <button
+                          className="mt-2 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+                          onClick={loadOrders}
+                          type="button"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
+
+                    {!ordersLoading && !ordersError && orders.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
+                        <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                          Nothing awaiting your approval
+                        </p>
+                      </div>
+                    )}
+
+                    {orders.map((order) => {
+                      const cost = formatCost(order.estimated_cost);
+                      return (
+                        <button
+                          className="group flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] sm:px-5"
+                          key={order.id}
+                          onClick={() => setSelectedOrder(order)}
+                          type="button"
+                        >
+                          <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start gap-2">
+                              <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                                {order.order_name}
+                              </h3>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${priorityStyles[order.priority]}`}
+                              >
+                                {order.priority}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                              {order.requested_by} · needed{" "}
+                              {formatDate(order.date_needed)}
+                              {cost ? ` · ${cost}` : ""}
+                            </p>
+                          </div>
+                          <ChevronRightIcon
+                            aria-hidden="true"
+                            className="shrink-0 text-[#93A3B8] transition-transform group-hover:translate-x-0.5"
+                            size={18}
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
                 </section>
               </div>
@@ -321,14 +430,15 @@ export function RishiCockpit() {
       </div>
 
       <ApprovalModal
-        request={selectedRequest}
-        onClose={() => setSelectedRequest(null)}
-        onApprove={() => setSelectedRequest(null)}
-        onDecline={() => setSelectedRequest(null)}
+        onClose={() => setSelectedOrder(null)}
+        onDecided={loadOrders}
+        order={selectedOrder}
       />
     </>
   );
 }
+
+/* ── Subcomponents ──────────────────────────────────────── */
 
 type StatCardProps = {
   value: string;
@@ -416,37 +526,79 @@ function OpenItem({ label, status, tone }: OpenItemProps) {
 }
 
 type ApprovalModalProps = {
-  request: ApprovalRequest | null;
+  order: Order | null;
   onClose: () => void;
-  onApprove: () => void;
-  onDecline: () => void;
+  /** Called after a decision succeeds, so the parent can refresh. */
+  onDecided: () => void;
 };
 
-function ApprovalModal({
-  request,
-  onClose,
-  onApprove,
-  onDecline,
-}: ApprovalModalProps) {
+function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
+  const [busy, setBusy] = React.useState<"Approved" | "Declined" | null>(null);
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    if (order) {
+      setBusy(null);
+      setError("");
+    }
+  }, [order]);
+
+  async function decide(status: "Approved" | "Declined") {
+    if (!order) return;
+
+    setBusy(status);
+    setError("");
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: order.id, status, decidedBy: "Rishi" }),
+      });
+
+      const raw = await res.text();
+      if (!res.ok) {
+        let msg = `Failed to save decision (${res.status})`;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed?.error) msg = parsed.error;
+        } catch {
+          /* keep default message */
+        }
+        throw new Error(msg);
+      }
+
+      onDecided();
+      onClose();
+    } catch (err) {
+      console.error("Decision failed:", err);
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setBusy(null);
+    }
+  }
+
+  const cost = order ? formatCost(order.estimated_cost) : null;
+
   return (
     <AnimatePresence>
-      {request && (
+      {order && (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1A1A2E]/50 px-5"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1A1A2E]/50 px-5 py-6"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="flex items-start justify-between gap-4">
+            {/* Header — pinned */}
+            <div className="flex shrink-0 items-start justify-between gap-4 px-6 pt-6">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
                 Approval request
               </p>
@@ -460,32 +612,89 @@ function ApprovalModal({
               </button>
             </div>
 
-            <h3 className="mt-2 text-[16px] font-extrabold leading-snug tracking-[-0.02em] text-[#1A1A2E]">
-              {request?.title}
-            </h3>
-            <p className="mt-1 text-[12px] font-medium leading-snug text-[#6B7A90]">
-              {request?.detail}
-            </p>
+            {/* Body — scrolls when the description is long */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">
+              <div className="mt-2 flex items-start gap-2">
+                <h3 className="min-w-0 flex-1 text-[16px] font-extrabold leading-snug tracking-[-0.02em] text-[#1A1A2E]">
+                  {order.order_name}
+                </h3>
+                <span
+                  className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${priorityStyles[order.priority]}`}
+                >
+                  {order.priority}
+                </span>
+              </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
-                onClick={onDecline}
-                type="button"
-              >
-                Decline
-              </button>
-              <button
-                className="flex-1 rounded-xl bg-[#16A34A] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#15803D]"
-                onClick={onApprove}
-                type="button"
-              >
-                Approve
-              </button>
+              <p className="mt-3 whitespace-pre-line text-[12px] font-medium leading-relaxed text-[#526176]">
+                {order.description}
+              </p>
+
+              <dl className="mt-4 space-y-2 rounded-xl bg-[#F8FAFC] px-4 py-3">
+                <Row label="Requested by" value={order.requested_by} />
+                <Row
+                  label="Date needed"
+                  value={formatDate(order.date_needed)}
+                />
+                <Row label="Submitted" value={formatDate(order.created_at)} />
+                {cost && <Row label="Estimated cost" value={cost} />}
+              </dl>
+            </div>
+
+            {/* Footer — pinned, so Approve/Decline are always reachable */}
+            <div className="shrink-0 border-t border-[#E6ECF2] px-6 pb-6 pt-4">
+              {error && (
+                <p className="mb-3 text-[11px] font-bold text-red-500">
+                  {error}
+                </p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={busy !== null}
+                  onClick={() => decide("Declined")}
+                  type="button"
+                >
+                  {busy === "Declined" ? (
+                    <LoaderIcon
+                      className="animate-spin"
+                      size={14}
+                      strokeWidth={2.5}
+                    />
+                  ) : null}
+                  Decline
+                </button>
+                <button
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                  disabled={busy !== null}
+                  onClick={() => decide("Approved")}
+                  type="button"
+                >
+                  {busy === "Approved" ? (
+                    <LoaderIcon
+                      className="animate-spin"
+                      size={14}
+                      strokeWidth={2.5}
+                    />
+                  ) : null}
+                  Approve
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#8A99AC]">
+        {label}
+      </dt>
+      <dd className="text-[12px] font-bold text-[#1A1A2E]">{value}</dd>
+    </div>
   );
 }
