@@ -4,6 +4,7 @@
 // never passes through Vercel (avoiding the 4.5MB body limit).
 
 import { JWT } from "google-auth-library";
+import { requireUser, requireCockpit } from "../lib/apiAuth.js";
 
 const SIDE_A = {
     "Demo": "1XJ73f5dfUlLnPwiSgEamtPPTKKacfm44",
@@ -101,8 +102,26 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
+    let caller;
+    try {
+        caller = await requireUser(req);
+        // Only the two crew leads upload stage photos.
+        requireCockpit(caller.profile, ["colton", "zo"]);
+    } catch (err) {
+        return res
+            .status(err?.status || 401)
+            .json({ error: err?.message || "Not authorised" });
+    }
+
     try {
         const { side, stageName, mimeType, ext } = req.body || {};
+
+        // Colton can only write to Side A, Zo only to Side B.
+        const ownSide = caller.profile.cockpit === "colton" ? "A" : "B";
+        const requestedSide = String(side || "").trim().toUpperCase().replace("SIDE ", "");
+        if (requestedSide !== ownSide) {
+            return res.status(403).json({ error: "You can only upload to your own side" });
+        }
 
         if (!side || !stageName) {
             return res.status(400).json({ error: "side and stageName are required" });
@@ -155,7 +174,11 @@ export default async function handler(req, res) {
             return res.status(502).json({ error: "Drive did not return an upload URL" });
         }
 
-        return res.status(200).json({ uploadUrl, fileName });
+        return res.status(200).json({
+      uploadUrl,
+      fileName,
+      folderUrl: `https://drive.google.com/drive/folders/${folderId}`,
+    });
     } catch (err) {
         console.error("drive-upload-url error:", err);
         return res.status(500).json({ error: err.message || "Unknown server error" });

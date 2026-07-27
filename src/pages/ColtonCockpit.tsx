@@ -8,6 +8,7 @@ import {
   ExternalLinkIcon,
 } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
+import { apiFetch } from "../lib/apiFetch";
 
 const SIDE = "A" as const;
 
@@ -19,7 +20,7 @@ type Stage = {
   drivePhotoLink: string | null;
   phase: string;
   status: string;
-};  
+};
 
 type UploadState = {
   uploading: boolean;
@@ -27,6 +28,7 @@ type UploadState = {
   saving: boolean;
   saved: boolean;
   error: string;
+  progress: string;
 };
 
 const phaseDots = [
@@ -35,6 +37,42 @@ const phaseDots = [
   { color: "#CBD5E1" },
   { color: "#CBD5E1" },
 ];
+
+// Notion returns rows in arbitrary order. Pin each phase to the SOP sequence
+// so the checklist reads the same way every visit.
+const STAGE_ORDER: Record<string, string[]> = {
+  "Phase 1": [
+    "Demo",
+    "Structural Repair",
+    "Framing",
+    "Wiring",
+    "Mini Split Rough-In",
+  ],
+  "Phase 2": ["Insulation", "Drywall", "Paint (Interior)"],
+  "Phase 3": [
+    "Flooring",
+    "Cabinets/Countertops",
+    "Bathrooms",
+    "Baseboard/Trim",
+    "Mini Split Set + Commission",
+    "Finishing Fixtures",
+    "Final Finished Pics",
+  ],
+  "Phase 4": [
+    "Siding",
+    "Skirting + Trim",
+    "Deck + Steps",
+    "Paint (Exterior)",
+    "Curb Appeal/Landscape",
+  ],
+};
+
+/** Unknown stage names sort to the end rather than disappearing. */
+function orderIndex(phase: string, stageName: string) {
+  const list = STAGE_ORDER[phase] || [];
+  const index = list.indexOf(stageName);
+  return index === -1 ? 999 : index;
+}
 
 const reveal = {
   hidden: { opacity: 0, y: 12 },
@@ -61,6 +99,7 @@ export function ColtonCockpit() {
             saving: false,
             saved: s.photoUploaded,
             error: "",
+            progress: "",
           };
         });
         setUploadStates(initial);
@@ -76,75 +115,97 @@ export function ColtonCockpit() {
     }));
   }
 
-  async function handleUpload(pageId: string, stageName: string, file: File) {
-    if (!file.type.startsWith("image/")) {
-      updateOne(pageId, { error: "That file isn't a photo. Pick an image." });
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      updateOne(pageId, { error: "Photo is over 50MB. Try a smaller one." });
+  async function handleUpload(
+    pageId: string,
+    stageName: string,
+    files: FileList,
+  ) {
+    const list = Array.from(files);
+    if (list.length === 0) return;
+
+    const notImage = list.find((f) => !f.type.startsWith("image/"));
+    if (notImage) {
+      updateOne(pageId, { error: `${notImage.name} isn't a photo.` });
       return;
     }
 
-    updateOne(pageId, { uploading: true, error: "" });
+    const tooBig = list.find((f) => f.size > 50 * 1024 * 1024);
+    if (tooBig) {
+      updateOne(pageId, { error: `${tooBig.name} is over 50MB.` });
+      return;
+    }
+
+    updateOne(pageId, {
+      uploading: true,
+      error: "",
+      progress: `0 of ${list.length}`,
+    });
+
     try {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      let folderUrl = "";
 
-      // 1. Ask our server for a Drive upload session (folder resolved server-side)
-      const sessionRes = await fetch("/api/drive-upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          side: SIDE,
-          stageName,
-          mimeType: file.type,
-          ext,
-        }),
-      });
+      for (let i = 0; i < list.length; i++) {
+        const file = list[i];
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
 
-      const sessionRaw = await sessionRes.text();
-      if (!sessionRes.ok) {
-        let msg = `Upload setup failed (${sessionRes.status})`;
-        try {
-          const parsed = JSON.parse(sessionRaw);
-          if (parsed?.error) msg = parsed.error;
-        } catch {
-          /* keep default message */
+        const sessionRes = await apiFetch("/api/drive-upload-url", {
+          method: "POST",
+          body: JSON.stringify({
+            side: SIDE,
+            stageName,
+            mimeType: file.type,
+            ext,
+          }),
+        });
+
+        const sessionRaw = await sessionRes.text();
+        if (!sessionRes.ok) {
+          let msg = `Upload setup failed (${sessionRes.status})`;
+          try {
+            const parsed = JSON.parse(sessionRaw);
+            if (parsed?.error) msg = parsed.error;
+          } catch {
+            /* keep default message */
+          }
+          throw new Error(msg);
         }
-        throw new Error(msg);
+
+        const parsed = JSON.parse(sessionRaw);
+        if (!parsed.uploadUrl) {
+          throw new Error("No upload URL returned by the server.");
+        }
+        folderUrl = parsed.folderUrl || folderUrl;
+
+        const putRes = await fetch(parsed.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "image/jpeg" },
+          body: file,
+        });
+
+        if (!putRes.ok) {
+          const detail = await putRes.text();
+          throw new Error(
+            `${file.name} failed (${putRes.status}): ${detail.slice(0, 120)}`,
+          );
+        }
+
+        updateOne(pageId, { progress: `${i + 1} of ${list.length}` });
       }
 
-      const { uploadUrl } = JSON.parse(sessionRaw);
-      if (!uploadUrl) throw new Error("No upload URL returned by the server.");
+      if (!folderUrl) throw new Error("Drive did not return a folder link.");
 
-      // 2. Send the bytes straight to Google Drive
-      const putRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type || "image/jpeg" },
-        body: file,
+      // Save the stage folder, not an individual file, so every photo for
+      // this stage is reachable from the one link in Notion.
+      updateOne(pageId, {
+        uploading: false,
+        progress: "",
+        driveUrl: folderUrl,
       });
-
-      if (!putRes.ok) {
-        const detail = await putRes.text();
-        throw new Error(
-          `Drive upload failed (${putRes.status}): ${detail.slice(0, 160)}`,
-        );
-      }
-
-      const uploaded = await putRes.json();
-      const driveUrl =
-        uploaded?.webViewLink ||
-        (uploaded?.id
-          ? `https://drive.google.com/file/d/${uploaded.id}/view`
-          : "");
-
-      if (!driveUrl) throw new Error("Drive did not return a link for the photo.");
-
-      updateOne(pageId, { uploading: false, driveUrl });
     } catch (err) {
       console.error("Upload failed:", err);
       updateOne(pageId, {
         uploading: false,
+        progress: "",
         error: err instanceof Error ? err.message : "Upload failed. Try again.",
       });
     }
@@ -189,7 +250,11 @@ export function ColtonCockpit() {
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
         <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
           <div className="flex items-center justify-between">
-            <img src="/able-logo.png" alt="Able Buys Homes" className="h-10 w-10 rounded-xl shadow-sm" />
+            <img
+              src="/able-logo.png"
+              alt="Able Buys Homes"
+              className="h-10 w-10 rounded-xl shadow-sm"
+            />
             <div className="flex items-center gap-3">
               <button
                 aria-label="View notifications"
@@ -331,9 +396,13 @@ export function ColtonCockpit() {
                   { key: "Phase 3", label: "Phase 3 — Inside Done" },
                   { key: "Phase 4", label: "Phase 4 — Exterior / Curb Appeal" },
                 ].map((phase) => {
-                  const phaseStages = stages.filter(
-                    (s) => s.phase === phase.key,
-                  );
+                  const phaseStages = stages
+                    .filter((s) => s.phase === phase.key)
+                    .sort(
+                      (a, b) =>
+                        orderIndex(phase.key, a.stageName) -
+                        orderIndex(phase.key, b.stageName),
+                    );
                   if (phaseStages.length === 0) return null;
                   return (
                     <div key={phase.key}>
@@ -400,7 +469,7 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
 type StageRowProps = {
   stage: Stage;
   uploadState: UploadState | undefined;
-  onUpload: (pageId: string, stageName: string, file: File) => void;
+  onUpload: (pageId: string, stageName: string, files: FileList) => void;
   onDone: (pageId: string) => void;
 };
 
@@ -412,6 +481,7 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
     saving: false,
     saved: false,
     error: "",
+    progress: "",
   };
 
   const isComplete = stage.photoUploaded || us.saved;
@@ -433,7 +503,7 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
           >
-            View photo
+            View photos
             <ExternalLinkIcon size={12} strokeWidth={2.5} />
           </a>
         )}
@@ -457,10 +527,13 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onUpload(stage.notionPageId, stage.stageName, file);
+            const files = e.target.files;
+            if (files && files.length > 0) {
+              onUpload(stage.notionPageId, stage.stageName, files);
+            }
             e.target.value = "";
           }}
         />
@@ -473,7 +546,7 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
             type="button"
           >
             <UploadCloudIcon size={16} strokeWidth={2.5} />
-            {us.driveUrl ? "Replace Photo" : "Upload Photo"}
+            {us.driveUrl ? "Add More Photos" : "Upload Photos"}
           </button>
         )}
 
@@ -486,7 +559,9 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
               className="animate-spin text-[#418BFF]"
             />
             <span className="text-[12px] font-bold text-[#5B6B82]">
-              Uploading to Google Drive…
+              {us.progress
+                ? `Uploading ${us.progress} to Google Drive…`
+                : "Uploading to Google Drive…"}
             </span>
           </div>
         )}
@@ -498,7 +573,7 @@ function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
               type="text"
               readOnly
               value={us.driveUrl}
-              placeholder="Drive link appears here after upload"
+              placeholder="Drive folder link appears here after upload"
               className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] placeholder:text-[#A3B0C0] sm:text-[12px]"
             />
             <button
