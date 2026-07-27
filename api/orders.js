@@ -1,15 +1,10 @@
 // api/orders.js
 // Orders / approval requests, stored in Supabase.
-//
-// GET    /api/orders?status=Pending   → list orders (newest first)
-// POST   /api/orders                  → create an order (Dane)
-// PATCH  /api/orders                  → approve or decline (Raj)
-//
-// Uses the Supabase secret key, so this must stay server-side only.
-// Row Level Security is on with no policies, meaning this endpoint is the
-// only way in or out of the table.
+// Every request must carry a valid Supabase session as a Bearer token.
+// The caller's role comes from the profiles table, never from the request body.
 
 import { createClient } from "@supabase/supabase-js";
+import { requireUser, requireCockpit } from "../lib/apiAuth.js";
 
 const PRIORITIES = ["Low", "Normal", "Urgent"];
 const STATUSES = ["Pending", "Approved", "Declined"];
@@ -41,20 +36,32 @@ function cleanText(value, max) {
 }
 
 export default async function handler(req, res) {
+    let caller;
+    try {
+        caller = await requireUser(req);
+    } catch (err) {
+        return res
+            .status(err?.status || 401)
+            .json({ error: err?.message || "Not authorised" });
+    }
+
+    const { profile } = caller;
+
     try {
         const supabase = getClient();
 
-        /* ── LIST ───────────────────────────────────────────── */
         if (req.method === "GET") {
-            const { status, requestedBy } = req.query || {};
+            requireCockpit(profile, ["raj", "dane"]);
+
+            const { status } = req.query || {};
 
             let query = supabase
                 .from("orders")
                 .select("*")
                 .order("created_at", { ascending: false });
 
-            if (requestedBy) {
-                query = query.eq("requested_by", requestedBy);
+            if (profile.cockpit === "dane") {
+                query = query.eq("requested_by", profile.full_name);
             }
 
             if (status) {
@@ -72,16 +79,11 @@ export default async function handler(req, res) {
             return res.status(200).json({ orders: data ?? [] });
         }
 
-        /* ── CREATE ─────────────────────────────────────────── */
         if (req.method === "POST") {
-            const {
-                orderName,
-                description,
-                dateNeeded,
-                priority,
-                estimatedCost,
-                requestedBy,
-            } = req.body || {};
+            requireCockpit(profile, ["dane"]);
+
+            const { orderName, description, dateNeeded, priority, estimatedCost } =
+                req.body || {};
 
             const name = cleanText(orderName, 200);
             if (!name) {
@@ -110,7 +112,6 @@ export default async function handler(req, res) {
                     .json({ error: `Priority must be one of ${PRIORITIES.join(", ")}` });
             }
 
-            // Optional — blank, null and undefined all mean "no cost".
             let cost = null;
             if (
                 estimatedCost !== undefined &&
@@ -134,7 +135,7 @@ export default async function handler(req, res) {
                     date_needed: dateNeeded,
                     priority: level,
                     estimated_cost: cost,
-                    requested_by: cleanText(requestedBy, 100) || "Dane",
+                    requested_by: profile.full_name,
                 })
                 .select()
                 .single();
@@ -144,9 +145,10 @@ export default async function handler(req, res) {
             return res.status(201).json({ order: data });
         }
 
-        /* ── DECIDE ─────────────────────────────────────────── */
         if (req.method === "PATCH") {
-            const { id, status, decidedBy } = req.body || {};
+            requireCockpit(profile, ["raj"]);
+
+            const { id, status } = req.body || {};
 
             if (!id) return res.status(400).json({ error: "id is required" });
 
@@ -161,14 +163,15 @@ export default async function handler(req, res) {
                 .update({
                     status,
                     decided_at: new Date().toISOString(),
-                    decided_by: cleanText(decidedBy, 100) || "Rishi",
+                    decided_by: profile.full_name,
                 })
                 .eq("id", id)
-                .eq("status", "Pending") // only a pending order can be decided
+                .eq("status", "Pending")
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error && error.code !== "PGRST116") throw error;
+
             if (!data) {
                 return res
                     .status(409)
@@ -181,6 +184,10 @@ export default async function handler(req, res) {
         res.setHeader("Allow", "GET, POST, PATCH");
         return res.status(405).json({ error: "Method not allowed" });
     } catch (err) {
+        if (err?.status) {
+            return res.status(err.status).json({ error: err.message });
+        }
+
         console.error("orders error:", err);
         return res.status(500).json({ error: err.message || "Unknown server error" });
     }

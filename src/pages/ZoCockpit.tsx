@@ -7,7 +7,7 @@ import {
   LoaderIcon,
   ExternalLinkIcon,
 } from "lucide-react";
-import { AccountSwitcher } from "../components/AccountSwitcher";
+import { UserMenu } from "../components/UserMenu";
 
 const SIDE = "B" as const;
 
@@ -199,7 +199,7 @@ export function ZoCockpit() {
               >
                 <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
               </button>
-              <AccountSwitcher current="zo" />
+              <UserMenu />
             </div>
           </div>
 

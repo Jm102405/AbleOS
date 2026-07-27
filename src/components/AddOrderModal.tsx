@@ -1,6 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoaderIcon, XIcon } from "lucide-react";
+import { apiFetch } from "../lib/apiFetch";
 
 const PRIORITIES = ["Low", "Normal", "Urgent"] as const;
 type Priority = (typeof PRIORITIES)[number];
@@ -10,8 +11,6 @@ type AddOrderModalProps = {
   onClose: () => void;
   /** Called after a successful submit, so the parent can refresh its list. */
   onCreated?: () => void;
-  /** Who is raising the request. */
-  requestedBy?: string;
 };
 
 const EMPTY = {
@@ -29,7 +28,6 @@ export function AddOrderModal({
   open,
   onClose,
   onCreated,
-  requestedBy = "Dane",
 }: AddOrderModalProps) {
   const [form, setForm] = React.useState(EMPTY);
   const [submitting, setSubmitting] = React.useState(false);
@@ -75,16 +73,14 @@ export function AddOrderModal({
     setError("");
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await apiFetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderName: form.orderName,
           description: form.description,
           dateNeeded: form.dateNeeded,
           priority: form.priority,
           estimatedCost: form.estimatedCost,
-          requestedBy,
         }),
       });
 

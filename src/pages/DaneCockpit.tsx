@@ -1,8 +1,9 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BellIcon, CheckIcon, PlusIcon } from "lucide-react";
-import { AccountSwitcher } from "../components/AccountSwitcher";
+import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
+import { apiFetch } from "../lib/apiFetch";
 
 type Order = {
   id: string;
@@ -77,7 +78,12 @@ export function DaneCockpit() {
   const loadOrders = React.useCallback(async () => {
     setOrdersError("");
     try {
-      const res = await fetch("/api/orders?requestedBy=Dane");
+      const res = await apiFetch("/api/orders");
+      // Signed out mid-poll - not an error, just stop.
+      if (res.status === 401) {
+        setOrders([]);
+        return;
+      }
       if (!res.ok) throw new Error(`Failed to load orders (${res.status})`);
       const data = await res.json();
       setOrders(Array.isArray(data.orders) ? data.orders : []);
@@ -140,7 +146,7 @@ export function DaneCockpit() {
               >
                 <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
               </button>
-              <AccountSwitcher current="dane" />
+              <UserMenu />
             </div>
           </div>
 
@@ -332,7 +338,6 @@ export function DaneCockpit() {
           setToast("Order sent to Rishi for approval");
           loadOrders();
         }}
-        requestedBy="Dane"
       />
 
       <AnimatePresence>

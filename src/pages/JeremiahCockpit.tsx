@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { BellIcon } from "lucide-react";
-import { AccountSwitcher } from "../components/AccountSwitcher";
+import { UserMenu } from "../components/UserMenu";
 
 type CrewStatus = {
   name: string;
@@ -48,7 +48,7 @@ export function JeremiahCockpit() {
               >
                 <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
               </button>
-              <AccountSwitcher current="jeremiah" />
+              <UserMenu />
             </div>
           </div>
 

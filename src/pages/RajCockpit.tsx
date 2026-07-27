@@ -7,7 +7,8 @@ import {
   MoreHorizontalIcon,
   XIcon,
 } from "lucide-react";
-import { AccountSwitcher } from "../components/AccountSwitcher";
+import { UserMenu } from "../components/UserMenu";
+import { apiFetch } from "../lib/apiFetch";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -74,7 +75,12 @@ export function RishiCockpit() {
   const loadOrders = React.useCallback(async () => {
     setOrdersError("");
     try {
-      const res = await fetch("/api/orders?status=Pending");
+      const res = await apiFetch("/api/orders?status=Pending");
+      // Signed out mid-poll - not an error, just stop.
+      if (res.status === 401) {
+        setOrders([]);
+        return;
+      }
       if (!res.ok) throw new Error(`Failed to load orders (${res.status})`);
       const data = await res.json();
       setOrders(Array.isArray(data.orders) ? data.orders : []);
@@ -131,7 +137,7 @@ export function RishiCockpit() {
                 >
                   <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
                 </button>
-                <AccountSwitcher current="raj" />
+                <UserMenu />
               </div>
             </div>
 
@@ -550,10 +556,9 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
     setError("");
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await apiFetch("/api/orders", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: order.id, status, decidedBy: "Rishi" }),
+        body: JSON.stringify({ id: order.id, status }),
       });
 
       const raw = await res.text();
