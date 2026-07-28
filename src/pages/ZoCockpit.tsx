@@ -251,7 +251,7 @@ export function ZoCockpit() {
             <img
               src="/able-logo.png"
               alt="Able Buys Homes"
-              className="h-10 w-10 rounded-xl shadow-sm"
+              className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm"
             />
             <div className="flex items-center gap-3">
               <button

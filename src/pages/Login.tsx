@@ -55,7 +55,7 @@ export function Login() {
         <div className="flex flex-col items-center text-center">
           <img
             alt="Able Buys Homes"
-            className="h-16 w-16 rounded-2xl shadow-[0_8px_20px_rgba(26,26,46,0.22)]"
+            className="h-16 w-16 rounded-2xl bg-[#191919] p-1 object-contain shadow-[0_8px_20px_rgba(26,26,46,0.22)]"
             src="/able-logo.png"
           />
           <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-white/85">
