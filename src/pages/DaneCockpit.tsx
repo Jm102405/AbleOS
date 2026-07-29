@@ -263,7 +263,7 @@ export function DaneCockpit() {
                 {!ordersLoading && !ordersError && orders.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
                     <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
-                      No orders yet — use Add Order to send one to Rishi.
+                      No orders yet — use Add Order to send one to Raj.
                     </p>
                   </div>
                 )}
@@ -335,7 +335,7 @@ export function DaneCockpit() {
         open={addOrderOpen}
         onClose={() => setAddOrderOpen(false)}
         onCreated={() => {
-          setToast("Order sent to Rishi for approval");
+          setToast("Order sent to Raj for approval");
           loadOrders();
         }}
       />

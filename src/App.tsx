@@ -2,12 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./lib/AuthProvider";
 import { ProtectedRoute, HomeRedirect } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
-import { RishiCockpit } from "./pages/RajCockpit";
+import { RajCockpit } from "./pages/RajCockpit";
 import { DaneCockpit } from "./pages/DaneCockpit";
 import { JeremiahCockpit } from "./pages/JeremiahCockpit";
 import { ColtonCockpit } from "./pages/ColtonCockpit";
 import { ZoCockpit } from "./pages/ZoCockpit";
 import { KarenCockpit } from "./pages/KarenCockpit";
+import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
   return (
@@ -20,7 +21,7 @@ export function App() {
             path="/raj"
             element={
               <ProtectedRoute cockpit="raj">
-                <RishiCockpit />
+                <RajCockpit />
               </ProtectedRoute>
             }
           />
@@ -61,6 +62,15 @@ export function App() {
             element={
               <ProtectedRoute cockpit="karen">
                 <KarenCockpit />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/raj/pipeline"
+            element={
+              <ProtectedRoute cockpit="raj">
+                <PipelineBoard />
               </ProtectedRoute>
             }
           />

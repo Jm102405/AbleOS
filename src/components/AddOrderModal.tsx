@@ -246,7 +246,7 @@ export function AddOrderModal({
                     Sending…
                   </>
                 ) : (
-                  "Send to Rishi"
+                  "Send to Raj"
                 )}
               </button>
             </div>
