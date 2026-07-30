@@ -7,8 +7,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt" hands us control of when the new worker takes over, so an
+      // update never interrupts a photo upload in progress.
+      registerType: "prompt",
       includeAssets: ["icon-192.png", "icon-512.png"],
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+      },
       manifest: {
         name: "Able OS",
         short_name: "Able OS",
