@@ -62,7 +62,7 @@ export function Login() {
             Able OS · Executive workspace
           </p>
           <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-[-0.04em] text-white">
-            Sign in
+            Sign innnnnn
           </h1>
         </div>
 
