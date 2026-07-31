@@ -142,6 +142,20 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
+            // Failing to notify shouldn't fail the order, so log rather than throw.
+            const { error: notifyError } = await supabase.from("notifications").insert({
+                recipient: "raj",
+                type: "order_created",
+                title: `New order from ${profile.full_name}`,
+                body: data.order_name,
+                link: "/raj",
+                order_id: data.id,
+            });
+
+            if (notifyError) {
+                console.error("Failed to create notification:", notifyError);
+            }
+
             return res.status(201).json({ order: data });
         }
 
@@ -176,6 +190,22 @@ export default async function handler(req, res) {
                 return res
                     .status(409)
                     .json({ error: "That order was already decided or doesn't exist" });
+            }
+
+            const { error: decideNotifyError } = await supabase
+                .from("notifications")
+                .insert({
+                    // Only Dane can create orders, so he's always the requester.
+                    recipient: "dane",
+                    type: "order_decided",
+                    title: `Order ${status.toLowerCase()} by ${profile.full_name}`,
+                    body: data.order_name,
+                    link: "/dane",
+                    order_id: data.id,
+                });
+
+            if (decideNotifyError) {
+                console.error("Failed to create notification:", decideNotifyError);
             }
 
             return res.status(200).json({ order: data });

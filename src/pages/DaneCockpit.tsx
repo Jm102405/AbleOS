@@ -1,9 +1,10 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BellIcon, CheckIcon, PlusIcon } from "lucide-react";
+import { CheckIcon, PlusIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
+import { NotificationBell } from "../components/NotificationBell";
 
 type Order = {
   id: string;
@@ -139,13 +140,7 @@ export function DaneCockpit() {
               className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm"
             />
             <div className="flex items-center gap-3">
-              <button
-                aria-label="View notifications"
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                type="button"
-              >
-                <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
-              </button>
+              <NotificationBell />
               <UserMenu />
             </div>
           </div>

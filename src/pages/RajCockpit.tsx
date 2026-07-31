@@ -1,7 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BellIcon,
   ChevronRightIcon,
   LoaderIcon,
   MoreHorizontalIcon,
@@ -10,6 +9,7 @@ import {
 import { UserMenu } from "../components/UserMenu";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
+import { NotificationBell } from "../components/NotificationBell";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -148,13 +148,7 @@ export function RajCockpit() {
                     Pipeline
                   </Link>
                 </nav>
-                <button
-                  aria-label="View notifications"
-                  className="grid h-9 w-9 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                  type="button"
-                >
-                  <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
-                </button>
+                <NotificationBell />
                 <UserMenu />
               </div>
             </div>

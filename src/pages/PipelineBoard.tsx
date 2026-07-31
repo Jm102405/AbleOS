@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BellIcon, ChevronDownIcon, FilterIcon } from "lucide-react";
+import { ChevronDownIcon, FilterIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
@@ -10,6 +10,7 @@ import { KpiTile } from "../features/pipeline/KpiTile";
 import { StageStrip } from "../features/pipeline/StageStrip";
 import { birdDogOptions, deals, stages } from "../features/pipeline/data";
 import type { BirdDog, Deal, DealStage } from "../features/pipeline/types";
+import { NotificationBell } from "../components/NotificationBell";
 
 export function PipelineBoard() {
   const [selectedBirdDog, setSelectedBirdDog] = React.useState<"All" | BirdDog>(
@@ -100,13 +101,7 @@ export function PipelineBoard() {
                   Pipeline
                 </span>
               </nav>
-              <button
-                aria-label="View notifications"
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                type="button"
-              >
-                <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
-              </button>
+              <NotificationBell />
               <UserMenu />
             </div>
           </div>
