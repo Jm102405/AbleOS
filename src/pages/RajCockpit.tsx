@@ -4,12 +4,14 @@ import {
   ChevronRightIcon,
   LoaderIcon,
   MoreHorizontalIcon,
+  PlusIcon,
   XIcon,
 } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
+import { AssignTaskModal } from "../components/AssignTaskModal";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -62,6 +64,14 @@ const reveal = {
 export function RajCockpit() {
   const [dealsCount, setDealsCount] = React.useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [assignOpen, setAssignOpen] = React.useState(false);
+  const [taskToast, setTaskToast] = React.useState("");
+
+  React.useEffect(() => {
+    if (!taskToast) return;
+    const timer = setTimeout(() => setTaskToast(""), 4000);
+    return () => clearTimeout(timer);
+  }, [taskToast]);
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = React.useState(true);
   const [ordersError, setOrdersError] = React.useState("");
@@ -190,6 +200,14 @@ export function RajCockpit() {
                   Vision · Acquisitions · Capital · Partnerships
                 </p>
               </div>
+              <button
+                className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2 sm:text-[12px]"
+                onClick={() => setAssignOpen(true)}
+                type="button"
+              >
+                <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
+                Assign Task
+              </button>
               <button
                 aria-label="Open profile options"
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F1F5F9] text-[#3B82C4] transition-colors hover:bg-[#E3EDF8] focus:outline-none focus:ring-2 focus:ring-[#3B82C4] focus:ring-offset-2"
@@ -452,6 +470,29 @@ export function RajCockpit() {
         onDecided={loadOrders}
         order={selectedOrder}
       />
+
+      <AssignTaskModal
+        onClose={() => setAssignOpen(false)}
+        onCreated={() => setTaskToast("Task assigned")}
+        open={assignOpen}
+      />
+
+      <AnimatePresence>
+        {taskToast && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-x-0 bottom-6 z-[60] mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-2xl bg-[#1A1A2E] px-5 py-3.5 shadow-[0_16px_32px_rgba(26,26,46,0.28)]"
+            exit={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 12 }}
+            role="status"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <p className="text-[12px] font-bold text-white sm:text-[13px]">
+              {taskToast}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

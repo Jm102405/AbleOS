@@ -4,6 +4,7 @@ import { CheckIcon, PlusIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
+import { TaskCard, type Task } from "../features/tasks/TaskCard";
 import { NotificationBell } from "../components/NotificationBell";
 
 type Order = {
@@ -98,9 +99,57 @@ export function DaneCockpit() {
     }
   }, []);
 
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = React.useState(true);
+  const [tasksError, setTasksError] = React.useState("");
+  const [savingTask, setSavingTask] = React.useState<string | null>(null);
+
+  const loadTasks = React.useCallback(async () => {
+    setTasksError("");
+    try {
+      const res = await apiFetch("/api/tasks");
+      if (res.status === 401) {
+        setTasks([]);
+        return;
+      }
+      if (!res.ok) throw new Error(`Failed to load tasks (${res.status})`);
+
+      const data = await res.json();
+      setTasks(Array.isArray(data.tasks) ? data.tasks : []);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+      setTasksError(
+        err instanceof Error ? err.message : "Could not load your tasks",
+      );
+    } finally {
+      setTasksLoading(false);
+    }
+  }, []);
+
+  async function updateTaskStatus(id: string, status: Task["status"]) {
+    setSavingTask(id);
+    try {
+      const res = await apiFetch("/api/tasks", {
+        method: "PATCH",
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        throw new Error(detail.slice(0, 160));
+      }
+      await loadTasks();
+    } catch (err) {
+      console.error("Failed to update task:", err);
+      setTasksError("Could not save that status. Try again.");
+    } finally {
+      setSavingTask(null);
+    }
+  }
+
   React.useEffect(() => {
     loadOrders();
-  }, [loadOrders]);
+    loadTasks();
+  }, [loadOrders, loadTasks]);
 
   // Poll every 30s, but only while the tab is actually visible — no point
   // burning requests on a phone in someone's pocket. Also refresh the moment
@@ -109,11 +158,17 @@ export function DaneCockpit() {
     const REFRESH_MS = 30_000;
 
     const timer = setInterval(() => {
-      if (!document.hidden) loadOrders();
+      if (!document.hidden) {
+        loadOrders();
+        loadTasks();
+      }
     }, REFRESH_MS);
 
     function handleVisibility() {
-      if (!document.hidden) loadOrders();
+      if (!document.hidden) {
+        loadOrders();
+        loadTasks();
+      }
     }
 
     document.addEventListener("visibilitychange", handleVisibility);
@@ -121,7 +176,7 @@ export function DaneCockpit() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [loadOrders]);
+  }, [loadOrders, loadTasks]);
 
   React.useEffect(() => {
     if (!toast) return;
@@ -231,6 +286,49 @@ export function DaneCockpit() {
           variants={reveal}
         >
           <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
+            <section aria-labelledby="tasks-heading" className="pt-9">
+              <SectionHeading id="tasks-heading">Tasks from Raj</SectionHeading>
+              <div className="mt-4 space-y-3">
+                {tasksLoading && (
+                  <p className="text-[12px] font-medium text-[#8A99AC]">
+                    Loading tasks…
+                  </p>
+                )}
+
+                {!tasksLoading && tasksError && (
+                  <div className="rounded-2xl border border-dashed border-[#FFC9AE] bg-[#FFF6F1] px-5 py-4">
+                    <p className="text-[12px] font-bold leading-snug text-[#D95717]">
+                      {tasksError}
+                    </p>
+                    <button
+                      className="mt-2 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+                      onClick={loadTasks}
+                      type="button"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {!tasksLoading && !tasksError && tasks.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
+                    <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                      Nothing assigned to you right now.
+                    </p>
+                  </div>
+                )}
+
+                {tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                    saving={savingTask === task.id}
+                    task={task}
+                  />
+                ))}
+              </div>
+            </section>
+
             <section aria-labelledby="orders-heading" className="pt-9">
               <SectionHeading id="orders-heading">Your orders</SectionHeading>
               <div className="mt-4 space-y-3">
