@@ -12,6 +12,8 @@ import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
 import { AssignTaskModal } from "../components/AssignTaskModal";
+import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
+import type { Task } from "../features/tasks/TaskCard";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -105,9 +107,48 @@ export function RajCockpit() {
     }
   }, []);
 
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [tasksLoaded, setTasksLoaded] = React.useState(false);
+  const [tasksOpen, setTasksOpen] = React.useState(false);
+  const [savingTask, setSavingTask] = React.useState<string | null>(null);
+
+  const loadTaskCount = React.useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/tasks");
+      if (!res.ok) return;
+      const data = await res.json();
+      setTasks(Array.isArray(data.tasks) ? data.tasks : []);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+    } finally {
+      setTasksLoaded(true);
+    }
+  }, []);
+
+  const openTaskCount = tasksLoaded
+    ? tasks.filter((task) => task.status !== "Done").length
+    : null;
+
+  async function updateTaskStatus(id: string, status: Task["status"]) {
+    setSavingTask(id);
+    try {
+      const res = await apiFetch("/api/tasks", {
+        method: "PATCH",
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      await loadTaskCount();
+    } catch (err) {
+      console.error("Failed to update task:", err);
+    } finally {
+      setSavingTask(null);
+    }
+  }
+
   React.useEffect(() => {
     loadOrders();
-  }, [loadOrders]);
+    loadTaskCount();
+  }, [loadOrders, loadTaskCount]);
 
   // Poll every 30s, but only while the tab is visible. Also refresh on focus
   // so switching back to this tab shows current data immediately.
@@ -127,7 +168,7 @@ export function RajCockpit() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [loadOrders]);
+  }, [loadOrders, loadTaskCount]);
 
   return (
     <>
@@ -240,7 +281,12 @@ export function RajCockpit() {
                 href="https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG"
               />
               <StatCard label="Escalations open" value="0" tone="primary" />
-              <StatCard label="AHTX 83(b) election" value="9d" tone="urgent" />
+              <StatCard
+                label="Tasks assigned"
+                onClick={() => setTasksOpen(true)}
+                tone="primary"
+                value={openTaskCount !== null ? String(openTaskCount) : "..."}
+              />
             </div>
           </motion.section>
 
@@ -471,9 +517,21 @@ export function RajCockpit() {
         order={selectedOrder}
       />
 
+      <AssignedTasksModal
+        loading={!tasksLoaded}
+        onClose={() => setTasksOpen(false)}
+        onStatusChange={updateTaskStatus}
+        open={tasksOpen}
+        savingTask={savingTask}
+        tasks={tasks}
+      />
+
       <AssignTaskModal
         onClose={() => setAssignOpen(false)}
-        onCreated={() => setTaskToast("Task assigned")}
+        onCreated={() => {
+          setTaskToast("Task assigned");
+          loadTaskCount();
+        }}
         open={assignOpen}
       />
 
@@ -504,9 +562,10 @@ type StatCardProps = {
   label: string;
   tone: "primary" | "urgent";
   href?: string;
+  onClick?: () => void;
 };
 
-function StatCard({ value, label, tone, href }: StatCardProps) {
+function StatCard({ value, label, tone, href, onClick }: StatCardProps) {
   const tones = {
     primary: "text-[#418BFF] bg-[#EEF5FF]",
     urgent: "text-[#FF7832] bg-[#FFF1E9]",
@@ -527,6 +586,18 @@ function StatCard({ value, label, tone, href }: StatCardProps) {
 
   const baseClasses =
     "min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5";
+
+  if (onClick) {
+    return (
+      <button
+        className={`${baseClasses} block w-full cursor-pointer text-left transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)]`}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
 
   if (href) {
     return (

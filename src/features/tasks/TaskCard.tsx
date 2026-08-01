@@ -50,9 +50,16 @@ type TaskCardProps = {
   task: Task;
   saving: boolean;
   onStatusChange: (status: Task["status"]) => void;
+  /** Shown bottom-left. Raj sees who it went to; staff see who sent it. */
+  metaLabel?: string;
 };
 
-export function TaskCard({ task, saving, onStatusChange }: TaskCardProps) {
+export function TaskCard({
+  task,
+  saving,
+  onStatusChange,
+  metaLabel = "From Raj",
+}: TaskCardProps) {
   const [expanded, setExpanded] = React.useState(false);
   const hasFlow = Array.isArray(task.flow_steps) && task.flow_steps.length > 0;
 
@@ -149,7 +156,7 @@ export function TaskCard({ task, saving, onStatusChange }: TaskCardProps) {
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wide text-[#8A99AC]">
-          <span>From Raj</span>
+          <span>{metaLabel}</span>
           {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
           <button
             className="ml-auto inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
