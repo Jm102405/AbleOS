@@ -129,6 +129,24 @@ export function RajCockpit() {
     ? tasks.filter((task) => task.status !== "Done").length
     : null;
 
+  async function deleteTask(id: string) {
+    try {
+      const res = await apiFetch("/api/tasks", {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+
+      // Drop it locally straight away so the list doesn't flicker.
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+      setTaskToast("Task deleted");
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+      setTaskToast("Could not delete that task");
+      loadTaskCount();
+    }
+  }
+
   async function updateTaskStatus(id: string, status: Task["status"]) {
     setSavingTask(id);
     try {
@@ -520,6 +538,7 @@ export function RajCockpit() {
       <AssignedTasksModal
         loading={!tasksLoaded}
         onClose={() => setTasksOpen(false)}
+        onDelete={deleteTask}
         onStatusChange={updateTaskStatus}
         open={tasksOpen}
         savingTask={savingTask}

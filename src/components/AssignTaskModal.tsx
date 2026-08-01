@@ -142,14 +142,14 @@ export function AssignTaskModal({
       {open && (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[#1A1A2E]/50 px-4 py-6 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-[#1A1A2E]/50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center sm:px-4 sm:py-6"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.form
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -203,7 +203,7 @@ export function AssignTaskModal({
                 )}
               </Field>
 
-              <Field label="Type">
+              <Field hint="Feature adds a flow section" label="Type">
                 <div className="grid grid-cols-2 gap-2">
                   {TYPES.map((type) => {
                     const active = form.taskType === type;
@@ -218,7 +218,7 @@ export function AssignTaskModal({
                         onClick={() => update("taskType", type)}
                         type="button"
                       >
-                        {type === "Task" ? "Task" : "Feature / system change"}
+                        {type}
                       </button>
                     );
                   })}
@@ -362,7 +362,7 @@ export function AssignTaskModal({
                 />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
                 <Field hint="Optional" label="Due date">
                   <input
                     className={inputClass}

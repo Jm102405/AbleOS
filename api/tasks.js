@@ -204,15 +204,12 @@ export default async function handler(req, res) {
             if (findError && findError.code !== "PGRST116") throw findError;
             if (!existing) return res.status(404).json({ error: "Task not found" });
 
-            const canUpdate =
-                profile.cockpit === existing.assigned_to || profile.cockpit === "raj";
-
-            if (!canUpdate) {
+            // Only the person doing the work moves it along. Raj can delete, not edit.
+            if (profile.cockpit !== existing.assigned_to) {
                 return res
                     .status(403)
-                    .json({ error: "You don't have permission to update this task" });
+                    .json({ error: "Only the assigned staff can change this status" });
             }
-
             const now = new Date().toISOString();
 
             const { data, error } = await supabase
@@ -248,7 +245,42 @@ export default async function handler(req, res) {
             return res.status(200).json({ task: data });
         }
 
-        res.setHeader("Allow", "GET, POST, PATCH");
+        /* ---- DELETE ---- */
+        if (req.method === "DELETE") {
+            requireCockpit(profile, ["raj"]);
+
+            const id = req.body?.id || req.query?.id;
+            if (!id) return res.status(400).json({ error: "id is required" });
+
+            const { data: existing, error: findError } = await supabase
+                .from("tasks")
+                .select("*")
+                .eq("id", id)
+                .single();
+
+            if (findError && findError.code !== "PGRST116") throw findError;
+            if (!existing) return res.status(404).json({ error: "Task not found" });
+
+            // Notify before deleting - once the row is gone we lose the details.
+            const { error: notifyError } = await supabase.from("notifications").insert({
+                recipient: existing.assigned_to,
+                type: "task_deleted",
+                title: `${profile.full_name} removed a ${existing.task_type.toLowerCase()}`,
+                body: existing.title,
+                link: `/${existing.assigned_to}`,
+            });
+
+            if (notifyError) {
+                console.error("Failed to create notification:", notifyError);
+            }
+
+            const { error } = await supabase.from("tasks").delete().eq("id", id);
+            if (error) throw error;
+
+            return res.status(200).json({ success: true });
+        }
+
+        res.setHeader("Allow", "GET, POST, PATCH, DELETE");
         return res.status(405).json({ error: "Method not allowed" });
     } catch (err) {
         if (err?.status) return res.status(err.status).json({ error: err.message });

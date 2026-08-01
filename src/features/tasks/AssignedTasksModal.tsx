@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { XIcon } from "lucide-react";
+import { LoaderIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import {
   TaskCard,
   TASK_STATUSES,
@@ -27,6 +27,7 @@ type AssignedTasksModalProps = {
   loading: boolean;
   savingTask: string | null;
   onStatusChange: (id: string, status: Task["status"]) => void;
+  onDelete: (id: string) => Promise<void>;
 };
 
 export function AssignedTasksModal({
@@ -36,7 +37,21 @@ export function AssignedTasksModal({
   loading,
   savingTask,
   onStatusChange,
+  onDelete,
 }: AssignedTasksModalProps) {
+  const [confirming, setConfirming] = React.useState<Task | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+
+  async function handleConfirmedDelete() {
+    if (!confirming) return;
+    setDeleting(true);
+    try {
+      await onDelete(confirming.id);
+      setConfirming(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
   const [filter, setFilter] = React.useState<Filter>("All");
 
   React.useEffect(() => {
@@ -71,7 +86,7 @@ export function AssignedTasksModal({
       {open && (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[#1A1A2E]/50 px-4 py-6 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-[#1A1A2E]/50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center sm:px-4 sm:py-6"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
           onClick={onClose}
@@ -150,13 +165,85 @@ export function AssignedTasksModal({
                 <TaskCard
                   key={task.id}
                   metaLabel={`To ${STAFF_LABELS[task.assigned_to] ?? task.assigned_to}`}
+                  onDelete={() => setConfirming(task)}
                   onStatusChange={(status) => onStatusChange(task.id, status)}
+                  readOnly
                   saving={savingTask === task.id}
                   task={task}
                 />
               ))}
             </div>
           </motion.div>
+
+          <AnimatePresence>
+            {confirming && (
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 z-10 flex items-center justify-center bg-[#1A1A2E]/60 px-5"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                onClick={(event) => {
+                  if (event.target === event.currentTarget && !deleting) {
+                    setConfirming(null);
+                  }
+                }}
+              >
+                <motion.div
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-[0_20px_40px_rgba(26,26,46,0.28)]"
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#FEE2E2] text-[#DC2626]">
+                      <TriangleAlertIcon size={17} strokeWidth={2.5} />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-[14px] font-extrabold tracking-[-0.02em] text-[#DC2626]">
+                        Delete permanently?
+                      </h3>
+                      <p className="mt-1.5 text-[11px] font-medium leading-relaxed text-[#6B7A90]">
+                        <span className="font-extrabold text-[#1A1A2E]">
+                          {confirming.title}
+                        </span>{" "}
+                        will be removed from the database for good.{" "}
+                        {STAFF_LABELS[confirming.assigned_to] ??
+                          confirming.assigned_to}{" "}
+                        will no longer see it, and this can&apos;t be undone.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex gap-2.5">
+                    <button
+                      className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
+                      disabled={deleting}
+                      onClick={() => setConfirming(null)}
+                      type="button"
+                    >
+                      Keep it
+                    </button>
+                    <button
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#DC2626] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={deleting}
+                      onClick={handleConfirmedDelete}
+                      type="button"
+                    >
+                      {deleting && (
+                        <LoaderIcon
+                          className="animate-spin"
+                          size={12}
+                          strokeWidth={2.5}
+                        />
+                      )}
+                      Delete
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

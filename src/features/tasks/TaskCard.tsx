@@ -1,5 +1,10 @@
 import React from "react";
-import { ChevronDownIcon, ExternalLinkIcon, LoaderIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ExternalLinkIcon,
+  LoaderIcon,
+  Trash2Icon,
+} from "lucide-react";
 
 export type FlowStep = { from: string; to: string; action: string };
 
@@ -52,6 +57,10 @@ type TaskCardProps = {
   onStatusChange: (status: Task["status"]) => void;
   /** Shown bottom-left. Raj sees who it went to; staff see who sent it. */
   metaLabel?: string;
+  /** Raj's view: status is display-only, with a delete action instead. */
+  readOnly?: boolean;
+  onDelete?: () => void;
+  deleting?: boolean;
 };
 
 export function TaskCard({
@@ -59,6 +68,9 @@ export function TaskCard({
   saving,
   onStatusChange,
   metaLabel = "From Raj",
+  readOnly = false,
+  onDelete,
+  deleting = false,
 }: TaskCardProps) {
   const [expanded, setExpanded] = React.useState(false);
   const hasFlow = Array.isArray(task.flow_steps) && task.flow_steps.length > 0;
@@ -165,7 +177,11 @@ export function TaskCard({
           >
             {expanded ? "Less" : "Details"}
             <ChevronDownIcon
-              className={expanded ? "rotate-180 transition-transform" : "transition-transform"}
+              className={
+                expanded
+                  ? "rotate-180 transition-transform"
+                  : "transition-transform"
+              }
               size={12}
               strokeWidth={2.5}
             />
@@ -173,32 +189,66 @@ export function TaskCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto border-t border-[#E6ECF2] px-4 py-2.5 sm:px-5">
-        {saving ? (
-          <span className="flex items-center gap-2 text-[11px] font-bold text-[#5B6B82]">
-            <LoaderIcon className="animate-spin" size={13} strokeWidth={2.5} />
-            Saving...
+      {readOnly ? (
+        <div className="flex items-center justify-between gap-3 border-t border-[#E6ECF2] px-4 py-2.5 sm:px-5">
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${taskStatusStyles[task.status]}`}
+          >
+            {task.status}
           </span>
-        ) : (
-          TASK_STATUSES.map((status) => {
-            const active = task.status === status;
-            return (
-              <button
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
-                  active
-                    ? taskStatusStyles[status]
-                    : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                }`}
-                key={status}
-                onClick={() => !active && onStatusChange(status)}
-                type="button"
-              >
-                {status}
-              </button>
-            );
-          })
-        )}
-      </div>
+
+          {onDelete && (
+            <button
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#DC2626] transition-colors hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={deleting}
+              onClick={onDelete}
+              type="button"
+            >
+              {deleting ? (
+                <LoaderIcon
+                  className="animate-spin"
+                  size={12}
+                  strokeWidth={2.5}
+                />
+              ) : (
+                <Trash2Icon size={12} strokeWidth={2.5} />
+              )}
+              Delete
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 overflow-x-auto border-t border-[#E6ECF2] px-4 py-2.5 sm:px-5">
+          {saving ? (
+            <span className="flex items-center gap-2 text-[11px] font-bold text-[#5B6B82]">
+              <LoaderIcon
+                className="animate-spin"
+                size={13}
+                strokeWidth={2.5}
+              />
+              Saving...
+            </span>
+          ) : (
+            TASK_STATUSES.map((status) => {
+              const active = task.status === status;
+              return (
+                <button
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                    active
+                      ? taskStatusStyles[status]
+                      : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
+                  }`}
+                  key={status}
+                  onClick={() => !active && onStatusChange(status)}
+                  type="button"
+                >
+                  {status}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
     </article>
   );
 }
