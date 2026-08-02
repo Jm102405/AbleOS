@@ -11,6 +11,7 @@ import { UserMenu } from "../components/UserMenu";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
+import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import type { Task } from "../features/tasks/TaskCard";
@@ -67,6 +68,7 @@ export function RajCockpit() {
   const [dealsCount, setDealsCount] = React.useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [assignOpen, setAssignOpen] = React.useState(false);
+  const [gateCount, setGateCount] = React.useState<number | null>(null);
   const [taskToast, setTaskToast] = React.useState("");
 
   React.useEffect(() => {
@@ -293,10 +295,9 @@ export function RajCockpit() {
                 href={NOTION_DEALS_URL}
               />
               <StatCard
-                label="Gate stalled"
-                value="2"
-                tone="urgent"
-                href="https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG"
+                label="Gates awaiting you"
+                tone={gateCount ? "urgent" : "primary"}
+                value={gateCount !== null ? String(gateCount) : "..."}
               />
               <StatCard label="Escalations open" value="0" tone="primary" />
               <StatCard
@@ -320,51 +321,7 @@ export function RajCockpit() {
                   <SectionHeading id="gates-heading">
                     Gates awaiting you
                   </SectionHeading>
-                  <div className="mt-4 space-y-3">
-                    <a
-                      href="https://drive.google.com/drive/folders/1GCgpD8uJ1K-84NBkzZNs-ATp1clCUevB?usp=sharing"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] sm:px-5"
-                    >
-                      <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                          HTM Duplex · Side A
-                        </h3>
-                        <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                          Phase 2 final stage photo in · Colton to Karen to you
-                        </p>
-                      </div>
-                      <ChevronRightIcon
-                        aria-hidden="true"
-                        className="shrink-0 text-[#93A3B8] transition-transform group-hover:translate-x-0.5"
-                        size={18}
-                      />
-                    </a>
-                    <a
-                      href="https://drive.google.com/drive/folders/1FRPLHONtP_SobaVVIPqY9BmeaEgCzuBM?usp=sharing"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] sm:px-5"
-                    >
-                      <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                          HTM Duplex · Side B
-                        </h3>
-                        <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                          Phase 2 final stage photo in · Jeremiah to Karen to
-                          you
-                        </p>
-                      </div>
-                      <ChevronRightIcon
-                        aria-hidden="true"
-                        className="shrink-0 text-[#93A3B8] transition-transform group-hover:translate-x-0.5"
-                        size={18}
-                      />
-                    </a>
-                  </div>
+                  <ApprovalQueue onCountChange={setGateCount} role="raj" />
                 </section>
 
                 <section aria-labelledby="escalations-heading" className="pt-9">

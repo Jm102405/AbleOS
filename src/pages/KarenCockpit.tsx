@@ -1,7 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { BellIcon, CheckIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
+import { NotificationBell } from "../components/NotificationBell";
+import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
 
 type ChecklistItem = {
   label: string;
@@ -21,6 +23,8 @@ const reveal = {
 };
 
 export function KarenCockpit() {
+  const [pendingCount, setPendingCount] = React.useState<number | null>(null);
+
   return (
     <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
@@ -28,13 +32,7 @@ export function KarenCockpit() {
           <div className="flex items-center justify-between">
             <img src="/able-logo.png" alt="Able Buys Homes" className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm" />
             <div className="flex items-center gap-3">
-              <button
-                aria-label="View notifications"
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                type="button"
-              >
-                <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
-              </button>
+              <NotificationBell />
               <UserMenu />
             </div>
           </div>
@@ -88,7 +86,11 @@ export function KarenCockpit() {
           variants={reveal}
         >
           <div className="mt-1 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
-            <InsightCard label="Units rent-ready" value="4" tone="success" />
+            <InsightCard
+              label="Photo approvals"
+              tone={pendingCount ? "critical" : "success"}
+              value={pendingCount !== null ? String(pendingCount) : "..."}
+            />
             <InsightCard label="Accounts to verify" value="3" tone="critical" />
             <InsightCard label="83(b) — you file" value="22d" tone="critical" />
           </div>
@@ -100,6 +102,13 @@ export function KarenCockpit() {
           transition={{ delay: 0.16, duration: 0.38, ease: "easeOut" }}
           variants={reveal}
         >
+          <section aria-labelledby="approval-queue-heading" className="pt-9">
+            <SectionHeading id="approval-queue-heading">
+              Waiting on you
+            </SectionHeading>
+            <ApprovalQueue onCountChange={setPendingCount} role="karen" />
+          </section>
+
           <section aria-labelledby="leasing-heading" className="pt-9">
             <SectionHeading id="leasing-heading">
               Hometown Meadows leasing

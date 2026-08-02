@@ -1,35 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  BellIcon,
-  CheckIcon,
-  UploadCloudIcon,
-  LoaderIcon,
-  ExternalLinkIcon,
-} from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
+import { NotificationBell } from "../components/NotificationBell";
 import { apiFetch } from "../lib/apiFetch";
+import {
+  StageRow,
+  type Stage,
+  type UploadState,
+} from "../features/rehab/StageRow";
 
 const SIDE = "A" as const;
-
-type Stage = {
-  notionPageId: string;
-  stageName: string;
-  workDone: boolean;
-  photoUploaded: boolean;
-  drivePhotoLink: string | null;
-  phase: string;
-  status: string;
-};
-
-type UploadState = {
-  uploading: boolean;
-  driveUrl: string;
-  saving: boolean;
-  saved: boolean;
-  error: string;
-  progress: string;
-};
 
 const phaseDots = [
   { color: "#16A34A" },
@@ -37,6 +17,11 @@ const phaseDots = [
   { color: "#CBD5E1" },
   { color: "#CBD5E1" },
 ];
+
+const reveal = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
+};
 
 // Notion returns rows in arbitrary order. Pin each phase to the SOP sequence
 // so the checklist reads the same way every visit.
@@ -74,11 +59,6 @@ function orderIndex(phase: string, stageName: string) {
   return index === -1 ? 999 : index;
 }
 
-const reveal = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0 },
-};
-
 export function ColtonCockpit() {
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -86,27 +66,59 @@ export function ColtonCockpit() {
     Record<string, UploadState>
   >({});
 
-  React.useEffect(() => {
-    fetch("/api/rehab-stages?side=Side%20A")
-      .then((res) => res.json())
-      .then((data) => {
-        setStages(data.stages);
-        const initial: Record<string, UploadState> = {};
-        data.stages.forEach((s: Stage) => {
-          initial[s.notionPageId] = {
-            uploading: false,
-            driveUrl: s.drivePhotoLink || "",
+  const loadStages = React.useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/rehab-stages");
+      if (res.status === 401) return;
+      if (!res.ok) throw new Error(`Failed to load stages (${res.status})`);
+
+      const data = await res.json();
+      const list: Stage[] = Array.isArray(data.stages) ? data.stages : [];
+
+      setStages(list);
+      setUploadStates((prev) => {
+        const next: Record<string, UploadState> = {};
+        list.forEach((s) => {
+          const existing = prev[s.notionPageId];
+          next[s.notionPageId] = {
+            uploading: existing?.uploading || false,
+            // A sent-back stage clears its link, so Done re-locks.
+            driveUrl: s.photoUploaded ? s.drivePhotoLink || "" : "",
             saving: false,
             saved: s.photoUploaded,
-            error: "",
-            progress: "",
+            error: existing?.error || "",
+            progress: existing?.progress || "",
           };
         });
-        setUploadStates(initial);
-      })
-      .catch((err) => console.error("Failed to fetch rehab stages:", err))
-      .finally(() => setLoading(false));
+        return next;
+      });
+    } catch (err) {
+      console.error("Failed to fetch rehab stages:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => {
+    loadStages();
+  }, [loadStages]);
+
+  // Pick up approvals and declines without a manual reload.
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      if (!document.hidden) loadStages();
+    }, 30_000);
+
+    function handleVisibility() {
+      if (!document.hidden) loadStages();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadStages]);
 
   function updateOne(pageId: string, patch: Partial<UploadState>) {
     setUploadStates((prev) => ({
@@ -194,8 +206,6 @@ export function ColtonCockpit() {
 
       if (!folderUrl) throw new Error("Drive did not return a folder link.");
 
-      // Save the stage folder, not an individual file, so every photo for
-      // this stage is reachable from the one link in Notion.
       updateOne(pageId, {
         uploading: false,
         progress: "",
@@ -217,9 +227,8 @@ export function ColtonCockpit() {
 
     updateOne(pageId, { saving: true, error: "" });
     try {
-      const res = await fetch("/api/update-stage", {
+      const res = await apiFetch("/api/update-stage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notionPageId: pageId, driveUrl: url }),
       });
 
@@ -229,13 +238,7 @@ export function ColtonCockpit() {
       }
 
       updateOne(pageId, { saving: false, saved: true });
-      setStages((prev) =>
-        prev.map((s) =>
-          s.notionPageId === pageId
-            ? { ...s, photoUploaded: true, drivePhotoLink: url }
-            : s,
-        ),
-      );
+      await loadStages();
     } catch (err) {
       console.error("Save failed:", err);
       updateOne(pageId, {
@@ -251,18 +254,12 @@ export function ColtonCockpit() {
         <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
           <div className="flex items-center justify-between">
             <img
-              src="/able-logo.png"
               alt="Able Buys Homes"
               className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm"
+              src="/able-logo.png"
             />
             <div className="flex items-center gap-3">
-              <button
-                aria-label="View notifications"
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
-                type="button"
-              >
-                <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
-              </button>
+              <NotificationBell />
               <UserMenu />
             </div>
           </div>
@@ -349,8 +346,8 @@ export function ColtonCockpit() {
           <div className="mt-4 flex items-center justify-center gap-2">
             {phaseDots.map((dot, index) => (
               <span
-                key={index}
                 className="h-2.5 w-2.5 rounded-full"
+                key={index}
                 style={{ backgroundColor: dot.color }}
               />
             ))}
@@ -403,7 +400,9 @@ export function ColtonCockpit() {
                         orderIndex(phase.key, a.stageName) -
                         orderIndex(phase.key, b.stageName),
                     );
+
                   if (phaseStages.length === 0) return null;
+
                   return (
                     <div key={phase.key}>
                       <h3 className="mb-3 text-[14px] font-extrabold uppercase tracking-[0.06em] text-[#5B6B82] sm:text-[15px]">
@@ -413,10 +412,10 @@ export function ColtonCockpit() {
                         {phaseStages.map((stage) => (
                           <StageRow
                             key={stage.notionPageId}
+                            onDone={handleDone}
+                            onUpload={handleUpload}
                             stage={stage}
                             uploadState={uploadStates[stage.notionPageId]}
-                            onUpload={handleUpload}
-                            onDone={handleDone}
                           />
                         ))}
                       </div>
@@ -463,149 +462,5 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
     >
       {children}
     </h2>
-  );
-}
-
-type StageRowProps = {
-  stage: Stage;
-  uploadState: UploadState | undefined;
-  onUpload: (pageId: string, stageName: string, files: FileList) => void;
-  onDone: (pageId: string) => void;
-};
-
-function StageRow({ stage, uploadState, onUpload, onDone }: StageRowProps) {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const us = uploadState || {
-    uploading: false,
-    driveUrl: "",
-    saving: false,
-    saved: false,
-    error: "",
-    progress: "",
-  };
-
-  const isComplete = stage.photoUploaded || us.saved;
-
-  // ── COMPLETE STATE ──
-  if (isComplete) {
-    return (
-      <article className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#16A34A] text-white">
-          <CheckIcon aria-hidden="true" size={14} strokeWidth={3} />
-        </span>
-        <p className="flex-1 text-[13px] font-bold leading-snug text-[#93A3B8] line-through sm:text-[14px]">
-          {stage.stageName}
-        </p>
-        {(stage.drivePhotoLink || us.driveUrl) && (
-          <a
-            href={stage.drivePhotoLink || us.driveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
-          >
-            View photos
-            <ExternalLinkIcon size={12} strokeWidth={2.5} />
-          </a>
-        )}
-      </article>
-    );
-  }
-
-  // ── ACTIVE STATE (needs upload) ──
-  return (
-    <article className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
-      <div className="flex items-center gap-3">
-        <span className="h-6 w-6 shrink-0 rounded-md border-2 border-[#93A3B8]" />
-        <p className="flex-1 text-[13px] font-bold leading-snug text-[#1A1A2E] sm:text-[14px]">
-          {stage.stageName}
-        </p>
-      </div>
-
-      <div className="mt-3 flex flex-col gap-2 pl-9">
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-              onUpload(stage.notionPageId, stage.stageName, files);
-            }
-            e.target.value = "";
-          }}
-        />
-
-        {/* Upload / Replace button */}
-        {!us.uploading && (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-3 text-[12px] font-bold text-[#418BFF] transition-colors hover:bg-[#DBEAFE] sm:text-[13px]"
-            type="button"
-          >
-            <UploadCloudIcon size={16} strokeWidth={2.5} />
-            {us.driveUrl ? "Add More Photos" : "Upload Photos"}
-          </button>
-        )}
-
-        {/* Uploading spinner */}
-        {us.uploading && (
-          <div className="flex items-center gap-2 rounded-xl bg-[#F1F5F9] px-4 py-3">
-            <LoaderIcon
-              size={16}
-              strokeWidth={2.5}
-              className="animate-spin text-[#418BFF]"
-            />
-            <span className="text-[12px] font-bold text-[#5B6B82]">
-              {us.progress
-                ? `Uploading ${us.progress} to Google Drive…`
-                : "Uploading to Google Drive…"}
-            </span>
-          </div>
-        )}
-
-        {/* URL textbox + Done button — always visible, Done gated on URL */}
-        {!us.saved && (
-          <>
-            <input
-              type="text"
-              readOnly
-              value={us.driveUrl}
-              placeholder="Drive folder link appears here after upload"
-              className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] placeholder:text-[#A3B0C0] sm:text-[12px]"
-            />
-            <button
-              onClick={() => onDone(stage.notionPageId)}
-              disabled={!us.driveUrl || us.saving}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[12px] font-bold text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC] sm:text-[13px]"
-              type="button"
-            >
-              {us.saving ? (
-                <>
-                  <LoaderIcon
-                    size={14}
-                    strokeWidth={2.5}
-                    className="animate-spin"
-                  />
-                  Saving…
-                </>
-              ) : (
-                <>
-                  <CheckIcon size={14} strokeWidth={3} />
-                  Done
-                </>
-              )}
-            </button>
-          </>
-        )}
-
-        {/* Error message */}
-        {us.error && (
-          <p className="text-[11px] font-bold text-red-500">{us.error}</p>
-        )}
-      </div>
-    </article>
   );
 }
