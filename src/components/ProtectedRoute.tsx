@@ -1,7 +1,17 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { LoaderIcon } from "lucide-react";
 import { useAuth, type CockpitKey } from "../lib/AuthProvider";
+import { setActingAs } from "../lib/apiFetch";
+
+const COCKPIT_LABELS: Record<string, string> = {
+  raj: "Raj",
+  dane: "Dane",
+  karen: "Karen",
+  jeremiah: "Jeremiah",
+  colton: "Colton",
+  zo: "Zo",
+};
 
 /** Shown while the stored session is being restored. */
 function AuthLoading() {
@@ -47,6 +57,32 @@ function NoProfile() {
   );
 }
 
+/** Makes it obvious whose dashboard this is, so nothing gets done by accident. */
+function VisitingBanner({
+  cockpit,
+  homeCockpit,
+}: {
+  cockpit: CockpitKey;
+  homeCockpit: CockpitKey;
+}) {
+  return (
+    <div className="sticky top-0 z-[70] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-[#1A1A2E] px-4 py-2 text-center">
+      <span className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#FF7832]">
+        Viewing as {COCKPIT_LABELS[cockpit] ?? cockpit}
+      </span>
+      <span className="text-[10px] font-medium text-white/70">
+        anything you do is recorded under your name
+      </span>
+      <Link
+        className="text-[10px] font-extrabold uppercase tracking-wide text-white underline decoration-white/40 hover:decoration-white"
+        to={`/${homeCockpit}`}
+      >
+        Back to yours
+      </Link>
+    </div>
+  );
+}
+
 type ProtectedRouteProps = {
   cockpit: CockpitKey;
   children: React.ReactNode;
@@ -55,16 +91,34 @@ type ProtectedRouteProps = {
 export function ProtectedRoute({ cockpit, children }: ProtectedRouteProps) {
   const { session, profile, loading } = useAuth();
 
+  const isVisiting = Boolean(
+    profile && profile.is_admin && profile.cockpit !== cockpit,
+  );
+
+  // Tell apiFetch which cockpit we're operating inside, so the server treats
+  // this admin as that person for the duration.
+  React.useEffect(() => {
+    setActingAs(isVisiting ? cockpit : null);
+    return () => setActingAs(null);
+  }, [cockpit, isVisiting]);
+
   if (loading) return <AuthLoading />;
   if (!session) return <Navigate replace to="/login" />;
   if (!profile) return <NoProfile />;
 
-  // Signed in, but trying to reach someone else's cockpit — send them home.
-  if (profile.cockpit !== cockpit) {
+  // Not yours, and you're not an admin — go home.
+  if (profile.cockpit !== cockpit && !profile.is_admin) {
     return <Navigate replace to={`/${profile.cockpit}`} />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {isVisiting && (
+        <VisitingBanner cockpit={cockpit} homeCockpit={profile.cockpit} />
+      )}
+      {children}
+    </>
+  );
 }
 
 /** Sends "/" to whichever cockpit the signed-in user owns. */

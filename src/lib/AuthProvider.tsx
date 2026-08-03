@@ -17,6 +17,7 @@ export type Profile = {
   id: string;
   full_name: string;
   cockpit: CockpitKey;
+  is_admin: boolean;
 };
 
 type AuthState = {
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = React.useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, cockpit")
+      .select("id, full_name, cockpit, is_admin")
       .eq("id", userId)
       .single();
 
