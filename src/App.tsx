@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./lib/AuthProvider";
 import { ProtectedRoute, HomeRedirect } from "./components/ProtectedRoute";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { Login } from "./pages/Login";
 import { RajCockpit } from "./pages/RajCockpit";
 import { DaneCockpit } from "./pages/DaneCockpit";
@@ -13,6 +14,7 @@ import { PipelineBoard } from "./pages/PipelineBoard";
 export function App() {
   return (
     <AuthProvider>
+      <UpdateBanner />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

@@ -1,13 +1,43 @@
 // Keeps the installed home-screen app up to date.
 //
-// The problem this solves: a PWA that's never fully quit will happily run an
-// old build forever, because the service worker only checks for updates when
-// the page loads. So we poll, and apply the update the next time the app is
-// brought to the foreground - never mid-upload.
+// Checks every 60 seconds while the app is open, and the moment it returns to
+// the foreground. Applies straight away if the app is in the background;
+// otherwise it tells the UI so the user can tap Update, and applies on the
+// next foreground transition regardless.
+//
+// iOS runs none of this while the PWA is closed, so an update is always
+// discovered on the next open at the latest.
 
 import { registerSW } from "virtual:pwa-register";
 
-const UPDATE_CHECK_MS = 60 * 60 * 1000; // hourly
+const UPDATE_CHECK_MS = 60 * 1000;
+
+type Listener = (ready: boolean) => void;
+
+const listeners = new Set<Listener>();
+let updateReady = false;
+let applyUpdate: (() => void) | null = null;
+
+/** Subscribe to "a new version is waiting". Returns an unsubscribe function. */
+export function onUpdateReady(listener: Listener) {
+  listeners.add(listener);
+  listener(updateReady);
+  // Braces matter: Set.delete returns a boolean, and React's cleanup
+  // function must return void.
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Force the swap now. Reloads the page. */
+export function applyPendingUpdate() {
+  if (applyUpdate) applyUpdate();
+}
+
+function announce(ready: boolean) {
+  updateReady = ready;
+  listeners.forEach((listener) => listener(ready));
+}
 
 export function setupPwaUpdates() {
   const updateSW = registerSW({
@@ -16,9 +46,9 @@ export function setupPwaUpdates() {
     onRegisteredSW(_swUrl, registration) {
       if (!registration) return;
 
-      // Ask the server for a newer build on a timer, and whenever the app
-      // comes back to the foreground.
-      setInterval(() => registration.update(), UPDATE_CHECK_MS);
+      setInterval(() => {
+        if (!document.hidden) registration.update();
+      }, UPDATE_CHECK_MS);
 
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) registration.update();
@@ -26,12 +56,17 @@ export function setupPwaUpdates() {
     },
 
     onNeedRefresh() {
-      // A new build is downloaded and waiting. Apply it while the app is in
-      // the background, or the moment it next becomes visible.
+      applyUpdate = () => updateSW(true);
+
+      // In the background already - just take it.
       if (document.hidden) {
         updateSW(true);
         return;
       }
+
+      // In use. Offer it, and take it the moment they switch away and back,
+      // so a photo upload in progress isn't interrupted.
+      announce(true);
 
       function applyWhenVisible() {
         if (document.hidden) return;
