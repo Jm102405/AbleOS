@@ -265,7 +265,7 @@ export function ZoCockpit() {
           </div>
 
           <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
-            ABLE OS · Executive workspace
+            ABLE OS · Executive workspacee
           </p>
           <h1 className="mt-1 text-[32px] font-extrabold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
             Zo&apos;s Cockpit
