@@ -11,13 +11,13 @@ import { UserMenu } from "../components/UserMenu";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
-import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
+import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
+import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
+import { DriveLinksCard } from "../components/DriveLinksCard";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
-
-
 
 type Order = {
   id: string;
@@ -68,6 +68,18 @@ export function RajCockpit() {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [gateCount, setGateCount] = React.useState<number | null>(null);
+  const [stages, setStages] = React.useState<Stage[]>([]);
+  const [stagesLoaded, setStagesLoaded] = React.useState(false);
+  const [approvedOpen, setApprovedOpen] = React.useState(false);
+
+  const handleStagesLoaded = React.useCallback((loaded: Stage[]) => {
+    setStages(loaded);
+    setStagesLoaded(true);
+  }, []);
+
+  const approvedCount = stagesLoaded
+    ? stages.filter((stage) => stage.rajApproved).length
+    : null;
   const [taskToast, setTaskToast] = React.useState("");
 
   React.useEffect(() => {
@@ -294,7 +306,7 @@ export function RajCockpit() {
             transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
             variants={reveal}
           >
-            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
                 tone={gateCount ? "urgent" : "primary"}
@@ -310,6 +322,12 @@ export function RajCockpit() {
                 onClick={() => setTasksOpen(true)}
                 tone="primary"
                 value={openTaskCount !== null ? String(openTaskCount) : "..."}
+              />
+              <StatCard
+                label="Gates approved"
+                onClick={() => setApprovedOpen(true)}
+                tone="primary"
+                value={approvedCount !== null ? String(approvedCount) : "..."}
               />
             </div>
           </motion.section>
@@ -327,7 +345,11 @@ export function RajCockpit() {
                   <SectionHeading id="gates-heading">
                     Gates awaiting you
                   </SectionHeading>
-                  <ApprovalQueue onCountChange={setGateCount} role="raj" />
+                  <ApprovalQueue
+                    onCountChange={setGateCount}
+                    onStagesLoaded={handleStagesLoaded}
+                    role="raj"
+                  />
                 </section>
 
                 <section aria-labelledby="approval-heading" className="pt-9">
@@ -408,6 +430,15 @@ export function RajCockpit() {
           <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
             Able OS · V1 Build
           </footer>
+          <section aria-labelledby="drive-heading" className="pt-9">
+            <h2
+              className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+              id="drive-heading"
+            >
+              Drive library
+            </h2>
+            <DriveLinksCard />
+          </section>
         </main>
       </div>
 
@@ -415,6 +446,14 @@ export function RajCockpit() {
         onClose={() => setSelectedOrder(null)}
         onDecided={loadOrders}
         order={selectedOrder}
+      />
+
+      <ApprovedGatesModal
+        loading={!stagesLoaded}
+        onClose={() => setApprovedOpen(false)}
+        open={approvedOpen}
+        role="raj"
+        stages={stages}
       />
 
       <TaskChatModal

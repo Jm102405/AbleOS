@@ -457,7 +457,7 @@ export function DaneCockpit() {
         </section>
 
         <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
-          Mockup · Not live data · Able OS Netlify cockpits
+          Able OS · V1 Build
         </footer>
       </main>
 

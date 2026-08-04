@@ -1,16 +1,11 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  CheckIcon,
-  ExternalLinkIcon,
-  LoaderIcon,
-  XIcon,
-} from "lucide-react";
+import { CheckIcon, ExternalLinkIcon, LoaderIcon, XIcon } from "lucide-react";
 import { apiFetch } from "../../lib/apiFetch";
 
 export type ApproverRole = "jeremiah" | "karen" | "raj";
 
-type Stage = {
+export type Stage = {
   notionPageId: string;
   stageName: string;
   side: string;
@@ -44,9 +39,18 @@ type ApprovalQueueProps = {
   role: ApproverRole;
   /** Lets the cockpit show the queue length in a KPI tile. */
   onCountChange?: (count: number) => void;
+  /**
+   * Hands up every stage so a cockpit can derive its own views - approved
+   * history, blocked counts - without fetching the same endpoint twice.
+   */
+  onStagesLoaded?: (stages: Stage[]) => void;
 };
 
-export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
+export function ApprovalQueue({
+  role,
+  onCountChange,
+  onStagesLoaded,
+}: ApprovalQueueProps) {
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -102,6 +106,10 @@ export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
   React.useEffect(() => {
     onCountChange?.(queue.length);
   }, [queue.length, onCountChange]);
+
+  React.useEffect(() => {
+    onStagesLoaded?.(stages);
+  }, [stages, onStagesLoaded]);
 
   async function decide(
     stage: Stage,
@@ -194,7 +202,7 @@ export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
                 </div>
 
                 {stage.drivePhotoLink && (
-                    <a
+                  <a
                     className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
                     href={stage.drivePhotoLink}
                     rel="noopener noreferrer"
@@ -225,7 +233,11 @@ export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
                   type="button"
                 >
                   {working ? (
-                    <LoaderIcon className="animate-spin" size={13} strokeWidth={2.5} />
+                    <LoaderIcon
+                      className="animate-spin"
+                      size={13}
+                      strokeWidth={2.5}
+                    />
                   ) : (
                     <CheckIcon size={13} strokeWidth={3} />
                   )}
@@ -308,7 +320,11 @@ export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
                   type="button"
                 >
                   {busy && (
-                    <LoaderIcon className="animate-spin" size={13} strokeWidth={2.5} />
+                    <LoaderIcon
+                      className="animate-spin"
+                      size={13}
+                      strokeWidth={2.5}
+                    />
                   )}
                   Send back
                 </button>
@@ -320,3 +336,4 @@ export function ApprovalQueue({ role, onCountChange }: ApprovalQueueProps) {
     </>
   );
 }
+  

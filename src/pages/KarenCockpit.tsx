@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { CheckIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { NotificationBell } from "../components/NotificationBell";
-import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
+import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
+import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 
 type ChecklistItem = {
   label: string;
@@ -24,13 +25,29 @@ const reveal = {
 
 export function KarenCockpit() {
   const [pendingCount, setPendingCount] = React.useState<number | null>(null);
+  const [stages, setStages] = React.useState<Stage[]>([]);
+  const [stagesLoaded, setStagesLoaded] = React.useState(false);
+  const [approvedOpen, setApprovedOpen] = React.useState(false);
+
+  const handleStagesLoaded = React.useCallback((loaded: Stage[]) => {
+    setStages(loaded);
+    setStagesLoaded(true);
+  }, []);
+
+  const approvedCount = stagesLoaded
+    ? stages.filter((stage) => stage.karenApproved).length
+    : null;
 
   return (
     <div className="min-h-screen w-full bg-[#EEF2F6] text-[#1A1A2E]">
       <header className="bg-gradient-to-r from-[#5EC5E8] to-[#3B82C4] text-white shadow-sm">
         <div className="mx-auto max-w-[428px] px-5 pb-8 pt-5 sm:max-w-2xl sm:px-8 sm:pb-10 sm:pt-6 lg:max-w-5xl lg:px-10 xl:max-w-6xl">
           <div className="flex items-center justify-between">
-            <img src="/able-logo.png" alt="Able Buys Homes" className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm" />
+            <img
+              alt="Able Buys Homes"
+              className="h-12 w-12 rounded-xl bg-[#191919] p-0.5 object-contain shadow-sm"
+              src="/able-logo.png"
+            />
             <div className="flex items-center gap-3">
               <NotificationBell />
               <UserMenu />
@@ -85,7 +102,7 @@ export function KarenCockpit() {
           transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
           variants={reveal}
         >
-          <div className="mt-1 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
+          <div className="mt-1 grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             <InsightCard
               label="Photo approvals"
               tone={pendingCount ? "critical" : "success"}
@@ -93,6 +110,12 @@ export function KarenCockpit() {
             />
             <InsightCard label="Accounts to verify" value="3" tone="critical" />
             <InsightCard label="83(b) — you file" value="22d" tone="critical" />
+            <InsightCard
+              label="Gates approved"
+              onClick={() => setApprovedOpen(true)}
+              tone="success"
+              value={approvedCount !== null ? String(approvedCount) : "..."}
+            />
           </div>
         </motion.section>
 
@@ -106,7 +129,11 @@ export function KarenCockpit() {
             <SectionHeading id="approval-queue-heading">
               Waiting on you
             </SectionHeading>
-            <ApprovalQueue onCountChange={setPendingCount} role="karen" />
+            <ApprovalQueue
+              onCountChange={setPendingCount}
+              onStagesLoaded={handleStagesLoaded}
+              role="karen"
+            />
           </section>
 
           <section aria-labelledby="leasing-heading" className="pt-9">
@@ -116,9 +143,9 @@ export function KarenCockpit() {
             <div className="mt-4 space-y-3">
               {leasingItems.map((item) => (
                 <ChecklistRow
+                  done={item.done}
                   key={item.label}
                   label={item.label}
-                  done={item.done}
                 />
               ))}
             </div>
@@ -144,24 +171,38 @@ export function KarenCockpit() {
           Able OS · V1 Build
         </footer>
       </main>
+
+      <ApprovedGatesModal
+        loading={!stagesLoaded}
+        onClose={() => setApprovedOpen(false)}
+        open={approvedOpen}
+        role="karen"
+        stages={stages}
+      />
     </div>
   );
 }
+
+/* ── Subcomponents ──────────────────────────────────────── */
 
 type InsightCardProps = {
   label: string;
   value: string;
   tone: "critical" | "success";
+  onClick?: () => void;
 };
 
-function InsightCard({ label, value, tone }: InsightCardProps) {
+function InsightCard({ label, value, tone, onClick }: InsightCardProps) {
   const tones = {
     critical: "text-[#FF7832] bg-[#FFF1E9]",
     success: "text-[#16A34A] bg-[#EAF8EF]",
   };
 
-  return (
-    <article className="min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 text-center shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5">
+  const base =
+    "min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 text-center shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5";
+
+  const content = (
+    <>
       <p
         className={`inline-flex items-center justify-center rounded-lg px-2 py-1 text-[24px] font-extrabold leading-none tracking-[-0.06em] sm:text-[27px] ${tones[tone]}`}
       >
@@ -170,8 +211,22 @@ function InsightCard({ label, value, tone }: InsightCardProps) {
       <p className="mt-3 text-[9px] font-extrabold uppercase leading-tight tracking-[0.06em] text-[#718096] sm:text-[10px]">
         {label}
       </p>
-    </article>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        className={`${base} w-full cursor-pointer transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)]`}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <article className={base}>{content}</article>;
 }
 
 type SectionHeadingProps = {
