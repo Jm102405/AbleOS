@@ -17,8 +17,7 @@ import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 
-const NOTION_DEALS_URL =
-  "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
+
 
 type Order = {
   id: string;
@@ -66,7 +65,6 @@ const reveal = {
 };
 
 export function RajCockpit() {
-  const [dealsCount, setDealsCount] = React.useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [gateCount, setGateCount] = React.useState<number | null>(null);
@@ -80,14 +78,6 @@ export function RajCockpit() {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = React.useState(true);
   const [ordersError, setOrdersError] = React.useState("");
-
-  React.useEffect(() => {
-    fetch("/api/deals-count")
-      .then((res) => res.json())
-      .then((data) => setDealsCount(data.count))
-      .catch((err) => console.error("Failed to fetch deals count:", err));
-  }, []);
-
   const loadOrders = React.useCallback(async () => {
     setOrdersError("");
     try {
@@ -304,19 +294,17 @@ export function RajCockpit() {
             transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
             variants={reveal}
           >
-            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-              <StatCard
-                label="Deals in pipe"
-                value={dealsCount !== null ? String(dealsCount) : "..."}
-                tone="primary"
-                href={NOTION_DEALS_URL}
-              />
+            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
                 tone={gateCount ? "urgent" : "primary"}
                 value={gateCount !== null ? String(gateCount) : "..."}
               />
-              <StatCard label="Escalations open" value="0" tone="primary" />
+              <StatCard
+                label="Approval requests"
+                tone={orders.length ? "urgent" : "primary"}
+                value={ordersLoading ? "..." : String(orders.length)}
+              />
               <StatCard
                 label="Tasks assigned"
                 onClick={() => setTasksOpen(true)}
@@ -334,23 +322,12 @@ export function RajCockpit() {
           >
             <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
               <div>
+                {/* Gates on the left */}
                 <section aria-labelledby="gates-heading" className="pt-9">
                   <SectionHeading id="gates-heading">
                     Gates awaiting you
                   </SectionHeading>
                   <ApprovalQueue onCountChange={setGateCount} role="raj" />
-                </section>
-
-                <section aria-labelledby="escalations-heading" className="pt-9">
-                  <SectionHeading id="escalations-heading">
-                    Escalations
-                  </SectionHeading>
-                  <div className="mt-4 rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
-                    <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
-                      No active escalations · iMessage reserved for damage,
-                      safety, or inspection failures
-                    </p>
-                  </div>
                 </section>
 
                 <section aria-labelledby="approval-heading" className="pt-9">
@@ -422,75 +399,6 @@ export function RajCockpit() {
                         </button>
                       );
                     })}
-                  </div>
-                </section>
-              </div>
-
-              <div>
-                <section aria-labelledby="karen-heading" className="pt-9">
-                  <SectionHeading id="karen-heading">
-                    Karen&apos;s load
-                  </SectionHeading>
-                  <article className="mt-4 rounded-2xl border border-[#DCE4EE] bg-white p-5 shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-[15px] font-extrabold tracking-[-0.02em]">
-                          Karen Grant
-                        </h3>
-                        <p className="mt-1 text-[11px] font-medium text-[#6B7A90]">
-                          Current weekly allocation
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-right">
-                        <span className="text-[25px] font-extrabold tracking-[-0.05em] text-[#418BFF]">
-                          32
-                        </span>
-                        <span className="ml-1 text-[11px] font-bold text-[#6B7A90]">
-                          / 40 hrs
-                        </span>
-                      </p>
-                    </div>
-                    <div
-                      aria-label="Karen's capacity: 32 of 40 hours"
-                      aria-valuemax={40}
-                      aria-valuemin={0}
-                      aria-valuenow={32}
-                      className="mt-5 h-2.5 overflow-hidden rounded-full bg-[#E8EDF3]"
-                      role="progressbar"
-                    >
-                      <motion.div
-                        animate={{ width: "80%" }}
-                        className="h-full rounded-full bg-[#3B82C4]"
-                        initial={{ width: 0 }}
-                        transition={{
-                          delay: 0.38,
-                          duration: 0.55,
-                          ease: "easeOut",
-                        }}
-                      />
-                    </div>
-                    <div className="mt-3 flex justify-between text-[10px] font-bold uppercase tracking-[0.09em] text-[#8A99AC]">
-                      <span>Available</span>
-                      <span>8 hours</span>
-                    </div>
-                  </article>
-                </section>
-
-                <section aria-labelledby="open-items-heading" className="pt-9">
-                  <SectionHeading id="open-items-heading">
-                    Open items
-                  </SectionHeading>
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
-                    <OpenItem
-                      label={
-                        <>
-                          AHTX 83(b) election, July 30{" "}
-                          <span className="text-[#D95717]">(9 days out)</span>
-                        </>
-                      }
-                      status="Jul 30"
-                      tone="urgent"
-                    />
                   </div>
                 </section>
               </div>
@@ -629,30 +537,6 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
     >
       {children}
     </h2>
-  );
-}
-
-type OpenItemProps = {
-  label: React.ReactNode;
-  status: string;
-  tone: "urgent" | "neutral";
-};
-
-function OpenItem({ label, status, tone }: OpenItemProps) {
-  const statusStyle =
-    tone === "urgent"
-      ? "bg-[#FFF1E9] text-[#D95717]"
-      : "bg-[#EEF2F6] text-[#526176]";
-
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-[#E6ECF2] px-5 py-4 last:border-b-0">
-      <p className="text-[13px] font-bold text-[#1A1A2E]">{label}</p>
-      <span
-        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-wide ${statusStyle}`}
-      >
-        {status}
-      </span>
-    </div>
   );
 }
 

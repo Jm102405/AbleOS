@@ -4,6 +4,10 @@ import { ChevronDownIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
+import { apiFetch } from "../lib/apiFetch";
+
+const NOTION_DEALS_URL =
+  "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
 import { DealCard } from "../features/pipeline/DealCard";
 import { DealDetail } from "../features/pipeline/DealDetail";
 import { KpiTile } from "../features/pipeline/KpiTile";
@@ -20,6 +24,18 @@ export function PipelineBoard() {
     stages[0].name,
   );
   const [selectedDeal, setSelectedDeal] = React.useState<Deal | null>(null);
+  const [notionDeals, setNotionDeals] = React.useState<number | null>(null);
+
+  // The real total from the Notion Deals database. The stage tabs and cards
+  // below are still placeholder data until the pipeline is wired to Notion.
+  React.useEffect(() => {
+    apiFetch("/api/deals-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setNotionDeals(data.count);
+      })
+      .catch((err) => console.error("Failed to fetch deals count:", err));
+  }, []);
 
   const scopedDeals = React.useMemo(
     () =>
@@ -180,9 +196,10 @@ export function PipelineBoard() {
         className="grid grid-cols-2 gap-3 pt-5 lg:grid-cols-4"
       >
         <KpiTile
+          href={NOTION_DEALS_URL}
           label="Deals in pipe"
           tone="primary"
-          value={String(scopedDeals.length)}
+          value={notionDeals !== null ? String(notionDeals) : "..."}
         />
         <KpiTile
           label="Missing docs"

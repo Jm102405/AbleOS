@@ -1,7 +1,7 @@
   import React from "react";
   import { motion } from "framer-motion";
   import { UserMenu } from "../components/UserMenu";
-import { NotificationBell } from "../components/NotificationBell";
+  import { NotificationBell } from "../components/NotificationBell";
   import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
 
   type CrewStatus = {
