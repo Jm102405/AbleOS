@@ -15,6 +15,7 @@ import { ApprovalQueue } from "../features/approvals/ApprovalQueue";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import type { Task } from "../features/tasks/TaskCard";
+import { TaskChatModal } from "../features/tasks/TaskChatModal";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
@@ -113,6 +114,21 @@ export function RajCockpit() {
   const [tasksLoaded, setTasksLoaded] = React.useState(false);
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
+  const [chatTask, setChatTask] = React.useState<Task | null>(null);
+  const [commentCounts, setCommentCounts] = React.useState<
+    Record<string, number>
+  >({});
+
+  const loadCommentCounts = React.useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/task-comments?counts=1");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCommentCounts(data.counts ?? {});
+    } catch (err) {
+      console.error("Failed to load comment counts:", err);
+    }
+  }, []);
 
   const loadTaskCount = React.useCallback(async () => {
     try {
@@ -168,7 +184,8 @@ export function RajCockpit() {
   React.useEffect(() => {
     loadOrders();
     loadTaskCount();
-  }, [loadOrders, loadTaskCount]);
+    loadCommentCounts();
+  }, [loadOrders, loadTaskCount, loadCommentCounts]);
 
   // Poll every 30s, but only while the tab is visible. Also refresh on focus
   // so switching back to this tab shows current data immediately.
@@ -492,10 +509,18 @@ export function RajCockpit() {
         order={selectedOrder}
       />
 
+      <TaskChatModal
+        onChanged={loadCommentCounts}
+        onClose={() => setChatTask(null)}
+        task={chatTask}
+      />
+
       <AssignedTasksModal
+        commentCounts={commentCounts}
         loading={!tasksLoaded}
         onClose={() => setTasksOpen(false)}
         onDelete={deleteTask}
+        onOpenChat={setChatTask}
         onStatusChange={updateTaskStatus}
         open={tasksOpen}
         savingTask={savingTask}

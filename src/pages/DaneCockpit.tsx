@@ -5,6 +5,7 @@ import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
 import { TaskCard, type Task } from "../features/tasks/TaskCard";
+import { TaskChatModal } from "../features/tasks/TaskChatModal";
 import { ResetRehabButton } from "../components/ResetRehabButton";
 import { NotificationBell } from "../components/NotificationBell";
 
@@ -104,6 +105,21 @@ export function DaneCockpit() {
   const [tasksLoading, setTasksLoading] = React.useState(true);
   const [tasksError, setTasksError] = React.useState("");
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
+  const [chatTask, setChatTask] = React.useState<Task | null>(null);
+  const [commentCounts, setCommentCounts] = React.useState<
+    Record<string, number>
+  >({});
+
+  const loadCommentCounts = React.useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/task-comments?counts=1");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCommentCounts(data.counts ?? {});
+    } catch (err) {
+      console.error("Failed to load comment counts:", err);
+    }
+  }, []);
 
   const loadTasks = React.useCallback(async () => {
     setTasksError("");
@@ -150,7 +166,8 @@ export function DaneCockpit() {
   React.useEffect(() => {
     loadOrders();
     loadTasks();
-  }, [loadOrders, loadTasks]);
+    loadCommentCounts();
+  }, [loadOrders, loadTasks, loadCommentCounts]);
 
   // Poll every 30s, but only while the tab is actually visible — no point
   // burning requests on a phone in someone's pocket. Also refresh the moment
@@ -162,6 +179,7 @@ export function DaneCockpit() {
       if (!document.hidden) {
         loadOrders();
         loadTasks();
+        loadCommentCounts();
       }
     }, REFRESH_MS);
 
@@ -169,6 +187,7 @@ export function DaneCockpit() {
       if (!document.hidden) {
         loadOrders();
         loadTasks();
+        loadCommentCounts();
       }
     }
 
@@ -177,7 +196,7 @@ export function DaneCockpit() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [loadOrders, loadTasks]);
+  }, [loadOrders, loadTasks, loadCommentCounts]);
 
   React.useEffect(() => {
     if (!toast) return;
@@ -321,7 +340,9 @@ export function DaneCockpit() {
 
                 {tasks.map((task) => (
                   <TaskCard
+                    commentCount={commentCounts[task.id] ?? 0}
                     key={task.id}
+                    onOpenChat={() => setChatTask(task)}
                     onStatusChange={(status) =>
                       updateTaskStatus(task.id, status)
                     }
@@ -439,6 +460,12 @@ export function DaneCockpit() {
           Mockup · Not live data · Able OS Netlify cockpits
         </footer>
       </main>
+
+      <TaskChatModal
+        onChanged={loadCommentCounts}
+        onClose={() => setChatTask(null)}
+        task={chatTask}
+      />
 
       <AddOrderModal
         open={addOrderOpen}

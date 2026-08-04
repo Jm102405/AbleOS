@@ -3,6 +3,7 @@ import {
   ChevronDownIcon,
   ExternalLinkIcon,
   LoaderIcon,
+  MessageSquareIcon,
   Trash2Icon,
 } from "lucide-react";
 
@@ -61,6 +62,8 @@ type TaskCardProps = {
   readOnly?: boolean;
   onDelete?: () => void;
   deleting?: boolean;
+  onOpenChat?: () => void;
+  commentCount?: number;
 };
 
 export function TaskCard({
@@ -71,6 +74,8 @@ export function TaskCard({
   readOnly = false,
   onDelete,
   deleting = false,
+  onOpenChat,
+  commentCount = 0,
 }: TaskCardProps) {
   const [expanded, setExpanded] = React.useState(false);
   const hasFlow = Array.isArray(task.flow_steps) && task.flow_steps.length > 0;
@@ -170,8 +175,25 @@ export function TaskCard({
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wide text-[#8A99AC]">
           <span>{metaLabel}</span>
           {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
+          {onOpenChat && (
+            <button
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
+              onClick={onOpenChat}
+              type="button"
+            >
+              <MessageSquareIcon size={11} strokeWidth={2.75} />
+              Chat
+              {commentCount > 0 && (
+                <span className="rounded-full bg-[#418BFF] px-1.5 text-[9px] font-extrabold text-white">
+                  {commentCount}
+                </span>
+              )}
+            </button>
+          )}
           <button
-            className="ml-auto inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+            className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline ${
+              onOpenChat ? "" : "ml-auto"
+            }`}
             onClick={() => setExpanded((value) => !value)}
             type="button"
           >

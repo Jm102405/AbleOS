@@ -28,6 +28,8 @@ type AssignedTasksModalProps = {
   savingTask: string | null;
   onStatusChange: (id: string, status: Task["status"]) => void;
   onDelete: (id: string) => Promise<void>;
+  onOpenChat: (task: Task) => void;
+  commentCounts: Record<string, number>;
 };
 
 export function AssignedTasksModal({
@@ -38,7 +40,10 @@ export function AssignedTasksModal({
   savingTask,
   onStatusChange,
   onDelete,
+  onOpenChat,
+  commentCounts,
 }: AssignedTasksModalProps) {
+  const [filter, setFilter] = React.useState<Filter>("All");
   const [confirming, setConfirming] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -52,7 +57,6 @@ export function AssignedTasksModal({
       setDeleting(false);
     }
   }
-  const [filter, setFilter] = React.useState<Filter>("All");
 
   React.useEffect(() => {
     if (open) setFilter("All");
@@ -93,7 +97,7 @@ export function AssignedTasksModal({
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -163,9 +167,11 @@ export function AssignedTasksModal({
 
               {visible.map((task) => (
                 <TaskCard
+                  commentCount={commentCounts[task.id] ?? 0}
                   key={task.id}
                   metaLabel={`To ${STAFF_LABELS[task.assigned_to] ?? task.assigned_to}`}
                   onDelete={() => setConfirming(task)}
+                  onOpenChat={() => onOpenChat(task)}
                   onStatusChange={(status) => onStatusChange(task.id, status)}
                   readOnly
                   saving={savingTask === task.id}
@@ -175,6 +181,7 @@ export function AssignedTasksModal({
             </div>
           </motion.div>
 
+          {/* Delete confirmation, layered over the list */}
           <AnimatePresence>
             {confirming && (
               <motion.div
