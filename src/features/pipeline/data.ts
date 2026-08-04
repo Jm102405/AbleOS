@@ -10,12 +10,15 @@ export const stages: Array<{ name: DealStage }> = [
   { name: "Ops handoff" },
 ];
 
-export const birdDogOptions: Array<{ label: string; value: "All" | BirdDog }> =
-  [
-    { label: "All bird dogs", value: "All" },
-    { label: "Rex", value: "Rex Patel" },
-    { label: "Karen", value: "Karen Grant" },
-  ];
+const BIRD_DOGS: BirdDog[] = ["Rex", "Thomas", "Chirag", "Victor", "Anthony"];
+
+export const birdDogOptions: Array<{ label: string; value: "All" | BirdDog }> = [
+  { label: "All bird dogs", value: "All" },
+  // Sorted here rather than hand-ordered, so adding a name keeps it alphabetical.
+  ...[...BIRD_DOGS]
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ label: name, value: name })),
+];
 
 /**
  * Placeholder data. When the deal pipeline gets a real source (Notion or
@@ -27,7 +30,7 @@ export const deals: Deal[] = [
     property: "HTM Duplex - Side A",
     market: "Austin, TX - 2 units",
     value: "$810K",
-    birdDog: "Rex Patel",
+    birdDog: "Rex",
     stage: "Intake",
     daysInStage: 2,
     missingDocs: ["Current rent roll", "Latest utility bills"],
@@ -39,13 +42,13 @@ export const deals: Deal[] = [
     history: [
       {
         date: "Today - 9:14 AM",
-        title: "Submitted by Rex Patel",
+        title: "Submitted by Rex",
         detail: "Initial deal intake and property notes received.",
       },
       {
         date: "Yesterday - 5:42 PM",
         title: "Bird dog assigned",
-        detail: "Rex Patel added as sourcing owner.",
+        detail: "Rex added as sourcing owner.",
       },
     ],
   },
@@ -54,7 +57,7 @@ export const deals: Deal[] = [
     property: "Elm Street 4-plex",
     market: "Austin, TX - 4 units",
     value: "$1.2M",
-    birdDog: "Rex Patel",
+    birdDog: "Rex",
     stage: "Intake",
     daysInStage: 1,
     missingDocs: [],
@@ -66,13 +69,13 @@ export const deals: Deal[] = [
     history: [
       {
         date: "Today - 8:31 AM",
-        title: "Submitted by Rex Patel",
+        title: "Submitted by Rex",
         detail: "Property packet and seller contact were added.",
       },
       {
         date: "Yesterday - 2:05 PM",
         title: "Bird dog assigned",
-        detail: "Rex Patel added as sourcing owner.",
+        detail: "Rex added as sourcing owner.",
       },
     ],
   },
@@ -81,7 +84,7 @@ export const deals: Deal[] = [
     property: "North Loop Commons",
     market: "Austin, TX - 28 units",
     value: "$3.2M",
-    birdDog: "Karen Grant",
+    birdDog: "Chirag",
     stage: "Docs complete",
     daysInStage: 2,
     missingDocs: [],
@@ -98,7 +101,7 @@ export const deals: Deal[] = [
       },
       {
         date: "Jul 24 - 11:08 AM",
-        title: "Submitted by Karen Grant",
+        title: "Submitted by Thomas",
         detail: "New off-market opportunity logged.",
       },
     ],
@@ -108,7 +111,7 @@ export const deals: Deal[] = [
     property: "Barton Ridge Townhomes",
     market: "San Marcos, TX - 42 units",
     value: "$5.6M",
-    birdDog: "Rex Patel",
+    birdDog: "Rex",
     stage: "Docs generated",
     daysInStage: 1,
     missingDocs: [],
@@ -135,7 +138,7 @@ export const deals: Deal[] = [
     property: "South Congress Flats",
     market: "Austin, TX - 18 units",
     value: "$2.8M",
-    birdDog: "Karen Grant",
+    birdDog: "Victor",
     stage: "Proof of funds",
     daysInStage: 5,
     missingDocs: ["Bank letter"],
@@ -162,7 +165,7 @@ export const deals: Deal[] = [
     property: "Eastside Courtyard",
     market: "Round Rock, TX - 36 units",
     value: "$4.1M",
-    birdDog: "Karen Grant",
+    birdDog: "Anthony",
     stage: "Awaiting signatures",
     daysInStage: 4,
     missingDocs: [],
@@ -189,7 +192,7 @@ export const deals: Deal[] = [
     property: "Riverside Exchange",
     market: "Georgetown, TX - 54 units",
     value: "$7.9M",
-    birdDog: "Rex Patel",
+    birdDog: "Rex",
     stage: "Contract",
     daysInStage: 2,
     missingDocs: [],
@@ -216,7 +219,7 @@ export const deals: Deal[] = [
     property: "Cedar Grove Residences",
     market: "Kyle, TX - 24 units",
     value: "$3.6M",
-    birdDog: "Karen Grant",
+    birdDog: "Thomas",
     stage: "Ops handoff",
     daysInStage: 1,
     missingDocs: [],

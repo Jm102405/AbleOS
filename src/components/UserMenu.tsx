@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LogOutIcon } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthProvider";
+import { PushToggle } from "./PushToggle";
 
 const COCKPITS = [
   { key: "raj", name: "Raj", role: "CEO", path: "/raj", initial: "R" },
@@ -155,6 +156,8 @@ export function UserMenu() {
                 ))}
               </div>
             )}
+
+            <PushToggle />
 
             {/* Sign out, always last */}
             <button

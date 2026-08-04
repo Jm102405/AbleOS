@@ -5,6 +5,7 @@
 import { Client } from "@notionhq/client";
 import { createClient } from "@supabase/supabase-js";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
+import { sendPush } from "../lib/sendPush.js";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
@@ -80,6 +81,12 @@ export default async function handler(req, res) {
         if (notifyError) {
             console.error("Failed to create notification:", notifyError);
         }
+
+        await sendPush("jeremiah", {
+            title: `${stageName} needs your approval`,
+            body: `${side} - ${phase} - photos from ${caller.profile.full_name}`,
+            url: "/jeremiah",
+        });
 
         return res.status(200).json({ success: true });
     } catch (error) {

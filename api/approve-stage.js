@@ -10,6 +10,7 @@ import { Client } from "@notionhq/client";
 import { createClient } from "@supabase/supabase-js";
 import { JWT } from "google-auth-library";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
+import { sendPush } from "../lib/sendPush.js";
 import { getFolderId } from "./drive-upload-url.js";
 
 const REHAB_DATABASE_ID = "39f97b1c96b680dd9a77d8d83da4793c";
@@ -193,6 +194,12 @@ export default async function handler(req, res) {
                     body: trimmedNote,
                     link: `/${crewLead}`,
                 });
+
+                await sendPush(crewLead, {
+                    title: `${stage.stageName} sent back`,
+                    body: trimmedNote,
+                    url: `/${crewLead}`,
+                });
             }
 
             return res.status(200).json({ success: true, outcome: "declined" });
@@ -220,6 +227,14 @@ export default async function handler(req, res) {
                     : `${stage.stageName} needs your approval`,
                 body: `${stage.side} - ${stage.phase}`,
                 link: `/${recipient}`,
+            });
+
+            await sendPush(recipient, {
+                title: finished
+                    ? `${stage.stageName} fully approved`
+                    : `${stage.stageName} needs your approval`,
+                body: `${stage.side} - ${stage.phase}`,
+                url: `/${recipient}`,
             });
         }
 

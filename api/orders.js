@@ -5,6 +5,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
+import { sendPush } from "../lib/sendPush.js";
 
 const PRIORITIES = ["Low", "Normal", "Urgent"];
 const STATUSES = ["Pending", "Approved", "Declined"];
@@ -156,6 +157,12 @@ export default async function handler(req, res) {
                 console.error("Failed to create notification:", notifyError);
             }
 
+            await sendPush("raj", {
+                title: `New order from ${profile.full_name}`,
+                body: data.order_name,
+                url: "/raj",
+            });
+
             return res.status(201).json({ order: data });
         }
 
@@ -208,6 +215,11 @@ export default async function handler(req, res) {
                 console.error("Failed to create notification:", decideNotifyError);
             }
 
+            await sendPush("dane", {
+                title: `Order ${status.toLowerCase()} by ${profile.full_name}`,
+                body: data.order_name,
+                url: "/dane",
+            });
             return res.status(200).json({ order: data });
         }
 

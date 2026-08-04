@@ -5,6 +5,7 @@ import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
 import { TaskCard, type Task } from "../features/tasks/TaskCard";
+import { ResetRehabButton } from "../components/ResetRehabButton";
 import { NotificationBell } from "../components/NotificationBell";
 
 type Order = {
@@ -321,7 +322,9 @@ export function DaneCockpit() {
                 {tasks.map((task) => (
                   <TaskCard
                     key={task.id}
-                    onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                    onStatusChange={(status) =>
+                      updateTaskStatus(task.id, status)
+                    }
                     saving={savingTask === task.id}
                     task={task}
                   />
@@ -418,6 +421,19 @@ export function DaneCockpit() {
             </section>
           </div>
         </motion.div>
+
+        <section aria-labelledby="danger-heading" className="pt-9">
+          <SectionHeading id="danger-heading">Danger zone</SectionHeading>
+          <div className="mt-4 rounded-2xl border border-[#FECACA] bg-[#FFF8F4] px-5 py-4">
+            <p className="text-[11px] font-medium leading-relaxed text-[#733614]">
+              Wipes every rehab photo and approval so the crew starts clean. Use
+              this for testing, not once the build is live.
+            </p>
+            <div className="mt-3">
+              <ResetRehabButton />
+            </div>
+          </div>
+        </section>
 
         <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
           Mockup · Not live data · Able OS Netlify cockpits

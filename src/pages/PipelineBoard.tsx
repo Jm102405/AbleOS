@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDownIcon, FilterIcon } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
@@ -150,8 +150,8 @@ export function PipelineBoard() {
         >
           Bird dog view
         </label>
-        <div className="mt-2 flex items-center gap-3">
-          <div className="relative min-w-0 flex-1">
+        <div className="mt-2">
+          <div className="relative">
             <select
               className="h-12 w-full appearance-none rounded-xl border border-[#DCE4EE] bg-white px-4 pr-10 text-[13px] font-extrabold text-[#1A1A2E] shadow-[0_4px_10px_rgba(30,58,138,0.04)] focus:outline-none focus:ring-2 focus:ring-[#3B82C4]"
               id="bird-dog-filter"
@@ -171,12 +171,6 @@ export function PipelineBoard() {
               className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B]"
               size={18}
             />
-          </div>
-          <div
-            aria-label={`Filtering deals for ${activeBirdDogLabel}`}
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#DCE4EE] bg-white text-[#3B82C4] shadow-[0_4px_10px_rgba(30,58,138,0.04)]"
-          >
-            <FilterIcon aria-hidden="true" size={18} />
           </div>
         </div>
       </section>

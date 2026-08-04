@@ -8,6 +8,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
+import { sendPush } from "../lib/sendPush.js";
 
 const ASSIGNEES = ["dane", "karen", "jeremiah", "colton", "zo"];
 const TYPES = ["Task", "Feature"];
@@ -181,6 +182,12 @@ export default async function handler(req, res) {
                 console.error("Failed to create notification:", notifyError);
             }
 
+            await sendPush(assignedTo, {
+                title: `New ${type.toLowerCase()} from ${profile.full_name}`,
+                body: cleanTitle,
+                url: `/${assignedTo}`,
+            });
+
             return res.status(201).json({ task: data });
         }
 
@@ -240,6 +247,12 @@ export default async function handler(req, res) {
                 if (notifyError) {
                     console.error("Failed to create notification:", notifyError);
                 }
+
+                await sendPush(existing.created_by, {
+                    title: `${profile.full_name} finished a ${existing.task_type.toLowerCase()}`,
+                    body: existing.title,
+                    url: "/raj",
+                });
             }
 
             return res.status(200).json({ task: data });

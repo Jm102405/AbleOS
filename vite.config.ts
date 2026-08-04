@@ -10,10 +10,12 @@ export default defineConfig({
       // "prompt" hands us control of when the new worker takes over, so an
       // update never interrupts a photo upload in progress.
       registerType: "prompt",
-      includeAssets: ["icon-192.png", "icon-512.png"],
+      includeAssets: ["icon-192.png", "icon-512.png", "push-handler.js"],
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
+        // Pulls our push and notificationclick handlers into the generated worker.
+        importScripts: ["push-handler.js"],
       },
       manifest: {
         name: "Able OS",

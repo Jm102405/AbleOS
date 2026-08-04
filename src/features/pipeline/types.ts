@@ -1,6 +1,6 @@
 export type DocumentStatus = "Complete" | "Missing" | "Generated";
 
-export type BirdDog = "Rex Patel" | "Karen Grant";
+export type BirdDog = "Rex" | "Thomas" | "Chirag" | "Victor" | "Anthony";
 
 export type DealStage =
   | "Intake"
