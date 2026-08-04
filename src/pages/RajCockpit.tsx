@@ -297,7 +297,6 @@ export function RajCockpit() {
               </button>
             </div>
           </motion.section>
-
           <motion.section
             animate="visible"
             aria-labelledby="queue-heading"
@@ -331,7 +330,6 @@ export function RajCockpit() {
               />
             </div>
           </motion.section>
-
           <motion.div
             animate="visible"
             initial="hidden"
@@ -426,10 +424,6 @@ export function RajCockpit() {
               </div>
             </div>
           </motion.div>
-
-          <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
-            Able OS · V1 Build
-          </footer>
           <section aria-labelledby="drive-heading" className="pt-9">
             <h2
               className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
@@ -439,6 +433,9 @@ export function RajCockpit() {
             </h2>
             <DriveLinksCard />
           </section>
+          <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
+            Able OS · V1 Build
+          </footer>
         </main>
       </div>
 
