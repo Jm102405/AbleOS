@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
 import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
+import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 import { DriveLinksCard } from "../components/DriveLinksCard";
 import { AssignTaskModal } from "../components/AssignTaskModal";
@@ -69,6 +70,7 @@ export function RajCockpit() {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [gateCount, setGateCount] = React.useState<number | null>(null);
+  const [gatesOpen, setGatesOpen] = React.useState(false);
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [stagesLoaded, setStagesLoaded] = React.useState(false);
   const [approvedOpen, setApprovedOpen] = React.useState(false);
@@ -373,12 +375,46 @@ export function RajCockpit() {
                   <SectionHeading id="gates-heading">
                     Gates awaiting you
                   </SectionHeading>
+                  <button
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                    onClick={() => setGatesOpen(true)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                        {gateCount === null
+                          ? "Loading gates..."
+                          : gateCount === 0
+                            ? "Nothing waiting on you"
+                            : `Review ${gateCount} gate${gateCount === 1 ? "" : "s"}`}
+                      </span>
+                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                        Photos submitted for your sign-off
+                      </span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                        gateCount
+                          ? "bg-[#FFF1E9] text-[#FF7832]"
+                          : "bg-[#EAF8EF] text-[#16A34A]"
+                      }`}
+                    >
+                      {gateCount === null ? "..." : gateCount}
+                    </span>
+                  </button>
+                </section>
+
+                <GateQueueModal
+                  count={gateCount}
+                  onClose={() => setGatesOpen(false)}
+                  open={gatesOpen}
+                >
                   <ApprovalQueue
                     onCountChange={setGateCount}
                     onStagesLoaded={handleStagesLoaded}
                     role="raj"
                   />
-                </section>
+                </GateQueueModal>
 
                 <section aria-labelledby="approval-heading" className="pt-9">
                   <SectionHeading id="approval-heading">
