@@ -350,13 +350,11 @@ export function RajCockpit() {
               />
               <StatCard
                 label="Tasks assigned"
-                onClick={() => setTasksOpen(true)}
                 tone="primary"
                 value={openTaskCount !== null ? String(openTaskCount) : "..."}
               />
               <StatCard
                 label="Gates approved"
-                onClick={() => setApprovedOpen(true)}
                 tone="primary"
                 value={approvedCount !== null ? String(approvedCount) : "..."}
               />
@@ -368,7 +366,7 @@ export function RajCockpit() {
             transition={{ delay: 0.16, duration: 0.38, ease: "easeOut" }}
             variants={reveal}
           >
-            <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
+            <div>
               <div>
                 {/* Gates on the left */}
                 <section aria-labelledby="gates-heading" className="pt-9">
@@ -415,6 +413,68 @@ export function RajCockpit() {
                     role="raj"
                   />
                 </GateQueueModal>
+
+                <section aria-labelledby="approved-heading" className="pt-9">
+                  <SectionHeading id="approved-heading">
+                    Gates approved
+                  </SectionHeading>
+
+                  <button
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                    onClick={() => setApprovedOpen(true)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                        {approvedCount === null
+                          ? "Loading..."
+                          : approvedCount === 0
+                            ? "Nothing approved yet"
+                            : `View ${approvedCount} approved gate${approvedCount === 1 ? "" : "s"}`}
+                      </span>
+                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                        Every stage you have signed off
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-[#EAF8EF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#16A34A]">
+                      {approvedCount === null ? "..." : approvedCount}
+                    </span>
+                  </button>
+                </section>
+
+                <section aria-labelledby="tasks-heading" className="pt-9">
+                  <SectionHeading id="tasks-heading">
+                    Tasks assigned
+                  </SectionHeading>
+
+                  <button
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                    onClick={() => setTasksOpen(true)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                        {openTaskCount === null
+                          ? "Loading..."
+                          : openTaskCount === 0
+                            ? "No open tasks"
+                            : `View ${openTaskCount} open task${openTaskCount === 1 ? "" : "s"}`}
+                      </span>
+                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                        Work you assigned to the team
+                      </span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                        openTaskCount
+                          ? "bg-[#EEF5FF] text-[#418BFF]"
+                          : "bg-[#F1F5F9] text-[#8291A5]"
+                      }`}
+                    >
+                      {openTaskCount === null ? "..." : openTaskCount}
+                    </span>
+                  </button>
+                </section>
 
                 <section aria-labelledby="approval-heading" className="pt-9">
                   <SectionHeading id="approval-heading">
