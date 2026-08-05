@@ -18,6 +18,12 @@ const REHAB_DATABASE_ID = "39f97b1c96b680dd9a77d8d83da4793c";
 const CREW_LEAD = { "Side A": "colton", "Side B": "zo" };
 
 // Who approves at each step, and what must already be true for them to act.
+/**
+ * Stages that skip Jeremiah and Karen and go straight to Raj. Must match the
+ * same set in api/update-stage.js.
+ */
+const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
+
 const CHAIN = {
     jeremiah: { field: "Jeremiah Approved", next: "karen" },
     karen: { field: "Karen Approved", next: "raj" },
@@ -93,6 +99,13 @@ function readStage(page) {
 /** Is it this person's turn? */
 function canAct(cockpit, stage) {
     if (!stage.photoUploaded) return "No photo has been uploaded yet";
+
+    // Before Teardown Photos goes straight to Raj, so the usual order does
+    // not apply and the other two have no business approving it.
+    if (DIRECT_TO_RAJ.has(stage.stageName)) {
+        if (cockpit !== "raj") return "This stage goes straight to Raj";
+        return stage.rajApproved ? "You already approved this stage" : null;
+    }
 
     if (cockpit === "jeremiah") {
         return stage.jeremiahApproved ? "You already approved this stage" : null;

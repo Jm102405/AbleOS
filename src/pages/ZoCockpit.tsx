@@ -30,6 +30,7 @@ const reveal = {
 // Notion returns rows in arbitrary order. Pin each phase to the SOP sequence
 // so the checklist reads the same way every visit.
 const STAGE_ORDER: Record<string, string[]> = {
+  "Phase 0": ["Before Teardown Photos"],
   "Phase 1": [
     "Demo",
     "Structural Repair",
@@ -405,6 +406,7 @@ export function ZoCockpit() {
                 </p>
               ) : (
                 [
+                  { key: "Phase 0", label: "Phase 0 — Before Teardown" },
                   { key: "Phase 1", label: "Phase 1 — Drywall Ready" },
                   { key: "Phase 2", label: "Phase 2 — Ready to Lay Flooring" },
                   { key: "Phase 3", label: "Phase 3 — Inside Done" },

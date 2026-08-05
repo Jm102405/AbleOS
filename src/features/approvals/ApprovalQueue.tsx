@@ -5,6 +5,12 @@ import { apiFetch } from "../../lib/apiFetch";
 
 export type ApproverRole = "jeremiah" | "karen" | "raj";
 
+/**
+ * Stages that skip Jeremiah and Karen and go straight to Raj. Must match the
+ * same set in api/approve-stage.js and api/update-stage.js.
+ */
+const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
+
 export type Stage = {
   notionPageId: string;
   stageName: string;
@@ -30,6 +36,10 @@ const WAITING_ON: Record<ApproverRole, string> = {
 
 function isMyTurn(role: ApproverRole, stage: Stage) {
   if (!stage.photoUploaded) return false;
+  if (DIRECT_TO_RAJ.has(stage.stageName)) {
+    return role === "raj" && !stage.rajApproved;
+  }
+
   if (role === "jeremiah") return !stage.jeremiahApproved;
   if (role === "karen") return stage.jeremiahApproved && !stage.karenApproved;
   return stage.karenApproved && !stage.rajApproved;

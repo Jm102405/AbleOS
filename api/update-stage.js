@@ -1,13 +1,20 @@
 // api/update-stage.js
 // Saves the Drive folder link to a Notion rehab stage, ticks "Photo Uploaded",
-// and puts the stage into Jeremiah's approval queue.
-
+// and puts the stage into the right person's approval queue.
 import { Client } from "@notionhq/client";
 import { createClient } from "@supabase/supabase-js";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
 import { sendPush } from "../lib/sendPush.js";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
+
+/**
+ * Stages that skip Jeremiah and Karen and go straight to Raj. Before Teardown
+ * Photos is a record of the property as found, not a work gate, so it does not
+ * need three sign-offs before demo can start. Must match the same set in
+ * api/approve-stage.js and src/features/approvals/ApprovalQueue.tsx.
+ */
+const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
 
 let cachedSupabase = null;
 
@@ -47,45 +54,51 @@ export default async function handler(req, res) {
     }
 
     try {
-        await notion.pages.update({
-            page_id: notionPageId,
-            properties: {
-                "Drive Photo Link": { url: driveUrl },
-                "Photo Uploaded": { checkbox: true },
-                // A re-upload after a decline starts the chain over.
-                "Jeremiah Approved": { checkbox: false },
-                "Karen Approved": { checkbox: false },
-                "Raj Approved": { checkbox: false },
-                Status: { select: { name: "In Progress" } },
-            },
-        });
-
-        // Read back the stage details so the notification is specific.
+        // Read the stage first - which approvals get reset depends on which
+        // stage this is, so we cannot write before we know.
         const page = await notion.pages.retrieve({ page_id: notionPageId });
         const props = page.properties;
+
         const stageName =
             props["Stage Name"]?.rich_text?.[0]?.plain_text || "A stage";
         const side = props["Side"]?.select?.name || "";
         const phase = props["Phase"]?.select?.name || "";
 
+        const skipsChain = DIRECT_TO_RAJ.has(stageName);
+        const approver = skipsChain ? "raj" : "jeremiah";
+
+        await notion.pages.update({
+            page_id: notionPageId,
+            properties: {
+                "Drive Photo Link": { url: driveUrl },
+                "Photo Uploaded": { checkbox: true },
+                // A re-upload after a decline starts the chain over. Stages that
+                // skip the chain keep Jeremiah and Karen ticked permanently.
+                "Jeremiah Approved": { checkbox: skipsChain },
+                "Karen Approved": { checkbox: skipsChain },
+                "Raj Approved": { checkbox: false },
+                Status: { select: { name: "In Progress" } },
+            },
+        });
+
         const { error: notifyError } = await getSupabase()
             .from("notifications")
             .insert({
-                recipient: "jeremiah",
+                recipient: approver,
                 type: "stage_awaiting_you",
                 title: `${stageName} needs your approval`,
                 body: `${side} - ${phase} - photos from ${caller.profile.full_name}`,
-                link: `/jeremiah?stage=${notionPageId}`,
+                link: `/${approver}?stage=${notionPageId}`,
             });
 
         if (notifyError) {
             console.error("Failed to create notification:", notifyError);
         }
 
-        await sendPush("jeremiah", {
+        await sendPush(approver, {
             title: `${stageName} needs your approval`,
             body: `${side} - ${phase} - photos from ${caller.profile.full_name}`,
-            url: `/jeremiah?stage=${notionPageId}`,
+            url: `/${approver}?stage=${notionPageId}`,
         });
 
         return res.status(200).json({ success: true });

@@ -7,6 +7,7 @@ import { JWT } from "google-auth-library";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
 
 const SIDE_A = {
+    "Before Teardown Photos": "1yEyYGh0KzmQbOk_qSMPI5yZXY9HroS6G",
     "Demo": "1XJ73f5dfUlLnPwiSgEamtPPTKKacfm44",
     "Structural Repair": "1obTNQBdTNID2DDpGrJPrObHCoQCSLFbJ",
     "Framing": "1eV6HPBte0RDyaFH2dQ9qBkrWfzBCCJpx",
@@ -30,6 +31,7 @@ const SIDE_A = {
 };
 
 const SIDE_B = {
+    "Before Teardown Photos": "1sdVIwyfecjrEZTP8yPKe4p4q_QieUiRW",
     "Demo": "1d8Uhm1qV7Ox_Oz5qok9gx-nctXpghqhv",
     "Structural Repair": "1UOHnOM_VSaxTl3egkroIC4XhJ_HzYfL5",
     "Framing": "17R0dbFj24Fs5C0xCcyE3SLQC8PUVfCq0",
