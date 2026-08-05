@@ -108,6 +108,23 @@ function canAct(cockpit, stage) {
     return "You don't have permission to approve stages";
 }
 
+/**
+ * Once someone approves or declines, their own "needs your approval" notice is
+ * obsolete. Delete it so it disappears from their bell rather than sitting
+ * there after the decision is already made.
+ */
+async function clearGateNotice(supabase, cockpit, notionPageId) {
+    const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("recipient", cockpit)
+        .eq("type", "stage_awaiting_you")
+        .eq("link", `/${cockpit}?stage=${notionPageId}`);
+
+    // Never fail the approval over a housekeeping delete.
+    if (error) console.error("Could not clear the gate notification:", error);
+}
+
 export default async function handler(req, res) {
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
@@ -186,6 +203,8 @@ export default async function handler(req, res) {
                 },
             });
 
+            await clearGateNotice(supabase, profile.cockpit, notionPageId);
+
             if (crewLead) {
                 await supabase.from("notifications").insert({
                     recipient: crewLead,
@@ -214,6 +233,8 @@ export default async function handler(req, res) {
         }
 
         await notion.pages.update({ page_id: notionPageId, properties });
+
+        await clearGateNotice(supabase, profile.cockpit, notionPageId);
 
         // Tell whoever is next, or the crew lead if the chain is complete.
         const recipient = step.next || crewLead;

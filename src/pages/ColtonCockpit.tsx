@@ -1,4 +1,8 @@
 import React from "react";
+import {
+  scrollToSection,
+  useNotificationTarget,
+} from "../lib/useNotificationTarget";
 import { motion } from "framer-motion";
 import { UserMenu } from "../components/UserMenu";
 import { NotificationBell } from "../components/NotificationBell";
@@ -61,6 +65,19 @@ function orderIndex(phase: string, stageName: string) {
 
 export function ColtonCockpit() {
   const [stages, setStages] = React.useState<Stage[]>([]);
+
+  /* Notifications deep-link into here, e.g. ?stage=<notion page id> */
+  const { clear, target } = useNotificationTarget();
+
+  React.useEffect(() => {
+    if (target.stage) {
+      scrollToSection("checklist-heading");
+      clear();
+      return;
+    }
+
+    if (target.task || target.order) clear();
+  }, [clear, target]);
   const [loading, setLoading] = React.useState(true);
   const [uploadStates, setUploadStates] = React.useState<
     Record<string, UploadState>
