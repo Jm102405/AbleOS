@@ -71,6 +71,7 @@ export function RajCockpit() {
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [gateCount, setGateCount] = React.useState<number | null>(null);
   const [gatesOpen, setGatesOpen] = React.useState(false);
+  const [ordersOpen, setOrdersOpen] = React.useState(false);
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [stagesLoaded, setStagesLoaded] = React.useState(false);
   const [approvedOpen, setApprovedOpen] = React.useState(false);
@@ -404,8 +405,10 @@ export function RajCockpit() {
 
                 <GateQueueModal
                   count={gateCount}
+                  eyebrow="Photo approvals"
                   onClose={() => setGatesOpen(false)}
                   open={gatesOpen}
+                  title="Gates awaiting you"
                 >
                   <ApprovalQueue
                     onCountChange={setGateCount}
@@ -480,7 +483,43 @@ export function RajCockpit() {
                   <SectionHeading id="approval-heading">
                     Approval requests
                   </SectionHeading>
-                  <div className="mt-4 space-y-3">
+                  <button
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                    onClick={() => setOrdersOpen(true)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                        {ordersLoading
+                          ? "Loading..."
+                          : orders.length === 0
+                            ? "Nothing awaiting your approval"
+                            : `Review ${orders.length} request${orders.length === 1 ? "" : "s"}`}
+                      </span>
+                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                        Orders submitted for your decision
+                      </span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                        orders.length
+                          ? "bg-[#FFF1E9] text-[#FF7832]"
+                          : "bg-[#EAF8EF] text-[#16A34A]"
+                      }`}
+                    >
+                      {ordersLoading ? "..." : orders.length}
+                    </span>
+                  </button>
+                </section>
+
+                <GateQueueModal
+                  count={ordersLoading ? null : orders.length}
+                  eyebrow="From the team"
+                  onClose={() => setOrdersOpen(false)}
+                  open={ordersOpen}
+                  title="Approval requests"
+                >
+                  <div className="space-y-3">
                     {ordersLoading && (
                       <p className="text-[12px] font-medium text-[#8A99AC]">
                         Loading requests…
@@ -546,7 +585,7 @@ export function RajCockpit() {
                       );
                     })}
                   </div>
-                </section>
+                </GateQueueModal>
               </div>
             </div>
           </motion.div>

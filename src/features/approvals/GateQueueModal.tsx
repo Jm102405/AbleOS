@@ -4,8 +4,10 @@ import { XIcon } from "lucide-react";
 type GateQueueModalProps = {
   open: boolean;
   onClose: () => void;
-  /** Null while the queue is still loading. */
+  /** Null while the contents are still loading. */
   count: number | null;
+  eyebrow: string;
+  title: string;
   children: React.ReactNode;
 };
 
@@ -19,6 +21,8 @@ export function GateQueueModal({
   open,
   onClose,
   count,
+  eyebrow,
+  title,
   children,
 }: GateQueueModalProps) {
   React.useEffect(() => {
@@ -50,10 +54,10 @@ export function GateQueueModal({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
-                Photo approvals
+                {eyebrow}
               </p>
               <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
-                Gates awaiting you
+                {title}
               </h2>
             </div>
             <div className="flex shrink-0 items-center gap-2">
