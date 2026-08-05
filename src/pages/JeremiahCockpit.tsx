@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { ExternalLinkIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { NotificationBell } from "../components/NotificationBell";
 import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
@@ -7,17 +8,17 @@ import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 
 type CrewStatus = {
   name: string;
-  detail: string;
+  url: string;
 };
 
 const crewStatuses: CrewStatus[] = [
   {
     name: "Colton — Side A",
-    detail: "Phase 2 of 4 · awaiting your photo approval to advance",
+    url: "https://drive.google.com/drive/folders/1GCgpD8uJ1K-84NBkzZNs-ATp1clCUevB",
   },
   {
     name: "Zo — Side B",
-    detail: "Phase 1 of 4 · on schedule",
+    url: "https://drive.google.com/drive/folders/1FRPLHONtP_SobaVVIPqY9BmeaEgCzuBM",
   },
 ];
 
@@ -135,20 +136,26 @@ export function JeremiahCockpit() {
               </SectionHeading>
               <div className="mt-4 space-y-3">
                 {crewStatuses.map((crew) => (
-                  <article
-                    className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5"
+                  <a
+                    className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                    href={crew.url}
                     key={crew.name}
+                    rel="noopener noreferrer"
+                    target="_blank"
                   >
                     <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
                     <div className="min-w-0 flex-1">
                       <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
                         {crew.name}
                       </h3>
-                      <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                        {crew.detail}
-                      </p>
                     </div>
-                  </article>
+                    <ExternalLinkIcon
+                      aria-hidden="true"
+                      className="shrink-0 text-[#93A3B8]"
+                      size={15}
+                      strokeWidth={2.5}
+                    />
+                  </a>
                 ))}
               </div>
             </section>

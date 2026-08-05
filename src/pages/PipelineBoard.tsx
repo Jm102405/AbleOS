@@ -158,47 +158,30 @@ export function PipelineBoard() {
       }
     >
       <section
-        aria-labelledby="pipeline-overview"
-        className="relative -mt-4 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_8px_20px_rgba(30,58,138,0.08)]"
+        aria-label="Pipeline metrics"
+        className="grid grid-cols-2 gap-3 pt-2 lg:grid-cols-4"
       >
-        <div
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-1.5 bg-[#1E3A8A]"
+        <KpiTile
+          href={NOTION_DEALS_URL}
+          label="Deals in pipe"
+          tone="primary"
+          value={loading ? "..." : String(metrics.active)}
         />
-        <div className="px-5 py-4 pl-6 sm:px-7 sm:py-5 sm:pl-8">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
-              Active deal flow
-            </p>
-            <button
-              aria-label="Refresh deals"
-              className="grid h-7 w-7 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9] hover:text-[#526176]"
-              onClick={refresh}
-              type="button"
-            >
-              <RefreshCwIcon
-                aria-hidden="true"
-                className={loading ? "animate-spin" : ""}
-                size={14}
-                strokeWidth={2.5}
-              />
-            </button>
-          </div>
-          <div className="mt-1 flex items-end justify-between gap-4">
-            <h2
-              className="text-[18px] font-extrabold tracking-[-0.03em]"
-              id="pipeline-overview"
-            >
-              {loading ? "Loading deals..." : `${metrics.active} active deals`}
-            </h2>
-            <p className="text-[11px] font-bold text-[#64748B]">
-              {stages.length} stages
-            </p>
-          </div>
-          {error ? (
-            <p className="mt-2 text-[11px] font-bold text-[#DC2626]">{error}</p>
-          ) : null}
-        </div>
+        <KpiTile
+          label="Awaiting docs"
+          tone={metrics.awaitingDocs > 0 ? "urgent" : "neutral"}
+          value={loading ? "..." : String(metrics.awaitingDocs)}
+        />
+        <KpiTile
+          label="Avg days in stage"
+          tone="neutral"
+          value={loading ? "..." : metrics.avgDays}
+        />
+        <KpiTile
+          label="Stalled 4+ days"
+          tone={metrics.stalled > 0 ? "urgent" : "neutral"}
+          value={loading ? "..." : String(metrics.stalled)}
+        />
       </section>
 
       <section aria-labelledby="bird-dog-filter-label" className="pt-7">
@@ -232,40 +215,32 @@ export function PipelineBoard() {
         </div>
       </section>
 
-      <section
-        aria-label="Pipeline metrics"
-        className="grid grid-cols-2 gap-3 pt-5 lg:grid-cols-4"
-      >
-        <KpiTile
-          href={NOTION_DEALS_URL}
-          label="Deals in pipe"
-          tone="primary"
-          value={loading ? "..." : String(metrics.active)}
-        />
-        <KpiTile
-          label="Awaiting docs"
-          tone={metrics.awaitingDocs > 0 ? "urgent" : "neutral"}
-          value={loading ? "..." : String(metrics.awaitingDocs)}
-        />
-        <KpiTile
-          label="Avg days in stage"
-          tone="neutral"
-          value={loading ? "..." : metrics.avgDays}
-        />
-        <KpiTile
-          label="Stalled 4+ days"
-          tone={metrics.stalled > 0 ? "urgent" : "neutral"}
-          value={loading ? "..." : String(metrics.stalled)}
-        />
-      </section>
+      {error ? (
+        <p className="pt-3 text-[11px] font-bold text-[#DC2626]">{error}</p>
+      ) : null}
 
       <section aria-labelledby="stage-browser-title" className="pt-8">
-        <h2
-          className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
-          id="stage-browser-title"
-        >
-          Deals by stage
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2
+            className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+            id="stage-browser-title"
+          >
+            Deals by stage
+          </h2>
+          <button
+            aria-label="Refresh deals"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#E3EDF8] hover:text-[#526176]"
+            onClick={refresh}
+            type="button"
+          >
+            <RefreshCwIcon
+              aria-hidden="true"
+              className={loading ? "animate-spin" : ""}
+              size={15}
+              strokeWidth={2.5}
+            />
+          </button>
+        </div>
 
         <button
           className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
