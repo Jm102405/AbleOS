@@ -75,7 +75,7 @@ export default async function handler(req, res) {
                 type: "stage_awaiting_you",
                 title: `${stageName} needs your approval`,
                 body: `${side} - ${phase} - photos from ${caller.profile.full_name}`,
-                link: "/jeremiah",
+                link: `/jeremiah?stage=${notionPageId}`,
             });
 
         if (notifyError) {
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
         await sendPush("jeremiah", {
             title: `${stageName} needs your approval`,
             body: `${side} - ${phase} - photos from ${caller.profile.full_name}`,
-            url: "/jeremiah",
+            url: `/jeremiah?stage=${notionPageId}`,
         });
 
         return res.status(200).json({ success: true });

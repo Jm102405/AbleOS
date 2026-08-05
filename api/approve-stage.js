@@ -192,13 +192,13 @@ export default async function handler(req, res) {
                     type: "stage_declined",
                     title: `${profile.full_name} declined ${stage.stageName}`,
                     body: trimmedNote,
-                    link: `/${crewLead}`,
+                    link: `/${crewLead}?stage=${notionPageId}`,
                 });
 
                 await sendPush(crewLead, {
                     title: `${stage.stageName} sent back`,
                     body: trimmedNote,
-                    url: `/${crewLead}`,
+                    url: `/${crewLead}?stage=${notionPageId}`,
                 });
             }
 
@@ -226,7 +226,7 @@ export default async function handler(req, res) {
                     ? `${stage.stageName} fully approved`
                     : `${stage.stageName} needs your approval`,
                 body: `${stage.side} - ${stage.phase}`,
-                link: `/${recipient}`,
+                link: `/${recipient}?stage=${notionPageId}`,
             });
 
             await sendPush(recipient, {
@@ -234,7 +234,7 @@ export default async function handler(req, res) {
                     ? `${stage.stageName} fully approved`
                     : `${stage.stageName} needs your approval`,
                 body: `${stage.side} - ${stage.phase}`,
-                url: `/${recipient}`,
+                url: `/${recipient}?stage=${notionPageId}`,
             });
         }
 

@@ -175,7 +175,7 @@ export default async function handler(req, res) {
                 type: "task_assigned",
                 title: `New ${type.toLowerCase()} from ${profile.full_name}`,
                 body: cleanTitle,
-                link: `/${assignedTo}`,
+                link: `/${assignedTo}?task=${data.id}`,
             });
 
             if (notifyError) {
@@ -185,7 +185,7 @@ export default async function handler(req, res) {
             await sendPush(assignedTo, {
                 title: `New ${type.toLowerCase()} from ${profile.full_name}`,
                 body: cleanTitle,
-                url: `/${assignedTo}`,
+                url: `/${assignedTo}?task=${data.id}`,
             });
 
             return res.status(201).json({ task: data });
@@ -241,7 +241,7 @@ export default async function handler(req, res) {
                         type: "task_done",
                         title: `${profile.full_name} finished a ${existing.task_type.toLowerCase()}`,
                         body: existing.title,
-                        link: "/raj",
+                        link: `/raj?task=${id}`,
                     });
 
                 if (notifyError) {
@@ -251,7 +251,7 @@ export default async function handler(req, res) {
                 await sendPush(existing.created_by, {
                     title: `${profile.full_name} finished a ${existing.task_type.toLowerCase()}`,
                     body: existing.title,
-                    url: "/raj",
+                    url: `/raj?task=${id}`,
                 });
             }
 

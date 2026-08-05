@@ -160,7 +160,7 @@ export default async function handler(req, res) {
                         type: "task_comment",
                         title: `${profile.full_name} commented on ${task.title}`,
                         body: text.slice(0, 140),
-                        link: `/${other}`,
+                        link: `/${other}?task=${taskId}&chat=1`,
                     });
 
                 if (notifyError) {
@@ -170,7 +170,7 @@ export default async function handler(req, res) {
                 await sendPush(other, {
                     title: `${profile.full_name}: ${task.title}`,
                     body: text.slice(0, 140),
-                    url: `/${other}`,
+                    url: `/${other}?task=${taskId}&chat=1`,
                     // Same tag per task, so a burst of messages replaces rather than stacks.
                     tag: `task-${taskId}`,
                 });

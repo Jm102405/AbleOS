@@ -16,6 +16,7 @@ import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 import { DriveLinksCard } from "../components/DriveLinksCard";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
+import { useNotificationTarget } from "../lib/useNotificationTarget";
 import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 
@@ -117,6 +118,35 @@ export function RajCockpit() {
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
   const [chatTask, setChatTask] = React.useState<Task | null>(null);
+
+  /* Notifications deep-link into here, e.g. /raj?task=<id>&chat=1 */
+  const { clear, target } = useNotificationTarget();
+
+  React.useEffect(() => {
+    if (target.order) {
+      // Wait for the list before deciding the id is missing.
+      if (ordersLoading) return;
+      const found = orders.find((order) => order.id === target.order);
+      if (found) setSelectedOrder(found);
+      clear();
+      return;
+    }
+
+    if (target.task) {
+      if (!tasksLoaded) return;
+      const found = tasks.find((task) => task.id === target.task);
+      if (found && target.chat) {
+        setChatTask(found);
+      } else {
+        setTasksOpen(true);
+      }
+      clear();
+      return;
+    }
+
+    // Raj's gate queue is already on the page, so there is nothing to open.
+    if (target.stage) clear();
+  }, [clear, orders, ordersLoading, target, tasks, tasksLoaded]);
   const [commentCounts, setCommentCounts] = React.useState<
     Record<string, number>
   >({});

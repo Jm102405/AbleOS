@@ -1,6 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BellIcon, CheckCheckIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 
 type Notification = {
@@ -43,6 +44,7 @@ export function NotificationBell() {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const load = React.useCallback(async () => {
     try {
@@ -125,6 +127,19 @@ export function NotificationBell() {
     }
   }
 
+  // Take the user to whatever the notification is about.
+  function handleOpen(item: Notification) {
+    setOpen(false);
+
+    if (!item.link) return;
+
+    // Only ever navigate inside the app. A stored absolute URL would turn
+    // this into an open redirect.
+    if (!item.link.startsWith("/")) return;
+
+    navigate(item.link);
+  }
+
   function toggle() {
     const next = !open;
     setOpen(next);
@@ -189,9 +204,11 @@ export function NotificationBell() {
               )}
 
               {items.map((item) => (
-                <article
-                  className="border-b border-[#F1F5F9] px-4 py-3 last:border-b-0"
+                <button
+                  className="block w-full border-b border-[#F1F5F9] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#F8FAFC]"
                   key={item.id}
+                  onClick={() => handleOpen(item)}
+                  type="button"
                 >
                   <div className="flex items-start gap-2.5">
                     {!item.read_at && (
@@ -216,7 +233,7 @@ export function NotificationBell() {
                       </p>
                     </div>
                   </div>
-                </article>
+                </button>
               ))}
             </div>
           </motion.div>

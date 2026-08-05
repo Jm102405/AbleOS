@@ -149,7 +149,7 @@ export default async function handler(req, res) {
                 type: "order_created",
                 title: `New order from ${profile.full_name}`,
                 body: data.order_name,
-                link: "/raj",
+                link: `/raj?order=${data.id}`,
                 order_id: data.id,
             });
 
@@ -160,7 +160,7 @@ export default async function handler(req, res) {
             await sendPush("raj", {
                 title: `New order from ${profile.full_name}`,
                 body: data.order_name,
-                url: "/raj",
+                url: `/raj?order=${data.id}`,
             });
 
             return res.status(201).json({ order: data });
@@ -207,7 +207,7 @@ export default async function handler(req, res) {
                     type: "order_decided",
                     title: `Order ${status.toLowerCase()} by ${profile.full_name}`,
                     body: data.order_name,
-                    link: "/dane",
+                    link: `/dane?order=${data.id}`,
                     order_id: data.id,
                 });
 
@@ -218,7 +218,7 @@ export default async function handler(req, res) {
             await sendPush("dane", {
                 title: `Order ${status.toLowerCase()} by ${profile.full_name}`,
                 body: data.order_name,
-                url: "/dane",
+                url: `/dane?order=${data.id}`,
             });
             return res.status(200).json({ order: data });
         }

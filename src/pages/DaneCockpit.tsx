@@ -6,6 +6,10 @@ import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
 import { TaskCard, type Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
+import {
+  scrollToSection,
+  useNotificationTarget,
+} from "../lib/useNotificationTarget";
 import { ResetRehabButton } from "../components/ResetRehabButton";
 import { NotificationBell } from "../components/NotificationBell";
 
@@ -106,6 +110,32 @@ export function DaneCockpit() {
   const [tasksError, setTasksError] = React.useState("");
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
   const [chatTask, setChatTask] = React.useState<Task | null>(null);
+
+  /* Notifications deep-link into here, e.g. /dane?task=<id>&chat=1 */
+  const { clear, target } = useNotificationTarget();
+
+  React.useEffect(() => {
+    if (target.task) {
+      // Wait for the list before deciding the id is missing.
+      if (tasksLoading) return;
+      const found = tasks.find((task) => task.id === target.task);
+      if (found && target.chat) {
+        setChatTask(found);
+      } else {
+        scrollToSection("tasks-heading");
+      }
+      clear();
+      return;
+    }
+
+    if (target.order) {
+      scrollToSection("orders-heading");
+      clear();
+      return;
+    }
+
+    if (target.stage) clear();
+  }, [clear, target, tasks, tasksLoading]);
   const [commentCounts, setCommentCounts] = React.useState<
     Record<string, number>
   >({});
