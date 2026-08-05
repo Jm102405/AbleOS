@@ -1,48 +1,49 @@
 import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDownIcon } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  LayersIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
-import { apiFetch } from "../lib/apiFetch";
+import { NotificationBell } from "../components/NotificationBell";
+import { DealDetail } from "../features/pipeline/DealDetail";
+import { KpiTile } from "../features/pipeline/KpiTile";
+import { StageBrowserModal } from "../features/pipeline/StageBrowserModal";
+import { buildBirdDogOptions, stages } from "../features/pipeline/data";
+import { useDeals } from "../features/pipeline/useDeals";
+import {
+  STAGE_LABELS,
+  TERMINAL_STAGES,
+  type Deal,
+  type DealStage,
+} from "../features/pipeline/types";
 
 const NOTION_DEALS_URL =
   "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
-import { DealCard } from "../features/pipeline/DealCard";
-import { DealDetail } from "../features/pipeline/DealDetail";
-import { KpiTile } from "../features/pipeline/KpiTile";
-import { StageStrip } from "../features/pipeline/StageStrip";
-import { birdDogOptions, deals, stages } from "../features/pipeline/data";
-import type { BirdDog, Deal, DealStage } from "../features/pipeline/types";
-import { NotificationBell } from "../components/NotificationBell";
 
 export function PipelineBoard() {
-  const [selectedBirdDog, setSelectedBirdDog] = React.useState<"All" | BirdDog>(
-    "All",
-  );
-  const [selectedStage, setSelectedStage] = React.useState<DealStage>(
-    stages[0].name,
-  );
-  const [selectedDeal, setSelectedDeal] = React.useState<Deal | null>(null);
-  const [notionDeals, setNotionDeals] = React.useState<number | null>(null);
+  const { deals, error, loading, moveDeal, movingId, refresh } = useDeals();
 
-  // The real total from the Notion Deals database. The stage tabs and cards
-  // below are still placeholder data until the pipeline is wired to Notion.
-  React.useEffect(() => {
-    apiFetch("/api/deals-count")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setNotionDeals(data.count);
-      })
-      .catch((err) => console.error("Failed to fetch deals count:", err));
-  }, []);
+  const [selectedBirdDog, setSelectedBirdDog] = React.useState("All");
+  const [selectedStage, setSelectedStage] = React.useState<DealStage>("intake");
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [browserOpen, setBrowserOpen] = React.useState(false);
+
+  const birdDogOptions = React.useMemo(
+    () => buildBirdDogOptions(deals),
+    [deals],
+  );
 
   const scopedDeals = React.useMemo(
     () =>
       deals.filter(
-        (deal) => selectedBirdDog === "All" || deal.birdDog === selectedBirdDog,
+        (deal) => selectedBirdDog === "All" || deal.source === selectedBirdDog,
       ),
-    [selectedBirdDog],
+    [deals, selectedBirdDog],
   );
 
   const displayedDeals = React.useMemo(
@@ -54,38 +55,60 @@ export function PipelineBoard() {
     () =>
       Object.fromEntries(
         stages.map((stage) => [
-          stage.name,
-          scopedDeals.filter((deal) => deal.stage === stage.name).length,
+          stage.key,
+          scopedDeals.filter((deal) => deal.stage === stage.key).length,
         ]),
       ),
     [scopedDeals],
   );
 
-  const missingDocsCount = scopedDeals.reduce(
-    (total, deal) => total + deal.missingDocs.length,
-    0,
-  );
-  const averageDays = scopedDeals.length
-    ? scopedDeals.reduce((total, deal) => total + deal.daysInStage, 0) /
-      scopedDeals.length
-    : 0;
-  const stalledDeals = scopedDeals.filter(
-    (deal) => deal.daysInStage >= 4,
-  ).length;
+  /* KPIs follow the bird dog filter, so the numbers match what is on screen. */
+  const metrics = React.useMemo(() => {
+    const active = scopedDeals.filter(
+      (deal) => !TERMINAL_STAGES.includes(deal.stage),
+    );
+    const timed = active.filter((deal) => typeof deal.daysInStage === "number");
+
+    return {
+      active: active.length,
+      awaitingDocs: scopedDeals.filter((deal) => deal.stage === "awaiting_docs")
+        .length,
+      avgDays: timed.length
+        ? (
+            timed.reduce((sum, deal) => sum + (deal.daysInStage as number), 0) /
+            timed.length
+          ).toFixed(1)
+        : "--",
+      stalled: timed.filter((deal) => (deal.daysInStage as number) >= 4).length,
+    };
+  }, [scopedDeals]);
+
+  // Read the open deal out of the live list so it updates after a move.
+  const selectedDeal: Deal | null =
+    deals.find((deal) => deal.id === selectedId) ?? null;
+
   const activeBirdDogLabel =
     birdDogOptions.find((option) => option.value === selectedBirdDog)?.label ??
     "All bird dogs";
 
   React.useEffect(() => {
-    if (!selectedDeal) return;
+    if (!selectedId) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setSelectedDeal(null);
+      if (event.key === "Escape") setSelectedId(null);
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedDeal]);
+  }, [selectedId]);
+
+  async function handleMove(id: string, stage: DealStage) {
+    const ok = await moveDeal(id, stage);
+    if (ok) {
+      setSelectedId(null);
+      setSelectedStage(stage);
+    }
+  }
 
   return (
     <MobileScreenShell
@@ -143,18 +166,38 @@ export function PipelineBoard() {
           className="absolute inset-y-0 left-0 w-1.5 bg-[#1E3A8A]"
         />
         <div className="px-5 py-4 pl-6 sm:px-7 sm:py-5 sm:pl-8">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
-            Active deal flow
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              Active deal flow
+            </p>
+            <button
+              aria-label="Refresh deals"
+              className="grid h-7 w-7 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9] hover:text-[#526176]"
+              onClick={refresh}
+              type="button"
+            >
+              <RefreshCwIcon
+                aria-hidden="true"
+                className={loading ? "animate-spin" : ""}
+                size={14}
+                strokeWidth={2.5}
+              />
+            </button>
+          </div>
           <div className="mt-1 flex items-end justify-between gap-4">
             <h2
               className="text-[18px] font-extrabold tracking-[-0.03em]"
               id="pipeline-overview"
             >
-              {scopedDeals.length} active deals
+              {loading ? "Loading deals..." : `${metrics.active} active deals`}
             </h2>
-            <p className="text-[11px] font-bold text-[#64748B]">7 stages</p>
+            <p className="text-[11px] font-bold text-[#64748B]">
+              {stages.length} stages
+            </p>
           </div>
+          {error ? (
+            <p className="mt-2 text-[11px] font-bold text-[#DC2626]">{error}</p>
+          ) : null}
         </div>
       </section>
 
@@ -171,9 +214,7 @@ export function PipelineBoard() {
             <select
               className="h-12 w-full appearance-none rounded-xl border border-[#DCE4EE] bg-white px-4 pr-10 text-[13px] font-extrabold text-[#1A1A2E] shadow-[0_4px_10px_rgba(30,58,138,0.04)] focus:outline-none focus:ring-2 focus:ring-[#3B82C4]"
               id="bird-dog-filter"
-              onChange={(event) =>
-                setSelectedBirdDog(event.target.value as "All" | BirdDog)
-              }
+              onChange={(event) => setSelectedBirdDog(event.target.value)}
               value={selectedBirdDog}
             >
               {birdDogOptions.map((option) => (
@@ -199,94 +240,82 @@ export function PipelineBoard() {
           href={NOTION_DEALS_URL}
           label="Deals in pipe"
           tone="primary"
-          value={notionDeals !== null ? String(notionDeals) : "..."}
+          value={loading ? "..." : String(metrics.active)}
         />
         <KpiTile
-          label="Missing docs"
-          tone={missingDocsCount > 0 ? "urgent" : "neutral"}
-          value={String(missingDocsCount)}
+          label="Awaiting docs"
+          tone={metrics.awaitingDocs > 0 ? "urgent" : "neutral"}
+          value={loading ? "..." : String(metrics.awaitingDocs)}
         />
         <KpiTile
           label="Avg days in stage"
           tone="neutral"
-          value={averageDays.toFixed(1)}
+          value={loading ? "..." : metrics.avgDays}
         />
         <KpiTile
           label="Stalled 4+ days"
-          tone={stalledDeals > 0 ? "urgent" : "neutral"}
-          value={String(stalledDeals)}
+          tone={metrics.stalled > 0 ? "urgent" : "neutral"}
+          value={loading ? "..." : String(metrics.stalled)}
         />
       </section>
 
-      <section aria-labelledby="stage-filter-title" className="pt-8">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#3B82C4]">
-              7 stages
-            </p>
-            <h2
-              className="mt-1 text-[19px] font-extrabold tracking-[-0.035em]"
-              id="stage-filter-title"
-            >
-              {selectedStage}
-            </h2>
-          </div>
-          <p className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#2465B5]">
-            {displayedDeals.length} deal{displayedDeals.length === 1 ? "" : "s"}
-          </p>
-        </div>
-
-        <StageStrip
-          counts={stageCounts}
-          onSelect={setSelectedStage}
-          selectedStage={selectedStage}
-        />
-      </section>
-
-      <section aria-labelledby="deal-list-title" className="pt-6">
-        <h2 className="sr-only" id="deal-list-title">
-          Deals in {selectedStage}
+      <section aria-labelledby="stage-browser-title" className="pt-8">
+        <h2
+          className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+          id="stage-browser-title"
+        >
+          Deals by stage
         </h2>
-        <AnimatePresence mode="wait">
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0"
-            initial={{ opacity: 0, y: 7 }}
-            key={`${selectedBirdDog}-${selectedStage}`}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            {displayedDeals.length > 0 ? (
-              displayedDeals.map((deal) => (
-                <DealCard
-                  deal={deal}
-                  key={deal.id}
-                  onClick={() => setSelectedDeal(deal)}
-                />
-              ))
-            ) : (
-              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-10 text-center lg:col-span-2">
-                <p className="text-[13px] font-extrabold text-[#526176]">
-                  No deals in this stage
-                </p>
-                <p className="mt-1 text-[11px] font-medium text-[#8291A5]">
-                  Choose another stage to review{" "}
-                  {activeBirdDogLabel.toLowerCase()}.
-                </p>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+
+        <button
+          className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+          onClick={() => setBrowserOpen(true)}
+          type="button"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EEF5FF] text-[#1E3A8A]">
+            <LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+              Browse all {stages.length} stages
+            </span>
+            <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+              {STAGE_LABELS[selectedStage]} · {displayedDeals.length} deal
+              {displayedDeals.length === 1 ? "" : "s"} · {activeBirdDogLabel}
+            </span>
+          </span>
+          <ChevronRightIcon
+            aria-hidden="true"
+            className="shrink-0 text-[#93A3B8]"
+            size={16}
+            strokeWidth={2.5}
+          />
+        </button>
       </section>
 
       <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
         Able OS · V1 Build
       </footer>
 
+      <StageBrowserModal
+        birdDogLabel={activeBirdDogLabel}
+        counts={stageCounts}
+        deals={displayedDeals}
+        loading={loading}
+        onClose={() => setBrowserOpen(false)}
+        onSelectDeal={(deal) => setSelectedId(deal.id)}
+        onSelectStage={setSelectedStage}
+        open={browserOpen}
+        selectedStage={selectedStage}
+      />
+
       <AnimatePresence>
         {selectedDeal ? (
           <DealDetail
             deal={selectedDeal}
-            onClose={() => setSelectedDeal(null)}
+            moving={movingId === selectedDeal.id}
+            onClose={() => setSelectedId(null)}
+            onMove={handleMove}
           />
         ) : null}
       </AnimatePresence>
