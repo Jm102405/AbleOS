@@ -61,8 +61,11 @@ export default async function handler(req, res) {
                 .select("*")
                 .order("created_at", { ascending: false });
 
-            if (profile.cockpit === "dane") {
-                query = query.eq("requested_by", profile.full_name);
+            // Scope by the acting cockpit, never by name. During impersonation
+            // full_name stays as the real person for the audit trail, so
+            // filtering on it would hide the cockpit owner's own orders.
+            if (profile.cockpit !== "raj") {
+                query = query.eq("requested_by_cockpit", profile.cockpit);
             }
 
             if (status) {
@@ -137,6 +140,7 @@ export default async function handler(req, res) {
                     priority: level,
                     estimated_cost: cost,
                     requested_by: profile.full_name,
+                    requested_by_cockpit: profile.cockpit,
                 })
                 .select()
                 .single();

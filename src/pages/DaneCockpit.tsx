@@ -6,6 +6,7 @@ import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
 import { TaskCard, type Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
+import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import {
   scrollToSection,
   useNotificationTarget,
@@ -109,6 +110,10 @@ export function DaneCockpit() {
   const [tasksLoading, setTasksLoading] = React.useState(true);
   const [tasksError, setTasksError] = React.useState("");
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
+  const [tasksOpen, setTasksOpen] = React.useState(false);
+  const [ordersOpen, setOrdersOpen] = React.useState(false);
+
+  const openTaskCount = tasks.filter((task) => task.status !== "Done").length;
   const [chatTask, setChatTask] = React.useState<Task | null>(null);
 
   /* Notifications deep-link into here, e.g. /dane?task=<id>&chat=1 */
@@ -338,7 +343,44 @@ export function DaneCockpit() {
           <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
             <section aria-labelledby="tasks-heading" className="pt-9">
               <SectionHeading id="tasks-heading">Tasks from Raj</SectionHeading>
-              <div className="mt-4 space-y-3">
+
+              <button
+                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                onClick={() => setTasksOpen(true)}
+                type="button"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                    {tasksLoading
+                      ? "Loading..."
+                      : openTaskCount === 0
+                        ? "Nothing assigned to you"
+                        : `View ${openTaskCount} open task${openTaskCount === 1 ? "" : "s"}`}
+                  </span>
+                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                    Work Raj has assigned to you
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                    openTaskCount
+                      ? "bg-[#EEF5FF] text-[#418BFF]"
+                      : "bg-[#F1F5F9] text-[#8291A5]"
+                  }`}
+                >
+                  {tasksLoading ? "..." : openTaskCount}
+                </span>
+              </button>
+            </section>
+
+            <GateQueueModal
+              count={tasksLoading ? null : openTaskCount}
+              eyebrow="From Raj"
+              onClose={() => setTasksOpen(false)}
+              open={tasksOpen}
+              title="Tasks from Raj"
+            >
+              <div className="space-y-3">
                 {tasksLoading && (
                   <p className="text-[12px] font-medium text-[#8A99AC]">
                     Loading tasks…
@@ -381,11 +423,48 @@ export function DaneCockpit() {
                   />
                 ))}
               </div>
-            </section>
+            </GateQueueModal>
 
             <section aria-labelledby="orders-heading" className="pt-9">
               <SectionHeading id="orders-heading">Your orders</SectionHeading>
-              <div className="mt-4 space-y-3">
+
+              <button
+                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                onClick={() => setOrdersOpen(true)}
+                type="button"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                    {ordersLoading
+                      ? "Loading..."
+                      : orders.length === 0
+                        ? "No orders sent yet"
+                        : `View ${orders.length} order${orders.length === 1 ? "" : "s"}`}
+                  </span>
+                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                    Requests you have sent to Raj
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                    orders.length
+                      ? "bg-[#EEF5FF] text-[#418BFF]"
+                      : "bg-[#F1F5F9] text-[#8291A5]"
+                  }`}
+                >
+                  {ordersLoading ? "..." : orders.length}
+                </span>
+              </button>
+            </section>
+
+            <GateQueueModal
+              count={ordersLoading ? null : orders.length}
+              eyebrow="Sent to Raj"
+              onClose={() => setOrdersOpen(false)}
+              open={ordersOpen}
+              title="Your orders"
+            >
+              <div className="space-y-3">
                 {ordersLoading && (
                   <p className="text-[12px] font-medium text-[#8A99AC]">
                     Loading orders…
@@ -455,7 +534,7 @@ export function DaneCockpit() {
                   );
                 })}
               </div>
-            </section>
+            </GateQueueModal>
 
             <section aria-labelledby="gaps-heading" className="pt-9">
               <SectionHeading id="gaps-heading">Known gaps</SectionHeading>
