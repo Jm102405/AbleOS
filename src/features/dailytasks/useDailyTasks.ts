@@ -2,7 +2,7 @@ import React from "react";
 import { apiFetch } from "../../lib/apiFetch";
 
 export type DailyTaskPriority = "Urgent" | "Not urgent";
-export type DailyTaskState = "in_progress" | "completed";
+export type DailyTaskState = "draft" | "in_progress" | "completed";
 
 export type DailyTaskFile = {
   id: string;
@@ -92,6 +92,8 @@ export function useDailyTasks({ owner }: Options = {}) {
       title: string;
       description: string;
       priority: DailyTaskPriority;
+      /** Omit to start it straight away. */
+      state?: "draft";
     }) => {
       const res = await apiFetch("/api/daily-tasks", {
         method: "POST",
@@ -151,6 +153,32 @@ export function useDailyTasks({ owner }: Options = {}) {
     [load],
   );
 
+  const publishTask = React.useCallback(
+    async (id: string) => {
+      setBusyId(id);
+      try {
+        const res = await apiFetch("/api/daily-tasks", {
+          method: "PATCH",
+          body: JSON.stringify({ id, action: "publish" }),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(body?.error || "Could not start it");
+
+        await load();
+        return true;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  const drafts = React.useMemo(
+    () => tasks.filter((task) => task.state === "draft"),
+    [tasks],
+  );
+
   const inProgress = React.useMemo(
     () => tasks.filter((task) => task.state === "in_progress"),
     [tasks],
@@ -166,9 +194,11 @@ export function useDailyTasks({ owner }: Options = {}) {
     completeTask,
     completed,
     createTask,
+    drafts,
     error,
     inProgress,
     loading,
+    publishTask,
     refresh: load,
     reopenTask,
     tasks,

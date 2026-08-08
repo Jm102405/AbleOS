@@ -12,6 +12,7 @@ type CreateDailyTaskModalProps = {
     title: string;
     description: string;
     priority: DailyTaskPriority;
+    state?: "draft";
   }) => Promise<unknown>;
 };
 
@@ -46,9 +47,7 @@ export function CreateDailyTaskModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, onClose, saving]);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-
+  async function submit(asDraft: boolean) {
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       setError("Give the task a name.");
@@ -63,6 +62,7 @@ export function CreateDailyTaskModal({
         title: cleanTitle,
         description: description.trim(),
         priority,
+        ...(asDraft ? { state: "draft" as const } : {}),
       });
       onClose();
     } catch (err) {
@@ -70,6 +70,11 @@ export function CreateDailyTaskModal({
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    submit(false);
   }
 
   return (
@@ -160,7 +165,7 @@ export function CreateDailyTaskModal({
                         className={`flex-1 rounded-xl border px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide transition-colors ${
                           active
                             ? option === "Urgent"
-                              ? "border-[#FF7832] bg-[#FFF1E9] text-[#FF7832]"
+                              ? "border-[#DC2626] bg-[#FEE2E2] text-[#DC2626]"
                               : "border-[#1E3A8A] bg-[#EEF5FF] text-[#1E3A8A]"
                             : "border-[#DCE4EE] bg-white text-[#93A3B8] hover:border-[#B7C7DC]"
                         }`}
@@ -177,8 +182,8 @@ export function CreateDailyTaskModal({
               </div>
 
               <p className="rounded-xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[11px] font-medium leading-snug text-[#8291A5]">
-                Starts as In progress and is dated automatically. Add your proof
-                when you mark it done.
+                Starting it tells Raj and dates it automatically. A draft stays
+                here until you start it.
               </p>
 
               {error ? (
@@ -191,10 +196,10 @@ export function CreateDailyTaskModal({
                 <button
                   className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
                   disabled={saving}
-                  onClick={onClose}
+                  onClick={() => submit(true)}
                   type="button"
                 >
-                  Cancel
+                  Save as draft
                 </button>
                 <button
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:cursor-not-allowed disabled:opacity-60"
@@ -208,7 +213,7 @@ export function CreateDailyTaskModal({
                       strokeWidth={2.5}
                     />
                   ) : null}
-                  Create task
+                  Start task
                 </button>
               </div>
             </div>

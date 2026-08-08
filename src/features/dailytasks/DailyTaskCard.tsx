@@ -4,6 +4,7 @@ import {
   FileTextIcon,
   LoaderIcon,
   PaperclipIcon,
+  PlayIcon,
   RotateCcwIcon,
 } from "lucide-react";
 import { loadEvidenceUrls, type EvidenceFile } from "./evidence";
@@ -15,6 +16,7 @@ type DailyTaskCardProps = {
   /** Omit both handlers for a read-only card. */
   onComplete?: (task: DailyTask) => void;
   onReopen?: (task: DailyTask) => void;
+  onStart?: (task: DailyTask) => void;
 };
 
 /** Rendered in the viewer's own timezone, on purpose. */
@@ -32,6 +34,7 @@ export function DailyTaskCard({
   busy,
   onComplete,
   onReopen,
+  onStart,
 }: DailyTaskCardProps) {
   const [expanded, setExpanded] = React.useState(false);
   const [files, setFiles] = React.useState<EvidenceFile[]>([]);
@@ -39,6 +42,7 @@ export function DailyTaskCard({
 
   const fileCount = task.files?.length ?? 0;
   const done = task.state === "completed";
+  const isDraft = task.state === "draft";
 
   async function toggleFiles() {
     const next = !expanded;
@@ -63,10 +67,15 @@ export function DailyTaskCard({
         <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
           {task.title}
         </h3>
+        {isDraft && (
+          <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#8291A5]">
+            Draft
+          </span>
+        )}
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
             task.priority === "Urgent"
-              ? "bg-[#FFF1E9] text-[#FF7832]"
+              ? "bg-[#FEE2E2] text-[#DC2626]"
               : "bg-[#F1F5F9] text-[#8291A5]"
           }`}
         >
@@ -95,7 +104,7 @@ export function DailyTaskCard({
         </p>
       ) : null}
 
-      {(fileCount > 0 || onComplete || onReopen) && (
+      {(fileCount > 0 || onComplete || onReopen || onStart) && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {fileCount > 0 && (
             <button
@@ -108,7 +117,23 @@ export function DailyTaskCard({
             </button>
           )}
 
-          {onComplete && !done && (
+          {onStart && isDraft && (
+            <button
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
+              disabled={busy}
+              onClick={() => onStart(task)}
+              type="button"
+            >
+              {busy ? (
+                <LoaderIcon className="animate-spin" size={11} strokeWidth={2.5} />
+              ) : (
+                <PlayIcon size={11} strokeWidth={2.5} />
+              )}
+              Start
+            </button>
+          )}
+
+          {onComplete && task.state === "in_progress" && (
             <button
               className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:opacity-60"
               disabled={busy}

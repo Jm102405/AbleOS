@@ -21,7 +21,7 @@ import { sendPush } from "../lib/sendPush.js";
 const BUSINESS_TZ = "America/Chicago";
 
 const PRIORITIES = ["Urgent", "Not urgent"];
-const STATES = ["in_progress", "completed"];
+const STATES = ["draft", "in_progress", "completed"];
 const OWNERS = ["dane", "karen", "jeremiah", "colton", "zo", "raj"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -99,6 +99,11 @@ export default async function handler(req, res) {
                 .select("*")
                 .eq("owner_cockpit", owner)
                 .limit(200);
+
+            // Drafts are private to whoever wrote them. Raj sees started work only.
+            if (owner !== profile.cockpit) {
+                query = query.neq("state", "draft");
+            }
 
             if (state) {
                 if (!STATES.includes(state)) {
@@ -181,6 +186,7 @@ export default async function handler(req, res) {
                 ? cleanText(req.body.description, 2000)
                 : null;
 
+            const isDraft = req.body?.state === "draft";
             const priority = req.body?.priority || "Not urgent";
             if (!PRIORITIES.includes(priority)) {
                 return res
@@ -195,7 +201,7 @@ export default async function handler(req, res) {
                     title,
                     description,
                     priority,
-                    state: "in_progress",
+                    state: isDraft ? "draft" : "in_progress",
                     created_on: businessDate(),
                 })
                 .select()
@@ -203,7 +209,7 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
-            if (profile.cockpit !== WATCHER) {
+            if (!isDraft && profile.cockpit !== WATCHER) {
                 const link = `/${WATCHER}?danetask=${data.id}`;
 
                 const { error: notifyError } = await supabase
@@ -238,10 +244,10 @@ export default async function handler(req, res) {
             const action = req.body?.action;
 
             if (!id) return res.status(400).json({ error: "id is required" });
-            if (!["complete", "reopen"].includes(action)) {
+            if (!["complete", "reopen", "publish"].includes(action)) {
                 return res
                     .status(400)
-                    .json({ error: "action must be complete or reopen" });
+                    .json({ error: "action must be complete, reopen or publish" });
             }
 
             const { data: existing, error: findError } = await supabase
@@ -259,6 +265,10 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: "Not your task" });
             }
 
+            if (action === "publish" && existing.state !== "draft") {
+                return res.status(400).json({ error: "That task is not a draft" });
+            }
+
             const now = new Date();
             const note = req.body?.note ? cleanText(req.body.note, 2000) : null;
 
@@ -271,12 +281,23 @@ export default async function handler(req, res) {
                         completion_note: note,
                         updated_at: now.toISOString(),
                     }
-                    : {
-                        state: "in_progress",
-                        completed_at: null,
-                        completed_on: null,
-                        updated_at: now.toISOString(),
-                    };
+                    : action === "publish"
+                        ? {
+                            // Starting a draft resets the clock - the work begins now,
+                            // not whenever the note was first jotted down.
+                            state: "in_progress",
+                            created_at: now.toISOString(),
+                            created_on: businessDate(now),
+                            completed_at: null,
+                            completed_on: null,
+                            updated_at: now.toISOString(),
+                        }
+                        : {
+                            state: "in_progress",
+                            completed_at: null,
+                            completed_on: null,
+                            updated_at: now.toISOString(),
+                        };
 
             const { data, error } = await supabase
                 .from("daily_tasks")
@@ -287,15 +308,28 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
-            if (action === "complete" && profile.cockpit !== WATCHER) {
+            const notify =
+                action === "complete"
+                    ? {
+                        type: "daily_task_done",
+                        headline: `${profile.full_name} completed a task`,
+                    }
+                    : action === "publish"
+                        ? {
+                            type: "daily_task_created",
+                            headline: `${profile.full_name} created a new task`,
+                        }
+                        : null;
+
+            if (notify && profile.cockpit !== WATCHER) {
                 const link = `/${WATCHER}?danetask=${id}`;
 
                 const { error: notifyError } = await supabase
                     .from("notifications")
                     .insert({
                         recipient: WATCHER,
-                        type: "daily_task_done",
-                        title: `${profile.full_name} completed a task`,
+                        type: notify.type,
+                        title: notify.headline,
                         body: existing.title,
                         link,
                     });
@@ -305,7 +339,7 @@ export default async function handler(req, res) {
                 }
 
                 await sendPush(WATCHER, {
-                    title: `${profile.full_name} completed a task`,
+                    title: notify.headline,
                     body: existing.title,
                     url: link,
                     tag: "daily-tasks",

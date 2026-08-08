@@ -465,7 +465,8 @@ export function DaneCockpit() {
                         : `${daily.inProgress.length} task${daily.inProgress.length === 1 ? "" : "s"} in progress`}
                   </span>
                   <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                    {daily.completed.length} completed so far
+                    {daily.drafts.length} drafts · {daily.completed.length}{" "}
+                    completed
                   </span>
                 </span>
                 <span
@@ -500,6 +501,27 @@ export function DaneCockpit() {
                       No tasks yet. Use New task to add one.
                     </p>
                   </div>
+                )}
+
+                {daily.drafts.length > 0 && (
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                    Drafts
+                  </p>
+                )}
+
+                {daily.drafts.map((task) => (
+                  <DailyTaskCard
+                    busy={daily.busyId === task.id}
+                    key={task.id}
+                    onStart={(item) => daily.publishTask(item.id)}
+                    task={task}
+                  />
+                ))}
+
+                {daily.drafts.length > 0 && daily.inProgress.length > 0 && (
+                  <p className="pt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                    In progress
+                  </p>
                 )}
 
                 {daily.inProgress.map((task) => (

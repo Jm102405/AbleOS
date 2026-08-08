@@ -89,3 +89,14 @@ header {
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #93a3b8;
 }
+
+/* iOS Safari zooms the whole page when a focused field renders below 16px.
+   Bumping the font size on small screens is the only fix that does not
+   disable pinch zoom for everyone. */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
