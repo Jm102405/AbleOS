@@ -354,7 +354,7 @@ export function RajCockpit() {
           >
             <QuickTiles onOpenDrive={() => setDriveOpen(true)} />
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
                 tone={gateCount ? "urgent" : "primary"}
@@ -374,15 +374,6 @@ export function RajCockpit() {
                 label="Gates approved"
                 tone="primary"
                 value={approvedCount !== null ? String(approvedCount) : "..."}
-              />
-              <StatCard
-                label="Incomplete tasks"
-                tone={daneDaily.inProgress.length ? "urgent" : "primary"}
-                value={
-                  daneDaily.loading
-                    ? "..."
-                    : String(daneDaily.inProgress.length)
-                }
               />
             </div>
           </motion.section>
