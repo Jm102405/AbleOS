@@ -1,17 +1,43 @@
 // api/rehab-stages.js
-// Reads the Able Builds rehab checklist from Notion, including where each
-// stage sits in the approval chain.
+// The Able Builds rehab checklist in Notion, including where each stage sits
+// in the approval chain.
 //
-// GET /api/rehab-stages              both sides (Jeremiah, Karen, Raj)
-// GET /api/rehab-stages?side=Side A  one side (crew leads)
+// GET  /api/rehab-stages              both sides (Jeremiah, Karen, Raj)
+// GET  /api/rehab-stages?side=Side A  one side (crew leads)
+// POST /api/rehab-stages              save a Drive folder link to a stage and
+//                                     put it into the right approval queue
+//
+// GET and POST live together because they are the same resource, and because
+// the Hobby plan caps a deployment at 12 serverless functions.
 
 import { Client } from "@notionhq/client";
-import { requireUser } from "../lib/apiAuth.js";
+import { createClient } from "@supabase/supabase-js";
+import { requireUser, requireCockpit } from "../lib/apiAuth.js";
+import { sendPush } from "../lib/sendPush.js";
 
 const REHAB_DATABASE_ID = "39f97b1c96b680dd9a77d8d83da4793c";
 
 // Crew leads only ever see their own side, whatever they ask for.
 const LOCKED_SIDE = { colton: "Side A", zo: "Side B" };
+
+/**
+ * Stages that skip Jeremiah and Karen and go straight to Raj. Before Teardown
+ * Photos is a record of the property as found, not a work gate. Must match the
+ * same set in api/approve-stage.js and src/features/approvals/ApprovalQueue.tsx.
+ */
+const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
+
+let cachedSupabase = null;
+
+function getSupabase() {
+    if (cachedSupabase) return cachedSupabase;
+    cachedSupabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SECRET_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+    return cachedSupabase;
+}
 
 export default async function handler(req, res) {
     let caller;
@@ -24,13 +50,102 @@ export default async function handler(req, res) {
     }
 
     const { profile } = caller;
+    const notion = new Client({ auth: process.env.NOTION_API_KEY });
+
+    /* ---- SAVE a photo link ---- */
+    if (req.method === "POST") {
+        try {
+            requireCockpit(profile, ["colton", "zo"]);
+        } catch (err) {
+            return res
+                .status(err?.status || 403)
+                .json({ error: err?.message || "Not authorised" });
+        }
+
+        const { notionPageId, driveUrl } = req.body || {};
+
+        if (!notionPageId || !driveUrl) {
+            return res
+                .status(400)
+                .json({ error: "Missing notionPageId or driveUrl" });
+        }
+
+        if (!process.env.NOTION_API_KEY) {
+            return res.status(500).json({ error: "NOTION_API_KEY is not set" });
+        }
+
+        try {
+            // Read the stage first - which approvals get reset depends on which
+            // stage this is, so we cannot write before we know.
+            const page = await notion.pages.retrieve({ page_id: notionPageId });
+            const props = page.properties;
+
+            const stageName =
+                props["Stage Name"]?.rich_text?.[0]?.plain_text || "A stage";
+            const side = props["Side"]?.select?.name || "";
+            const phase = props["Phase"]?.select?.name || "";
+
+            const skipsChain = DIRECT_TO_RAJ.has(stageName);
+            const approver = skipsChain ? "raj" : "jeremiah";
+
+            await notion.pages.update({
+                page_id: notionPageId,
+                properties: {
+                    "Drive Photo Link": { url: driveUrl },
+                    "Photo Uploaded": { checkbox: true },
+                    // A re-upload after a decline starts the chain over. Stages
+                    // that skip the chain keep Jeremiah and Karen ticked.
+                    "Jeremiah Approved": { checkbox: skipsChain },
+                    "Karen Approved": { checkbox: skipsChain },
+                    "Raj Approved": { checkbox: false },
+                    Status: { select: { name: "In Progress" } },
+                },
+            });
+
+            const { error: notifyError } = await getSupabase()
+                .from("notifications")
+                .insert({
+                    recipient: approver,
+                    type: "stage_awaiting_you",
+                    title: `${stageName} needs your approval`,
+                    body: `${side} - ${phase} - photos from ${profile.full_name}`,
+                    link: `/${approver}?stage=${notionPageId}`,
+                });
+
+            if (notifyError) {
+                console.error("Failed to create notification:", notifyError);
+            }
+
+            await sendPush(approver, {
+                title: `${stageName} needs your approval`,
+                body: `${side} - ${phase} - photos from ${profile.full_name}`,
+                url: `/${approver}?stage=${notionPageId}`,
+            });
+
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.error("Notion update failed:", error);
+            return res.status(500).json({
+                error: error?.message || "Failed to update Notion",
+                code: error?.code,
+            });
+        }
+    }
+
+    /* ---- LIST ---- */
+    if (req.method !== "GET") {
+        res.setHeader("Allow", "GET, POST");
+        return res.status(405).json({ error: "Method not allowed" });
+    }
 
     try {
         const requestedSide = req.query?.side;
         const lockedSide = LOCKED_SIDE[profile.cockpit];
 
         if (lockedSide && requestedSide && requestedSide !== lockedSide) {
-            return res.status(403).json({ error: "You can only view your own side" });
+            return res
+                .status(403)
+                .json({ error: "You can only view your own side" });
         }
 
         const side = lockedSide || requestedSide || null;
@@ -40,8 +155,6 @@ export default async function handler(req, res) {
                 .status(400)
                 .json({ error: 'side must be "Side A" or "Side B"' });
         }
-
-        const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
         const database = await notion.databases.retrieve({
             database_id: REHAB_DATABASE_ID,
@@ -63,7 +176,6 @@ export default async function handler(req, res) {
 
             for (const page of response.results) {
                 const props = page.properties;
-
                 stages.push({
                     notionPageId: page.id,
                     stageName: props["Stage Name"]?.rich_text?.[0]?.plain_text || "",

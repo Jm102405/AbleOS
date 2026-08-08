@@ -20,7 +20,7 @@ const CREW_LEAD = { "Side A": "colton", "Side B": "zo" };
 // Who approves at each step, and what must already be true for them to act.
 /**
  * Stages that skip Jeremiah and Karen and go straight to Raj. Must match the
- * same set in api/update-stage.js.
+ * same set in api/rehab-stages.js.
  */
 const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
 

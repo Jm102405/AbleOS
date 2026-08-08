@@ -7,7 +7,7 @@ export type ApproverRole = "jeremiah" | "karen" | "raj";
 
 /**
  * Stages that skip Jeremiah and Karen and go straight to Raj. Must match the
- * same set in api/approve-stage.js and api/update-stage.js.
+ * same set in api/approve-stage.js and api/rehab-stages.js.
  */
 const DIRECT_TO_RAJ = new Set(["Before Teardown Photos"]);
 

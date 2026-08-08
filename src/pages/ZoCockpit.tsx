@@ -245,7 +245,7 @@ export function ZoCockpit() {
 
     updateOne(pageId, { saving: true, error: "" });
     try {
-      const res = await apiFetch("/api/update-stage", {
+      const res = await apiFetch("/api/rehab-stages", {
         method: "POST",
         body: JSON.stringify({ notionPageId: pageId, driveUrl: url }),
       });
