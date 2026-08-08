@@ -16,7 +16,8 @@ import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import { DailyProgressModal } from "../features/dailytasks/DailyProgressModal";
 import { useDailyTasks } from "../features/dailytasks/useDailyTasks";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
-import { DriveLinksCard } from "../components/DriveLinksCard";
+import { DriveLinksModal } from "../components/DriveLinksModal";
+import { QuickTiles } from "../components/QuickTiles";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import { useNotificationTarget } from "../lib/useNotificationTarget";
@@ -78,6 +79,7 @@ export function RajCockpit() {
   /* Dane's own daily work. Read-only from here. */
   const daneDaily = useDailyTasks({ owner: "dane" });
   const [progressOpen, setProgressOpen] = React.useState(false);
+  const [driveOpen, setDriveOpen] = React.useState(false);
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [stagesLoaded, setStagesLoaded] = React.useState(false);
   const [approvedOpen, setApprovedOpen] = React.useState(false);
@@ -350,7 +352,9 @@ export function RajCockpit() {
             transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
             variants={reveal}
           >
-            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
+            <QuickTiles onOpenDrive={() => setDriveOpen(true)} />
+
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
                 tone={gateCount ? "urgent" : "primary"}
@@ -645,6 +649,11 @@ export function RajCockpit() {
             </button>
           </section>
 
+          <DriveLinksModal
+            onClose={() => setDriveOpen(false)}
+            open={driveOpen}
+          />
+
           <DailyProgressModal
             loading={daneDaily.loading}
             onClose={() => setProgressOpen(false)}
@@ -653,16 +662,6 @@ export function RajCockpit() {
             tasks={daneDaily.tasks}
             today={daneDaily.today}
           />
-
-          <section aria-labelledby="drive-heading" className="pt-9">
-            <h2
-              className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
-              id="drive-heading"
-            >
-              Drive library
-            </h2>
-            <DriveLinksCard />
-          </section>
           <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
             Able OS · V1 Build
           </footer>
