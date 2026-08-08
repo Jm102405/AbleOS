@@ -13,6 +13,8 @@ import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
 import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
+import { DailyProgressModal } from "../features/dailytasks/DailyProgressModal";
+import { useDailyTasks } from "../features/dailytasks/useDailyTasks";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 import { DriveLinksCard } from "../components/DriveLinksCard";
 import { AssignTaskModal } from "../components/AssignTaskModal";
@@ -72,6 +74,10 @@ export function RajCockpit() {
   const [gateCount, setGateCount] = React.useState<number | null>(null);
   const [gatesOpen, setGatesOpen] = React.useState(false);
   const [ordersOpen, setOrdersOpen] = React.useState(false);
+
+  /* Dane's own daily work. Read-only from here. */
+  const daneDaily = useDailyTasks({ owner: "dane" });
+  const [progressOpen, setProgressOpen] = React.useState(false);
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [stagesLoaded, setStagesLoaded] = React.useState(false);
   const [approvedOpen, setApprovedOpen] = React.useState(false);
@@ -143,6 +149,12 @@ export function RajCockpit() {
       } else {
         setTasksOpen(true);
       }
+      clear();
+      return;
+    }
+
+    if (target.daneTask) {
+      setProgressOpen(true);
       clear();
       return;
     }
@@ -338,7 +350,7 @@ export function RajCockpit() {
             transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
             variants={reveal}
           >
-            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+            <div className="mt-1 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
                 tone={gateCount ? "urgent" : "primary"}
@@ -358,6 +370,15 @@ export function RajCockpit() {
                 label="Gates approved"
                 tone="primary"
                 value={approvedCount !== null ? String(approvedCount) : "..."}
+              />
+              <StatCard
+                label="Incomplete tasks"
+                tone={daneDaily.inProgress.length ? "urgent" : "primary"}
+                value={
+                  daneDaily.loading
+                    ? "..."
+                    : String(daneDaily.inProgress.length)
+                }
               />
             </div>
           </motion.section>
@@ -589,6 +610,50 @@ export function RajCockpit() {
               </div>
             </div>
           </motion.div>
+          <section aria-labelledby="progress-heading" className="pt-9">
+            <h2
+              className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+              id="progress-heading"
+            >
+              Dane&apos;s Progress
+            </h2>
+
+            <button
+              className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+              onClick={() => setProgressOpen(true)}
+              type="button"
+            >
+              <span className="min-w-0">
+                <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                  {daneDaily.loading
+                    ? "Loading..."
+                    : `${daneDaily.inProgress.length} in progress · ${daneDaily.completed.length} completed`}
+                </span>
+                <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                  What Dane is working on, and what he finished
+                </span>
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                  daneDaily.inProgress.length
+                    ? "bg-[#EEF5FF] text-[#418BFF]"
+                    : "bg-[#EAF8EF] text-[#16A34A]"
+                }`}
+              >
+                {daneDaily.loading ? "..." : daneDaily.inProgress.length}
+              </span>
+            </button>
+          </section>
+
+          <DailyProgressModal
+            loading={daneDaily.loading}
+            onClose={() => setProgressOpen(false)}
+            open={progressOpen}
+            personLabel="Dane's Progress"
+            tasks={daneDaily.tasks}
+            today={daneDaily.today}
+          />
+
           <section aria-labelledby="drive-heading" className="pt-9">
             <h2
               className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"

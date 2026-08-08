@@ -7,6 +7,13 @@ import { apiFetch } from "../lib/apiFetch";
 import { TaskCard, type Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
+import { CompleteDailyTaskModal } from "../features/dailytasks/CompleteDailyTaskModal";
+import { CreateDailyTaskModal } from "../features/dailytasks/CreateDailyTaskModal";
+import { DailyTaskCard } from "../features/dailytasks/DailyTaskCard";
+import {
+  useDailyTasks,
+  type DailyTask,
+} from "../features/dailytasks/useDailyTasks";
 import {
   scrollToSection,
   useNotificationTarget,
@@ -112,6 +119,12 @@ export function DaneCockpit() {
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [ordersOpen, setOrdersOpen] = React.useState(false);
+
+  /* Dane's own daily work, separate from what Raj assigns him. */
+  const daily = useDailyTasks();
+  const [dailyOpen, setDailyOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [completing, setCompleting] = React.useState<DailyTask | null>(null);
 
   const openTaskCount = tasks.filter((task) => task.status !== "Done").length;
   const [chatTask, setChatTask] = React.useState<Task | null>(null);
@@ -425,6 +438,96 @@ export function DaneCockpit() {
               </div>
             </GateQueueModal>
 
+            <section aria-labelledby="daily-heading" className="pt-9">
+              <div className="flex items-center justify-between gap-3">
+                <SectionHeading id="daily-heading">My tasks</SectionHeading>
+                <button
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E]"
+                  onClick={() => setCreateOpen(true)}
+                  type="button"
+                >
+                  <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
+                  New task
+                </button>
+              </div>
+
+              <button
+                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                onClick={() => setDailyOpen(true)}
+                type="button"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                    {daily.loading
+                      ? "Loading..."
+                      : daily.inProgress.length === 0
+                        ? "Nothing in progress"
+                        : `${daily.inProgress.length} task${daily.inProgress.length === 1 ? "" : "s"} in progress`}
+                  </span>
+                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                    {daily.completed.length} completed so far
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
+                    daily.inProgress.length
+                      ? "bg-[#EEF5FF] text-[#418BFF]"
+                      : "bg-[#EAF8EF] text-[#16A34A]"
+                  }`}
+                >
+                  {daily.loading ? "..." : daily.inProgress.length}
+                </span>
+              </button>
+            </section>
+
+            <GateQueueModal
+              count={daily.loading ? null : daily.inProgress.length}
+              eyebrow="Daily work"
+              onClose={() => setDailyOpen(false)}
+              open={dailyOpen}
+              title="My tasks"
+            >
+              <div className="space-y-3">
+                {daily.error ? (
+                  <p className="text-[12px] font-bold text-[#DC2626]">
+                    {daily.error}
+                  </p>
+                ) : null}
+
+                {!daily.loading && daily.tasks.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
+                    <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                      No tasks yet. Use New task to add one.
+                    </p>
+                  </div>
+                )}
+
+                {daily.inProgress.map((task) => (
+                  <DailyTaskCard
+                    busy={daily.busyId === task.id}
+                    key={task.id}
+                    onComplete={setCompleting}
+                    task={task}
+                  />
+                ))}
+
+                {daily.completed.length > 0 && (
+                  <p className="pt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                    Completed
+                  </p>
+                )}
+
+                {daily.completed.map((task) => (
+                  <DailyTaskCard
+                    busy={daily.busyId === task.id}
+                    key={task.id}
+                    onReopen={(item) => daily.reopenTask(item.id)}
+                    task={task}
+                  />
+                ))}
+              </div>
+            </GateQueueModal>
+
             <section aria-labelledby="orders-heading" className="pt-9">
               <SectionHeading id="orders-heading">Your orders</SectionHeading>
 
@@ -569,6 +672,19 @@ export function DaneCockpit() {
           Able OS · V1 Build
         </footer>
       </main>
+
+      <CreateDailyTaskModal
+        onClose={() => setCreateOpen(false)}
+        onCreate={daily.createTask}
+        open={createOpen}
+      />
+
+      <CompleteDailyTaskModal
+        onClose={() => setCompleting(null)}
+        onComplete={daily.completeTask}
+        open={Boolean(completing)}
+        task={completing}
+      />
 
       <TaskChatModal
         onChanged={loadCommentCounts}

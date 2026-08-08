@@ -14,6 +14,7 @@ export type NotificationTarget = {
   chat: boolean;
   order: string | null;
   stage: string | null;
+  daneTask: string | null;
 };
 
 /** Bring a section heading into view once a notification lands on the page. */
@@ -34,13 +35,14 @@ export function useNotificationTarget() {
   const chat = params.get("chat") === "1";
   const order = params.get("order");
   const stage = params.get("stage");
+  const daneTask = params.get("danetask");
 
   const target: NotificationTarget = React.useMemo(
-    () => ({ task, chat, order, stage }),
-    [chat, order, stage, task],
+    () => ({ task, chat, order, stage, daneTask }),
+    [chat, daneTask, order, stage, task],
   );
 
-  const hasTarget = Boolean(task || order || stage);
+  const hasTarget = Boolean(task || order || stage || daneTask);
 
   /**
    * Call once the cockpit has opened the right thing, so the param does not
