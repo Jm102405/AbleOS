@@ -18,6 +18,14 @@ import { useDailyTasks } from "../features/dailytasks/useDailyTasks";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 import { DriveLinksModal } from "../components/DriveLinksModal";
 import { QuickTiles } from "../components/QuickTiles";
+import { NavCard } from "../components/NavCard";
+import {
+  CameraIcon,
+  ClipboardListIcon,
+  FileTextIcon,
+  ShieldCheckIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import { AssignTaskModal } from "../components/AssignTaskModal";
 import { AssignedTasksModal } from "../features/tasks/AssignedTasksModal";
 import { useNotificationTarget } from "../lib/useNotificationTarget";
@@ -386,37 +394,18 @@ export function RajCockpit() {
             <div>
               <div>
                 {/* Gates on the left */}
-                <section aria-labelledby="gates-heading" className="pt-9">
-                  <SectionHeading id="gates-heading">
+                <section aria-labelledby="gates-heading" className="pt-8">
+                  <h2 className="sr-only" id="gates-heading">
                     Gates awaiting you
-                  </SectionHeading>
-                  <button
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                  </h2>
+                  <NavCard
+                    count={gateCount}
+                    icon={<CameraIcon size={17} strokeWidth={2.5} />}
                     onClick={() => setGatesOpen(true)}
-                    type="button"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                        {gateCount === null
-                          ? "Loading gates..."
-                          : gateCount === 0
-                            ? "Nothing waiting on you"
-                            : `Review ${gateCount} gate${gateCount === 1 ? "" : "s"}`}
-                      </span>
-                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                        Photos submitted for your sign-off
-                      </span>
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                        gateCount
-                          ? "bg-[#FFF1E9] text-[#FF7832]"
-                          : "bg-[#EAF8EF] text-[#16A34A]"
-                      }`}
-                    >
-                      {gateCount === null ? "..." : gateCount}
-                    </span>
-                  </button>
+                    subtitle="Photos submitted for your sign-off"
+                    title="Gates awaiting you"
+                    tone="orange"
+                  />
                 </section>
 
                 <GateQueueModal
@@ -433,99 +422,46 @@ export function RajCockpit() {
                   />
                 </GateQueueModal>
 
-                <section aria-labelledby="approved-heading" className="pt-9">
-                  <SectionHeading id="approved-heading">
+                <section aria-labelledby="approved-heading" className="pt-3">
+                  <h2 className="sr-only" id="approved-heading">
                     Gates approved
-                  </SectionHeading>
-
-                  <button
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                  </h2>
+                  <NavCard
+                    count={approvedCount}
+                    icon={<ShieldCheckIcon size={17} strokeWidth={2.5} />}
                     onClick={() => setApprovedOpen(true)}
-                    type="button"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                        {approvedCount === null
-                          ? "Loading..."
-                          : approvedCount === 0
-                            ? "Nothing approved yet"
-                            : `View ${approvedCount} approved gate${approvedCount === 1 ? "" : "s"}`}
-                      </span>
-                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                        Every stage you have signed off
-                      </span>
-                    </span>
-                    <span className="shrink-0 rounded-full bg-[#EAF8EF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#16A34A]">
-                      {approvedCount === null ? "..." : approvedCount}
-                    </span>
-                  </button>
+                    subtitle="Every stage you have signed off"
+                    title="Gates approved"
+                    tone="green"
+                  />
                 </section>
 
-                <section aria-labelledby="tasks-heading" className="pt-9">
-                  <SectionHeading id="tasks-heading">
+                <section aria-labelledby="tasks-heading" className="pt-3">
+                  <h2 className="sr-only" id="tasks-heading">
                     Tasks assigned
-                  </SectionHeading>
-
-                  <button
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                  </h2>
+                  <NavCard
+                    count={openTaskCount}
+                    icon={<ClipboardListIcon size={17} strokeWidth={2.5} />}
                     onClick={() => setTasksOpen(true)}
-                    type="button"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                        {openTaskCount === null
-                          ? "Loading..."
-                          : openTaskCount === 0
-                            ? "No open tasks"
-                            : `View ${openTaskCount} open task${openTaskCount === 1 ? "" : "s"}`}
-                      </span>
-                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                        Work you assigned to the team
-                      </span>
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                        openTaskCount
-                          ? "bg-[#EEF5FF] text-[#418BFF]"
-                          : "bg-[#F1F5F9] text-[#8291A5]"
-                      }`}
-                    >
-                      {openTaskCount === null ? "..." : openTaskCount}
-                    </span>
-                  </button>
+                    subtitle="Work you assigned to the team"
+                    title="Tasks assigned"
+                    tone="blue"
+                  />
                 </section>
 
-                <section aria-labelledby="approval-heading" className="pt-9">
-                  <SectionHeading id="approval-heading">
+                <section aria-labelledby="approval-heading" className="pt-3">
+                  <h2 className="sr-only" id="approval-heading">
                     Approval requests
-                  </SectionHeading>
-                  <button
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+                  </h2>
+                  <NavCard
+                    count={ordersLoading ? null : orders.length}
+                    icon={<FileTextIcon size={17} strokeWidth={2.5} />}
                     onClick={() => setOrdersOpen(true)}
-                    type="button"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                        {ordersLoading
-                          ? "Loading..."
-                          : orders.length === 0
-                            ? "Nothing awaiting your approval"
-                            : `Review ${orders.length} request${orders.length === 1 ? "" : "s"}`}
-                      </span>
-                      <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                        Orders submitted for your decision
-                      </span>
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                        orders.length
-                          ? "bg-[#FFF1E9] text-[#FF7832]"
-                          : "bg-[#EAF8EF] text-[#16A34A]"
-                      }`}
-                    >
-                      {ordersLoading ? "..." : orders.length}
-                    </span>
-                  </button>
+                    subtitle="Orders submitted for your decision"
+                    title="Approval requests"
+                    tone="orange"
+                  />
                 </section>
 
                 <GateQueueModal
@@ -605,39 +541,18 @@ export function RajCockpit() {
               </div>
             </div>
           </motion.div>
-          <section aria-labelledby="progress-heading" className="pt-9">
-            <h2
-              className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
-              id="progress-heading"
-            >
+          <section aria-labelledby="progress-heading" className="pt-3">
+            <h2 className="sr-only" id="progress-heading">
               Dane&apos;s Progress
             </h2>
-
-            <button
-              className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+            <NavCard
+              count={daneDaily.loading ? null : daneDaily.inProgress.length}
+              icon={<TrendingUpIcon size={17} strokeWidth={2.5} />}
               onClick={() => setProgressOpen(true)}
-              type="button"
-            >
-              <span className="min-w-0">
-                <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                  {daneDaily.loading
-                    ? "Loading..."
-                    : `${daneDaily.inProgress.length} in progress · ${daneDaily.completed.length} completed`}
-                </span>
-                <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                  What Dane is working on, and what he finished
-                </span>
-              </span>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                  daneDaily.inProgress.length
-                    ? "bg-[#EEF5FF] text-[#418BFF]"
-                    : "bg-[#EAF8EF] text-[#16A34A]"
-                }`}
-              >
-                {daneDaily.loading ? "..." : daneDaily.inProgress.length}
-              </span>
-            </button>
+              subtitle="What Dane is working on, and what he finished"
+              title="Dane's Progress"
+              tone="blue"
+            />
           </section>
 
           <DriveLinksModal
@@ -778,22 +693,6 @@ function StatCard({ value, label, tone, href, onClick }: StatCardProps) {
   }
 
   return <article className={baseClasses}>{content}</article>;
-}
-
-type SectionHeadingProps = {
-  id: string;
-  children: React.ReactNode;
-};
-
-function SectionHeading({ id, children }: SectionHeadingProps) {
-  return (
-    <h2
-      className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
-      id={id}
-    >
-      {children}
-    </h2>
-  );
 }
 
 type ApprovalModalProps = {
