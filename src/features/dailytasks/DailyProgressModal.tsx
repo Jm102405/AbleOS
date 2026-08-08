@@ -5,6 +5,7 @@ import { DailyTaskCard } from "./DailyTaskCard";
 import type { DailyTask } from "./useDailyTasks";
 
 type View = "in_progress" | "completed";
+type Mode = "today" | "this_week" | "last_week" | "all" | "date";
 
 type DailyProgressModalProps = {
   open: boolean;
@@ -22,16 +23,50 @@ type DailyProgressModalProps = {
  * new Date() would treat it as UTC midnight and show the day before for
  * anyone west of Greenwich.
  */
-function prettyDate(ymd: string) {
+function ymdToDate(ymd: string) {
   const [year, month, day] = ymd.split("-").map(Number);
-  if (!year || !month || !day) return ymd;
+  return new Date(year, (month || 1) - 1, day || 1);
+}
 
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+function dateToYmd(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function prettyDate(ymd: string) {
+  if (!ymd) return "";
+  return ymdToDate(ymd).toLocaleDateString(undefined, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 }
+
+function shortDate(ymd: string) {
+  if (!ymd) return "";
+  return ymdToDate(ymd).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+/** Sunday to Saturday, US convention. weeksBack 0 is the current week. */
+function weekRange(todayYmd: string, weeksBack: number) {
+  const base = ymdToDate(todayYmd);
+  const start = new Date(base);
+  start.setDate(base.getDate() - base.getDay() - weeksBack * 7);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return { start: dateToYmd(start), end: dateToYmd(end) };
+}
+
+const MODES: Array<{ key: Mode; label: string }> = [
+  { key: "today", label: "Today" },
+  { key: "this_week", label: "This week" },
+  { key: "last_week", label: "Last week" },
+  { key: "all", label: "All dates" },
+];
 
 export function DailyProgressModal({
   open,
@@ -42,11 +77,13 @@ export function DailyProgressModal({
   personLabel,
 }: DailyProgressModalProps) {
   const [view, setView] = React.useState<View>("in_progress");
+  const [mode, setMode] = React.useState<Mode>("today");
   const [date, setDate] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
     setView("in_progress");
+    setMode("today");
     setDate(today);
   }, [open, today]);
 
@@ -71,19 +108,28 @@ export function DailyProgressModal({
     [tasks],
   );
 
-  /** Dates that actually have completed work, newest first. */
-  const availableDates = React.useMemo(() => {
-    const set = new Set(
-      completed.map((task) => task.completed_on).filter(Boolean) as string[],
-    );
-    return Array.from(set).sort().reverse();
-  }, [completed]);
+  const range = React.useMemo(() => {
+    if (mode === "all") return null;
+    if (mode === "today") return { start: today, end: today };
+    if (mode === "date") return { start: date, end: date };
+    return weekRange(today, mode === "this_week" ? 0 : 1);
+  }, [date, mode, today]);
 
-  const visibleCompleted = React.useMemo(
-    () =>
-      date ? completed.filter((task) => task.completed_on === date) : completed,
-    [completed, date],
-  );
+  const visibleCompleted = React.useMemo(() => {
+    if (!range || !range.start) return completed;
+    return completed.filter(
+      (task) =>
+        task.completed_on &&
+        task.completed_on >= range.start &&
+        task.completed_on <= range.end,
+    );
+  }, [completed, range]);
+
+  const rangeLabel = React.useMemo(() => {
+    if (!range) return "all time";
+    if (range.start === range.end) return prettyDate(range.start);
+    return `${shortDate(range.start)} to ${shortDate(range.end)}`;
+  }, [range]);
 
   const visible = view === "in_progress" ? inProgress : visibleCompleted;
 
@@ -151,37 +197,44 @@ export function DailyProgressModal({
               </div>
 
               {view === "completed" && (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <input
-                    aria-label="Filter by completion date"
-                    className="rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-2.5 py-1.5 text-[11px] font-bold text-[#1A1A2E] outline-none transition-colors focus:border-[#1E3A8A] focus:bg-white"
-                    onChange={(event) => setDate(event.target.value)}
-                    type="date"
-                    value={date}
-                  />
-                  <button
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
-                      date === today
-                        ? "bg-[#EEF5FF] text-[#418BFF]"
-                        : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                    }`}
-                    onClick={() => setDate(today)}
-                    type="button"
-                  >
-                    Today
-                  </button>
-                  <button
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
-                      date === ""
-                        ? "bg-[#EEF5FF] text-[#418BFF]"
-                        : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                    }`}
-                    onClick={() => setDate("")}
-                    type="button"
-                  >
-                    All dates
-                  </button>
-                </div>
+                <>
+                  <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
+                    {MODES.map((option) => (
+                      <button
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                          mode === option.key
+                            ? "bg-[#EEF5FF] text-[#418BFF]"
+                            : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
+                        }`}
+                        key={option.key}
+                        onClick={() => setMode(option.key)}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[9px] font-extrabold uppercase tracking-[0.08em] text-[#A3B0C0]">
+                      Or pick a day
+                    </span>
+                    <input
+                      aria-label="Filter by completion date"
+                      className={`rounded-xl border bg-[#F8FAFC] px-2.5 py-1.5 text-[11px] font-bold text-[#1A1A2E] outline-none transition-colors focus:bg-white ${
+                        mode === "date"
+                          ? "border-[#418BFF]"
+                          : "border-[#DCE4EE] focus:border-[#1E3A8A]"
+                      }`}
+                      onChange={(event) => {
+                        setDate(event.target.value);
+                        setMode("date");
+                      }}
+                      type="date"
+                      value={date}
+                    />
+                  </div>
+                </>
               )}
             </div>
 
@@ -192,11 +245,11 @@ export function DailyProgressModal({
                 </p>
               )}
 
-              {view === "completed" && date && !loading && (
+              {view === "completed" && !loading && (
                 <p className="text-[11px] font-bold text-[#526176]">
                   {visibleCompleted.length}{" "}
-                  {visibleCompleted.length === 1 ? "task" : "tasks"} completed
-                  on {prettyDate(date)}
+                  {visibleCompleted.length === 1 ? "task" : "tasks"} completed ·{" "}
+                  {rangeLabel}
                 </p>
               )}
 
@@ -205,13 +258,8 @@ export function DailyProgressModal({
                   <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
                     {view === "in_progress"
                       ? "Nothing in progress right now."
-                      : "Nothing completed for this date."}
+                      : "Nothing completed in this range."}
                   </p>
-                  {view === "completed" && availableDates.length > 0 && (
-                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
-                      Most recent: {prettyDate(availableDates[0])}
-                    </p>
-                  )}
                 </div>
               )}
 
