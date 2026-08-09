@@ -22,9 +22,6 @@ import {
   type DealStage,
 } from "../features/pipeline/types";
 
-const NOTION_DEALS_URL =
-  "https://app.notion.com/p/3a397b1c96b680e8af62f3a34a5c6a02?v=01b686d4bc8c43d6b4eff6ae73afdbc9&source=copy_link";
-
 export function PipelineBoard() {
   const { deals, error, loading, moveDeal, movingId, refresh } = useDeals();
 
@@ -162,7 +159,6 @@ export function PipelineBoard() {
         className="grid grid-cols-2 gap-3 pt-2 lg:grid-cols-4"
       >
         <KpiTile
-          href={NOTION_DEALS_URL}
           label="Deals in pipe"
           tone="primary"
           value={loading ? "..." : String(metrics.active)}

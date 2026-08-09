@@ -1,6 +1,6 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { DealCard } from "./DealCard";
 import { StageStrip } from "./StageStrip";
 import { STAGE_LABELS, type Deal, type DealStage } from "./types";
@@ -28,6 +28,24 @@ export function StageBrowserModal({
   loading,
   birdDogLabel,
 }: StageBrowserModalProps) {
+  const [query, setQuery] = React.useState("");
+
+  React.useEffect(() => {
+    if (open) setQuery("");
+  }, [open]);
+
+  const filtered = React.useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return deals;
+
+    return deals.filter(
+      (deal) =>
+        deal.name.toLowerCase().includes(term) ||
+        deal.address.toLowerCase().includes(term) ||
+        deal.source.toLowerCase().includes(term),
+    );
+  }, [deals, query]);
+
   React.useEffect(() => {
     if (!open) return;
 
@@ -70,7 +88,7 @@ export function StageBrowserModal({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#2465B5]">
-                    {deals.length} deal{deals.length === 1 ? "" : "s"}
+                    {filtered.length} deal{filtered.length === 1 ? "" : "s"}
                   </span>
                   <button
                     aria-label="Close"
@@ -88,18 +106,49 @@ export function StageBrowserModal({
                 onSelect={onSelectStage}
                 selectedStage={selectedStage}
               />
+
+              <div className="relative mt-3">
+                <SearchIcon
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#93A3B8]"
+                  size={15}
+                  strokeWidth={2.5}
+                />
+                <input
+                  aria-label="Search deals"
+                  className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pl-9 pr-9 text-[13px] font-bold text-[#1A1A2E] outline-none transition-colors placeholder:font-medium placeholder:text-[#A3B0C0] focus:border-[#1E3A8A] focus:bg-white"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search name, address or bird dog"
+                  type="text"
+                  value={query}
+                />
+                {query && (
+                  <button
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9]"
+                    onClick={() => setQuery("")}
+                    type="button"
+                  >
+                    <XIcon aria-hidden="true" size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Scrolling deal list */}
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
-              {deals.length > 0 ? (
-                deals.map((deal) => (
+              {filtered.length > 0 ? (
+                filtered.map((deal) => (
                   <DealCard deal={deal} key={deal.id} onSelect={onSelectDeal} />
                 ))
               ) : (
                 <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-10 text-center">
                   <p className="text-[13px] font-extrabold text-[#526176]">
-                    {loading ? "Loading deals..." : "No deals in this stage"}
+                    {loading
+                      ? "Loading deals..."
+                      : query
+                        ? "No deals match that search"
+                        : "No deals in this stage"}
                   </p>
                   <p className="mt-1 text-[11px] font-medium text-[#8291A5]">
                     Choose another stage to review {birdDogLabel.toLowerCase()}.
