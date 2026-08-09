@@ -88,6 +88,30 @@ export function RajCockpit() {
   const daneDaily = useDailyTasks({ owner: "dane" });
   const [progressOpen, setProgressOpen] = React.useState(false);
   const [driveOpen, setDriveOpen] = React.useState(false);
+  const [approvingTask, setApprovingTask] = React.useState<string | null>(null);
+  const [focusTaskId, setFocusTaskId] = React.useState<string | null>(null);
+
+  /* Raj signing off on work he assigned. Only then does it count as done. */
+  async function approveTask(id: string) {
+    setApprovingTask(id);
+    try {
+      const res = await apiFetch("/api/tasks", {
+        method: "PATCH",
+        body: JSON.stringify({ id, action: "approve" }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) throw new Error(body?.error || "Could not approve it");
+
+      setTasks((current) =>
+        current.map((task) => (task.id === id ? body.task : task)),
+      );
+    } catch (err) {
+      console.error("Failed to approve task:", err);
+    } finally {
+      setApprovingTask(null);
+    }
+  }
   const [stages, setStages] = React.useState<Stage[]>([]);
   const [stagesLoaded, setStagesLoaded] = React.useState(false);
   const [approvedOpen, setApprovedOpen] = React.useState(false);
@@ -157,6 +181,8 @@ export function RajCockpit() {
       if (found && target.chat) {
         setChatTask(found);
       } else {
+        // Open the list and expand the task the notification was about.
+        setFocusTaskId(target.task);
         setTasksOpen(true);
       }
       clear();
@@ -374,9 +400,19 @@ export function RajCockpit() {
                 value={ordersLoading ? "..." : String(orders.length)}
               />
               <StatCard
-                label="Tasks assigned"
+                label="Dane's progress"
                 tone="primary"
-                value={openTaskCount !== null ? String(openTaskCount) : "..."}
+                value={
+                  daneDaily.loading || !tasksLoaded
+                    ? "..."
+                    : String(
+                        daneDaily.completed.length +
+                          tasks.filter(
+                            (task) =>
+                              task.assigned_to === "dane" && task.approved_at,
+                          ).length,
+                      )
+                }
               />
               <StatCard
                 label="Gates approved"
@@ -561,6 +597,9 @@ export function RajCockpit() {
           />
 
           <DailyProgressModal
+            approvedTasks={tasks.filter(
+              (task) => task.assigned_to === "dane" && task.approved_at,
+            )}
             loading={daneDaily.loading}
             onClose={() => setProgressOpen(false)}
             open={progressOpen}
@@ -595,6 +634,9 @@ export function RajCockpit() {
       />
 
       <AssignedTasksModal
+        approvingId={approvingTask}
+        focusTaskId={focusTaskId}
+        onApprove={approveTask}
         commentCounts={commentCounts}
         loading={!tasksLoaded}
         onClose={() => setTasksOpen(false)}

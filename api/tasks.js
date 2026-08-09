@@ -10,6 +10,18 @@ import { createClient } from "@supabase/supabase-js";
 import { requireUser, requireCockpit } from "../lib/apiAuth.js";
 import { sendPush } from "../lib/sendPush.js";
 
+/** Same fixed timezone as daily tasks, so both feed one progress view. */
+const BUSINESS_TZ = "America/Chicago";
+
+function businessDate(date = new Date()) {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: BUSINESS_TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(date);
+}
+
 const ASSIGNEES = ["dane", "karen", "jeremiah", "colton", "zo"];
 const TYPES = ["Task", "Feature"];
 const PRIORITIES = ["Low", "Normal", "Urgent"];
@@ -193,9 +205,71 @@ export default async function handler(req, res) {
 
         /* ---- UPDATE STATUS ---- */
         if (req.method === "PATCH") {
-            const { id, status } = req.body || {};
-
+            const { id, status, action } = req.body || {};
             if (!id) return res.status(400).json({ error: "id is required" });
+
+            /* ---- Raj signs off on work he assigned ---- */
+            if (action === "approve") {
+                requireCockpit(profile, ["raj"]);
+
+                const { data: task, error: findError } = await supabase
+                    .from("tasks")
+                    .select("*")
+                    .eq("id", id)
+                    .single();
+
+                if (findError && findError.code !== "PGRST116") throw findError;
+                if (!task) return res.status(404).json({ error: "Task not found" });
+
+                if (task.status !== "Done") {
+                    return res
+                        .status(400)
+                        .json({ error: "That task is not marked done yet" });
+                }
+                if (task.approved_at) {
+                    return res.status(400).json({ error: "Already approved" });
+                }
+
+                const approvedNow = new Date();
+
+                const { data: approved, error: approveError } = await supabase
+                    .from("tasks")
+                    .update({
+                        approved_at: approvedNow.toISOString(),
+                        approved_on: businessDate(approvedNow),
+                        approved_by: profile.full_name,
+                        updated_at: approvedNow.toISOString(),
+                    })
+                    .eq("id", id)
+                    .select()
+                    .single();
+
+                if (approveError) throw approveError;
+
+                const link = `/${task.assigned_to}?task=${id}`;
+
+                const { error: notifyError } = await supabase
+                    .from("notifications")
+                    .insert({
+                        recipient: task.assigned_to,
+                        type: "task_approved",
+                        title: `${profile.full_name} approved your work`,
+                        body: task.title,
+                        link,
+                    });
+
+                if (notifyError) {
+                    console.error("Failed to create notification:", notifyError);
+                }
+
+                await sendPush(task.assigned_to, {
+                    title: `${profile.full_name} approved your work`,
+                    body: task.title,
+                    url: link,
+                });
+
+                return res.status(200).json({ task: approved });
+            }
             if (!STATUSES.includes(status)) {
                 return res
                     .status(400)
@@ -225,6 +299,15 @@ export default async function handler(req, res) {
                     status,
                     updated_at: now,
                     completed_at: status === "Done" ? now : null,
+                    // Reopening withdraws Raj's approval - he signed off on
+                    // finished work, not on work that went back in progress.
+                    ...(status === "Done"
+                        ? {}
+                        : {
+                            approved_at: null,
+                            approved_on: null,
+                            approved_by: null,
+                        }),
                 })
                 .eq("id", id)
                 .select()

@@ -47,7 +47,7 @@ export function CompleteDailyTaskModal({
   const refreshFiles = React.useCallback(async () => {
     if (!taskId) return;
     try {
-      setFiles(await loadEvidenceUrls(taskId));
+      setFiles(await loadEvidenceUrls({ taskId }));
     } catch (err) {
       console.error("Could not load evidence:", err);
     }
@@ -83,7 +83,7 @@ export function CompleteDailyTaskModal({
 
     for (const file of picked) {
       try {
-        await uploadEvidence(taskId, file);
+        await uploadEvidence({ taskId }, file);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {

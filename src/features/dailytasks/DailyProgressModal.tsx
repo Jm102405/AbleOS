@@ -2,6 +2,7 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { XIcon } from "lucide-react";
 import { DailyTaskCard } from "./DailyTaskCard";
+import { TaskCard, type Task } from "../tasks/TaskCard";
 import type { DailyTask } from "./useDailyTasks";
 
 type View = "in_progress" | "completed";
@@ -15,6 +16,8 @@ type DailyProgressModalProps = {
   /** Today's date in the business timezone, from the API. */
   today: string;
   personLabel: string;
+  /** Tasks Raj assigned and has since approved. */
+  approvedTasks?: Task[];
 };
 
 /**
@@ -75,6 +78,7 @@ export function DailyProgressModal({
   loading,
   today,
   personLabel,
+  approvedTasks = [],
 }: DailyProgressModalProps) {
   const [view, setView] = React.useState<View>("in_progress");
   const [mode, setMode] = React.useState<Mode>("today");
@@ -124,6 +128,16 @@ export function DailyProgressModal({
         task.completed_on <= range.end,
     );
   }, [completed, range]);
+
+  const visibleApproved = React.useMemo(() => {
+    if (!range || !range.start) return approvedTasks;
+    return approvedTasks.filter(
+      (task) =>
+        task.approved_on &&
+        task.approved_on >= range.start &&
+        task.approved_on <= range.end,
+    );
+  }, [approvedTasks, range]);
 
   const rangeLabel = React.useMemo(() => {
     if (!range) return "all time";
@@ -192,7 +206,7 @@ export function DailyProgressModal({
                   onClick={() => setView("completed")}
                   type="button"
                 >
-                  Completed ({completed.length})
+                  Completed ({completed.length + approvedTasks.length})
                 </button>
               </div>
 
@@ -247,13 +261,17 @@ export function DailyProgressModal({
 
               {view === "completed" && !loading && (
                 <p className="text-[11px] font-bold text-[#526176]">
-                  {visibleCompleted.length}{" "}
-                  {visibleCompleted.length === 1 ? "task" : "tasks"} completed ·{" "}
-                  {rangeLabel}
+                  {visibleCompleted.length + visibleApproved.length}{" "}
+                  {visibleCompleted.length + visibleApproved.length === 1
+                    ? "task"
+                    : "tasks"}{" "}
+                  completed · {rangeLabel}
                 </p>
               )}
 
-              {!loading && visible.length === 0 && (
+              {!loading &&
+                visible.length === 0 &&
+                (view === "in_progress" || visibleApproved.length === 0) && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
                   <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
                     {view === "in_progress"
@@ -266,6 +284,23 @@ export function DailyProgressModal({
               {visible.map((task) => (
                 <DailyTaskCard key={task.id} task={task} />
               ))}
+
+              {view === "completed" && visibleApproved.length > 0 && (
+                <p className="pt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                  Assigned by Raj
+                </p>
+              )}
+
+              {view === "completed" &&
+                visibleApproved.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    onStatusChange={() => {}}
+                    readOnly
+                    saving={false}
+                    task={task}
+                  />
+                ))}
             </div>
           </motion.div>
         </motion.div>

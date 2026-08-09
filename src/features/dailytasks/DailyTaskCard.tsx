@@ -52,7 +52,7 @@ export function DailyTaskCard({
     if (next && files.length === 0 && fileCount > 0) {
       setLoadingFiles(true);
       try {
-        setFiles(await loadEvidenceUrls(task.id));
+        setFiles(await loadEvidenceUrls({ taskId: task.id }));
       } catch (err) {
         console.error("Could not load evidence:", err);
       } finally {

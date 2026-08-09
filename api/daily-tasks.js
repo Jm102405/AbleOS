@@ -209,7 +209,7 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
-            if (!isDraft && profile.cockpit !== WATCHER) {
+            if (!isDraft && profile.realCockpit !== WATCHER) {
                 const link = `/${WATCHER}?danetask=${data.id}`;
 
                 const { error: notifyError } = await supabase
@@ -321,7 +321,7 @@ export default async function handler(req, res) {
                         }
                         : null;
 
-            if (notify && profile.cockpit !== WATCHER) {
+            if (notify && profile.realCockpit !== WATCHER) {
                 const link = `/${WATCHER}?danetask=${id}`;
 
                 const { error: notifyError } = await supabase

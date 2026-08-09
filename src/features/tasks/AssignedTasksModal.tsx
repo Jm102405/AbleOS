@@ -30,6 +30,10 @@ type AssignedTasksModalProps = {
   onDelete: (id: string) => Promise<void>;
   onOpenChat: (task: Task) => void;
   commentCounts: Record<string, number>;
+  onApprove: (id: string) => void;
+  approvingId: string | null;
+  /** Task to open expanded, when arriving from a notification. */
+  focusTaskId?: string | null;
 };
 
 export function AssignedTasksModal({
@@ -42,6 +46,9 @@ export function AssignedTasksModal({
   onDelete,
   onOpenChat,
   commentCounts,
+  onApprove,
+  approvingId,
+  focusTaskId,
 }: AssignedTasksModalProps) {
   const [filter, setFilter] = React.useState<Filter>("All");
   const [confirming, setConfirming] = React.useState<Task | null>(null);
@@ -167,8 +174,11 @@ export function AssignedTasksModal({
 
               {visible.map((task) => (
                 <TaskCard
+                  approving={approvingId === task.id}
+                  defaultExpanded={focusTaskId === task.id}
                   commentCount={commentCounts[task.id] ?? 0}
                   key={task.id}
+                  onApprove={() => onApprove(task.id)}
                   metaLabel={`To ${STAFF_LABELS[task.assigned_to] ?? task.assigned_to}`}
                   onDelete={() => setConfirming(task)}
                   onOpenChat={() => onOpenChat(task)}

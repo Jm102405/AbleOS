@@ -25,6 +25,10 @@ export type EvidenceFile = {
   url: string;
 };
 
+export type EvidenceTarget =
+  | { taskId: string; assignedTaskId?: never }
+  | { assignedTaskId: string; taskId?: never };
+
 function asJpgName(name: string) {
   return name.replace(/\.[^.]+$/, "") + ".jpg";
 }
@@ -67,8 +71,15 @@ export async function prepareFile(file: File): Promise<File> {
  * Three steps: ask the server for a one-shot signed URL scoped to a single
  * path, PUT the bytes straight to Storage, then record the row. The browser
  * never holds a key that can write anywhere else.
+ *
+ * Pass notify on the last file of a batch so the recipient gets one
+ * notification rather than one per file.
  */
-export async function uploadEvidence(taskId: string, original: File) {
+export async function uploadEvidence(
+  target: EvidenceTarget,
+  original: File,
+  options: { notify?: boolean } = {},
+) {
   const file = await prepareFile(original);
 
   if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -81,7 +92,7 @@ export async function uploadEvidence(taskId: string, original: File) {
   const signRes = await apiFetch("/api/task-evidence", {
     method: "POST",
     body: JSON.stringify({
-      taskId,
+      ...target,
       mimeType: file.type,
       sizeBytes: file.size,
     }),
@@ -103,7 +114,8 @@ export async function uploadEvidence(taskId: string, original: File) {
   const recordRes = await apiFetch("/api/task-evidence", {
     method: "PATCH",
     body: JSON.stringify({
-      taskId,
+      ...target,
+      ...(options.notify ? { notify: true } : {}),
       path: signed.path,
       fileName: file.name,
       mimeType: file.type,
@@ -131,11 +143,13 @@ export async function deleteEvidence(fileId: string) {
 
 /** Signed download links, valid for ten minutes. */
 export async function loadEvidenceUrls(
-  taskId: string,
+  target: EvidenceTarget,
 ): Promise<EvidenceFile[]> {
-  const res = await apiFetch(
-    `/api/task-evidence?taskId=${encodeURIComponent(taskId)}`,
-  );
+  const query = target.taskId
+    ? `taskId=${encodeURIComponent(target.taskId)}`
+    : `assignedTaskId=${encodeURIComponent(target.assignedTaskId as string)}`;
+
+  const res = await apiFetch(`/api/task-evidence?${query}`);
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body?.error || "Could not load the files");
