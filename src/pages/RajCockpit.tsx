@@ -408,7 +408,7 @@ export function RajCockpit() {
               />
               <StatCard
                 label="Gates approved"
-                tone="primary"
+                tone="success"
                 value={approvedCount !== null ? String(approvedCount) : "..."}
               />
             </div>
@@ -679,10 +679,19 @@ type StatCardProps = {
   onClick?: () => void;
 };
 
-function StatCard({ value, label, tone, href, onClick }: StatCardProps) {
+function StatCard({
+  value,
+  label,
+  tone,
+  href,
+  onClick,
+}: Omit<StatCardProps, "tone"> & {
+  tone: "primary" | "urgent" | "success";
+}) {
   const tones = {
     primary: "text-[#418BFF] bg-[#EEF5FF]",
     urgent: "text-[#FF7832] bg-[#FFF1E9]",
+    success: "text-[#16A34A] bg-[#EAF8EF]",
   };
 
   const content = (
