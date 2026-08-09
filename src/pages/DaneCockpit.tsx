@@ -1,6 +1,13 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckIcon, PlusIcon } from "lucide-react";
+import {
+  ClipboardListIcon,
+  FileTextIcon,
+  ListChecksIcon,
+  PlusIcon,
+  CheckIcon,
+} from "lucide-react";
+import { NavCard } from "../components/NavCard";
 import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
@@ -67,17 +74,6 @@ const priorityStyles: Record<Order["priority"], string> = {
   Normal: "bg-[#EEF5FF] text-[#418BFF]",
   Urgent: "bg-[#FFF1E9] text-[#D95717]",
 };
-
-type KnownGap = {
-  label: string;
-  status: string;
-  tone: "urgent" | "scheduled";
-};
-
-const knownGaps: KnownGap[] = [
-  { label: "WF-DEAL-12 PSA extractor", status: "Inactive", tone: "urgent" },
-  { label: "Cockpit DNS CNAMEs", status: "Wk 2-3", tone: "scheduled" },
-];
 
 const reveal = {
   hidden: { opacity: 0, y: 12 },
@@ -305,14 +301,6 @@ export function DaneCockpit() {
                 Audits · Access grants · Main Brain integration
               </p>
             </div>
-            <button
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2 sm:text-[12px]"
-              onClick={() => setAddOrderOpen(true)}
-              type="button"
-            >
-              <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
-              Add Order
-            </button>
           </div>
         </motion.section>
 
@@ -324,26 +312,26 @@ export function DaneCockpit() {
           transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
           variants={reveal}
         >
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#3B82C4]">
-            Lane 2 · Audit first
-          </p>
-          <div className="mt-2 flex items-end gap-4">
-            <span className="text-[68px] font-extrabold leading-[0.8] tracking-[-0.075em] text-[#418BFF] sm:text-[80px] lg:text-[92px]">
-              25
-            </span>
-            <h2
-              className="max-w-[245px] pb-1 text-[14px] font-medium leading-[1.45] text-[#526176] sm:max-w-xs sm:text-[15px] lg:max-w-sm"
-              id="queue-heading"
-            >
-              of 59 workflows to verify against the July 2 handoff before
-              anything else.
-            </h2>
-          </div>
+          <h2 className="sr-only" id="queue-heading">
+            Your numbers
+          </h2>
 
-          <div className="mt-7 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
-            <InsightCard label="Critical gap" value="1" tone="critical" />
-            <InsightCard label="Cockpits queued" value="2" tone="queued" />
-            <InsightCard label="Main Brain access" tone="success" />
+          <div className="mt-1 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
+            <InsightCard
+              label="Tasks from Raj"
+              tone="queued"
+              value={tasksLoading ? "..." : String(openTaskCount)}
+            />
+            <InsightCard
+              label="My tasks"
+              tone="yellow"
+              value={daily.loading ? "..." : String(daily.inProgress.length)}
+            />
+            <InsightCard
+              label="Orders to Raj"
+              tone="critical"
+              value={ordersLoading ? "..." : String(orders.length)}
+            />
           </div>
         </motion.section>
 
@@ -353,37 +341,19 @@ export function DaneCockpit() {
           transition={{ delay: 0.16, duration: 0.38, ease: "easeOut" }}
           variants={reveal}
         >
-          <div className="lg:grid lg:grid-cols-2 lg:gap-x-10 xl:gap-x-14">
-            <section aria-labelledby="tasks-heading" className="pt-9">
-              <SectionHeading id="tasks-heading">Tasks from Raj</SectionHeading>
-
-              <button
-                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+          <div>
+            <section aria-labelledby="tasks-heading" className="pt-8">
+              <h2 className="sr-only" id="tasks-heading">
+                Tasks from Raj
+              </h2>
+              <NavCard
+                count={tasksLoading ? null : openTaskCount}
+                icon={<ClipboardListIcon size={17} strokeWidth={2.5} />}
                 onClick={() => setTasksOpen(true)}
-                type="button"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                    {tasksLoading
-                      ? "Loading..."
-                      : openTaskCount === 0
-                        ? "Nothing assigned to you"
-                        : `View ${openTaskCount} open task${openTaskCount === 1 ? "" : "s"}`}
-                  </span>
-                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                    Work Raj has assigned to you
-                  </span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                    openTaskCount
-                      ? "bg-[#EEF5FF] text-[#418BFF]"
-                      : "bg-[#F1F5F9] text-[#8291A5]"
-                  }`}
-                >
-                  {tasksLoading ? "..." : openTaskCount}
-                </span>
-              </button>
+                subtitle="Work Raj has assigned to you"
+                title="Tasks from Raj"
+                tone="blue"
+              />
             </section>
 
             <GateQueueModal
@@ -438,47 +408,28 @@ export function DaneCockpit() {
               </div>
             </GateQueueModal>
 
-            <section aria-labelledby="daily-heading" className="pt-9">
-              <div className="flex items-center justify-between gap-3">
-                <SectionHeading id="daily-heading">My tasks</SectionHeading>
-                <button
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E]"
-                  onClick={() => setCreateOpen(true)}
-                  type="button"
-                >
-                  <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
-                  New task
-                </button>
-              </div>
-
-              <button
-                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+            <section aria-labelledby="daily-heading" className="pt-3">
+              <h2 className="sr-only" id="daily-heading">
+                My tasks
+              </h2>
+              <NavCard
+                action={
+                  <button
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#418BFF] px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8]"
+                    onClick={() => setCreateOpen(true)}
+                    type="button"
+                  >
+                    <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
+                    New
+                  </button>
+                }
+                count={daily.loading ? null : daily.inProgress.length}
+                icon={<ListChecksIcon size={17} strokeWidth={2.5} />}
                 onClick={() => setDailyOpen(true)}
-                type="button"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                    {daily.loading
-                      ? "Loading..."
-                      : daily.inProgress.length === 0
-                        ? "Nothing in progress"
-                        : `${daily.inProgress.length} task${daily.inProgress.length === 1 ? "" : "s"} in progress`}
-                  </span>
-                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                    {daily.drafts.length} drafts · {daily.completed.length}{" "}
-                    completed
-                  </span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                    daily.inProgress.length
-                      ? "bg-[#EEF5FF] text-[#418BFF]"
-                      : "bg-[#EAF8EF] text-[#16A34A]"
-                  }`}
-                >
-                  {daily.loading ? "..." : daily.inProgress.length}
-                </span>
-              </button>
+                subtitle={`${daily.drafts.length} drafts · ${daily.completed.length} completed`}
+                title="My tasks"
+                tone="yellow"
+              />
             </section>
 
             <GateQueueModal
@@ -550,36 +501,28 @@ export function DaneCockpit() {
               </div>
             </GateQueueModal>
 
-            <section aria-labelledby="orders-heading" className="pt-9">
-              <SectionHeading id="orders-heading">Your orders</SectionHeading>
-
-              <button
-                className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
+            <section aria-labelledby="orders-heading" className="pt-3">
+              <h2 className="sr-only" id="orders-heading">
+                Orders to Raj
+              </h2>
+              <NavCard
+                action={
+                  <button
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#418BFF] px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8]"
+                    onClick={() => setAddOrderOpen(true)}
+                    type="button"
+                  >
+                    <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
+                    Add
+                  </button>
+                }
+                count={ordersLoading ? null : orders.length}
+                icon={<FileTextIcon size={17} strokeWidth={2.5} />}
                 onClick={() => setOrdersOpen(true)}
-                type="button"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
-                    {ordersLoading
-                      ? "Loading..."
-                      : orders.length === 0
-                        ? "No orders sent yet"
-                        : `View ${orders.length} order${orders.length === 1 ? "" : "s"}`}
-                  </span>
-                  <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
-                    Requests you have sent to Raj
-                  </span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] ${
-                    orders.length
-                      ? "bg-[#EEF5FF] text-[#418BFF]"
-                      : "bg-[#F1F5F9] text-[#8291A5]"
-                  }`}
-                >
-                  {ordersLoading ? "..." : orders.length}
-                </span>
-              </button>
+                subtitle="Requests you have sent to Raj"
+                title="Orders to Raj"
+                tone="orange"
+              />
             </section>
 
             <GateQueueModal
@@ -660,20 +603,6 @@ export function DaneCockpit() {
                 })}
               </div>
             </GateQueueModal>
-
-            <section aria-labelledby="gaps-heading" className="pt-9">
-              <SectionHeading id="gaps-heading">Known gaps</SectionHeading>
-              <div className="mt-4 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
-                {knownGaps.map((gap) => (
-                  <GapItem
-                    key={gap.label}
-                    label={gap.label}
-                    status={gap.status}
-                    tone={gap.tone}
-                  />
-                ))}
-              </div>
-            </section>
           </div>
         </motion.div>
 
@@ -760,11 +689,18 @@ type InsightCardProps = {
   tone: "critical" | "queued" | "success";
 };
 
-function InsightCard({ label, value, tone }: InsightCardProps) {
+function InsightCard({
+  label,
+  value,
+  tone,
+}: Omit<InsightCardProps, "tone"> & {
+  tone: "critical" | "queued" | "success" | "yellow";
+}) {
   const tones = {
     critical: "text-[#FF7832] bg-[#FFF1E9]",
     queued: "text-[#418BFF] bg-[#EEF5FF]",
     success: "text-[#16A34A] bg-[#EAF8EF]",
+    yellow: "text-[#CA8A04] bg-[#FEF9C3]",
   };
 
   return (
@@ -798,29 +734,5 @@ function SectionHeading({ id, children }: SectionHeadingProps) {
     >
       {children}
     </h2>
-  );
-}
-
-type GapItemProps = {
-  label: string;
-  status: string;
-  tone: "urgent" | "scheduled";
-};
-
-function GapItem({ label, status, tone }: GapItemProps) {
-  const statusStyle =
-    tone === "urgent"
-      ? "bg-[#FFF1E9] text-[#D95717]"
-      : "bg-[#FEF3C7] text-[#B45309]";
-
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-[#E6ECF2] px-5 py-4 last:border-b-0">
-      <p className="text-[13px] font-bold text-[#1A1A2E]">{label}</p>
-      <span
-        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-wide ${statusStyle}`}
-      >
-        {status}
-      </span>
-    </div>
   );
 }

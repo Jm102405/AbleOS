@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRightIcon,
   LoaderIcon,
-  MoreHorizontalIcon,
   PlusIcon,
   XIcon,
 } from "lucide-react";
@@ -368,13 +367,6 @@ export function RajCockpit() {
               >
                 <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
                 Assign Task
-              </button>
-              <button
-                aria-label="Open profile options"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F1F5F9] text-[#3B82C4] transition-colors hover:bg-[#E3EDF8] focus:outline-none focus:ring-2 focus:ring-[#3B82C4] focus:ring-offset-2"
-                type="button"
-              >
-                <MoreHorizontalIcon aria-hidden="true" size={18} />
               </button>
             </div>
           </motion.section>
