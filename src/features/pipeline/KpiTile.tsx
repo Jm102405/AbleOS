@@ -18,11 +18,11 @@ export function KpiTile({ label, value, tone, href }: KpiTileProps) {
 
   const content = (
     <>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.07em] text-[#718096]">
+      <p className="text-[16px] font-semibold tracking-[0.07em] text-[#718096]">
         {label}
       </p>
       <p
-        className={`mt-2 text-[28px] font-extrabold leading-none tracking-[-0.06em] ${valueStyle}`}
+        className={`mt-2 text-[28px] font-semibold leading-none tracking-[-0.06em] ${valueStyle}`}
       >
         {value}
       </p>

@@ -22,7 +22,7 @@ const EMPTY = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]";
+  "w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]";
 
 export function AddOrderModal({
   open,
@@ -130,10 +130,10 @@ export function AddOrderModal({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                   New request
                 </p>
-                <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                   Add Order
                 </h2>
               </div>
@@ -185,7 +185,7 @@ export function AddOrderModal({
                     const active = form.priority === level;
                     return (
                       <button
-                        className={`rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-colors ${
+                        className={`rounded-xl border px-3 py-2.5 text-[16px] font-medium transition-colors ${
                           active
                             ? "border-[#418BFF] bg-[#EBF3FF] text-[#418BFF]"
                             : "border-[#DCE4EE] bg-white text-[#6B7A90] hover:bg-[#F8FAFC]"
@@ -203,7 +203,7 @@ export function AddOrderModal({
 
               <Field hint="Optional" label="Estimated cost">
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#93A3B8]">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] font-medium text-[#93A3B8]">
                     $
                   </span>
                   <input
@@ -220,19 +220,19 @@ export function AddOrderModal({
             </div>
 
             {error && (
-              <p className="mt-4 text-[11px] font-bold text-red-500">{error}</p>
+              <p className="mt-4 text-[16px] font-medium text-red-500">{error}</p>
             )}
 
             <div className="mt-6 flex gap-3">
               <button
-                className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-3 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
+                className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-3 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
                 onClick={onClose}
                 type="button"
               >
                 Cancel
               </button>
               <button
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
                 disabled={!canSubmit}
                 type="submit"
               >
@@ -268,14 +268,14 @@ function Field({ label, required, hint, children }: FieldProps) {
   return (
     <label className="block">
       <span className="mb-1.5 flex items-center gap-2">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+        <span className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
           {label}
         </span>
         {required && (
-          <span className="text-[11px] font-bold text-[#FF7832]">*</span>
+          <span className="text-[16px] font-medium text-[#FF7832]">*</span>
         )}
         {hint && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
+          <span className="text-[16px] font-medium tracking-wide text-[#A3B0C0]">
             {hint}
           </span>
         )}

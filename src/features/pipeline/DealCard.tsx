@@ -29,19 +29,19 @@ export function DealCard({ deal, onSelect }: DealCardProps) {
       />
 
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+        <h3 className="truncate text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
           {deal.name}
         </h3>
-        <p className="mt-1 truncate text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+        <p className="mt-1 truncate text-[16px] font-medium leading-snug text-[#6B7A90]">
           {deal.address || "No address recorded"}
         </p>
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full bg-[#EEF5FF] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.06em] text-[#418BFF]">
+          <span className="rounded-full bg-[#EEF5FF] px-2 py-0.5 text-[14px] font-semibold tracking-[0.06em] text-[#418BFF]">
             {deal.source}
           </span>
           <span
-            className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.06em] ${
+            className={`rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-[0.06em] ${
               stalled
                 ? "bg-[#FFF1E9] text-[#FF7832]"
                 : "bg-[#F1F5F9] text-[#8291A5]"

@@ -57,7 +57,7 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#DCE4EE] bg-white px-5 py-4">
           <button
-            className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#3B82C4] focus:outline-none focus:ring-2 focus:ring-[#3B82C4] focus:ring-offset-2"
+            className="inline-flex items-center gap-1.5 text-[16px] font-semibold tracking-[0.07em] text-[#3B82C4] focus:outline-none focus:ring-2 focus:ring-[#3B82C4] focus:ring-offset-2"
             onClick={onClose}
             type="button"
           >
@@ -75,16 +75,16 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
         </div>
 
         <div className="px-5 pb-8 pt-6">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#3B82C4]">
+          <p className="text-[16px] font-semibold tracking-[0.12em] text-[#3B82C4]">
             {STAGE_LABELS[deal.stage]}
           </p>
           <h2
-            className="mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.045em]"
+            className="mt-1 text-[26px] font-semibold leading-tight tracking-[-0.045em]"
             id="deal-detail-title"
           >
             {deal.name}
           </h2>
-          <p className="mt-3 flex items-start gap-1.5 text-[12px] font-medium text-[#64748B]">
+          <p className="mt-3 flex items-start gap-1.5 text-[16px] font-medium text-[#64748B]">
             <MapPinIcon
               aria-hidden="true"
               className="mt-0.5 shrink-0"
@@ -107,9 +107,9 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
           </div>
 
           {deal.movedBy ? (
-            <p className="mt-3 text-[11px] font-medium text-[#8291A5]">
+            <p className="mt-3 text-[16px] font-medium text-[#8291A5]">
               Last moved by{" "}
-              <span className="font-extrabold capitalize text-[#526176]">
+              <span className="font-semibold capitalize text-[#526176]">
                 {deal.movedBy}
               </span>
             </p>
@@ -125,11 +125,11 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
 
             <div className="mt-3 rounded-2xl border border-[#DCE4EE] bg-white p-4">
               <label className="block" htmlFor="deal-stage-select">
-                <span className="text-[9px] font-extrabold uppercase tracking-[0.08em] text-[#8291A5]">
+                <span className="text-[14px] font-semibold tracking-[0.08em] text-[#8291A5]">
                   New stage
                 </span>
                 <select
-                  className="mt-1.5 w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[13px] font-bold text-[#1A1A2E] outline-none transition-colors focus:border-[#1E3A8A] focus:bg-white"
+                  className="mt-1.5 w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors focus:border-[#1E3A8A] focus:bg-white"
                   disabled={moving}
                   id="deal-stage-select"
                   onChange={(event) =>
@@ -146,7 +146,7 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
               </label>
 
               <button
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={moving || unchanged}
                 onClick={() => onMove(deal.id, nextStage)}
                 type="button"
@@ -171,11 +171,11 @@ export function DealDetail({ deal, moving, onClose, onMove }: DealDetailProps) {
               Notes from Notion
             </DetailHeading>
             <div className="mt-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5">
-              <p className="text-[12px] font-medium leading-relaxed text-[#526176]">
+              <p className="text-[16px] font-medium leading-relaxed text-[#526176]">
                 {deal.notes || "No notes recorded."}
               </p>
               {deal.category ? (
-                <span className="mt-3 inline-block rounded-full bg-[#F1F5F9] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.06em] text-[#8291A5]">
+                <span className="mt-3 inline-block rounded-full bg-[#F1F5F9] px-2 py-1 text-[14px] font-semibold tracking-[0.06em] text-[#8291A5]">
                   {deal.category}
                 </span>
               ) : null}
@@ -201,10 +201,10 @@ function DetailStat({
   return (
     <div className="rounded-2xl border border-[#DCE4EE] bg-white p-3.5 shadow-[0_4px_10px_rgba(30,58,138,0.035)]">
       <span className="text-[#3B82C4]">{icon}</span>
-      <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.08em] text-[#8291A5]">
+      <p className="mt-2 text-[14px] font-semibold tracking-[0.08em] text-[#8291A5]">
         {label}
       </p>
-      <p className="mt-1 text-[12px] font-extrabold text-[#1A1A2E]">{value}</p>
+      <p className="mt-1 text-[16px] font-semibold text-[#1A1A2E]">{value}</p>
     </div>
   );
 }
@@ -220,7 +220,7 @@ function DetailHeading({
 }) {
   return (
     <h2
-      className="flex items-center gap-2 text-[16px] font-extrabold tracking-[-0.025em]"
+      className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.025em]"
       id={id}
     >
       <span className="text-[#3B82C4]">{icon}</span>

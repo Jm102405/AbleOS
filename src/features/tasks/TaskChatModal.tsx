@@ -182,10 +182,10 @@ export function TaskChatModal({
             {/* Header */}
             <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#DCE4EE] bg-white px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                   Discussion
                 </p>
-                <h2 className="mt-1 truncate text-[15px] font-extrabold tracking-[-0.02em] text-[#1A1A2E]">
+                <h2 className="mt-1 truncate text-[15px] font-semibold tracking-[-0.02em] text-[#1A1A2E]">
                   {task.title}
                 </h2>
               </div>
@@ -202,14 +202,14 @@ export function TaskChatModal({
             {/* Messages */}
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {loading && (
-                <p className="text-center text-[12px] font-medium text-[#8A99AC]">
+                <p className="text-center text-[16px] font-medium text-[#8A99AC]">
                   Loading…
                 </p>
               )}
 
               {!loading && comments.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
-                  <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                  <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                     No messages yet. Ask anything you need clarified.
                   </p>
                 </div>
@@ -226,7 +226,7 @@ export function TaskChatModal({
                 return (
                   <React.Fragment key={comment.id}>
                     {showDay && (
-                      <p className="pt-1 text-center text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#A3B0C0]">
+                      <p className="pt-1 text-center text-[16px] font-semibold tracking-[0.1em] text-[#A3B0C0]">
                         {dayLabel(comment.created_at)}
                       </p>
                     )}
@@ -238,7 +238,7 @@ export function TaskChatModal({
                     >
                       <div className="max-w-[78%]">
                         {!mine && (
-                          <p className="mb-1 pl-1 text-[10px] font-extrabold uppercase tracking-wide text-[#8A99AC]">
+                          <p className="mb-1 pl-1 text-[16px] font-semibold tracking-wide text-[#8A99AC]">
                             {comment.author_name}
                           </p>
                         )}
@@ -256,7 +256,7 @@ export function TaskChatModal({
                         </div>
 
                         <p
-                          className={`mt-1 text-[10px] font-bold text-[#A3B0C0] ${
+                          className={`mt-1 text-[16px] font-medium text-[#A3B0C0] ${
                             mine ? "pr-1 text-right" : "pl-1"
                           }`}
                         >
@@ -274,14 +274,14 @@ export function TaskChatModal({
             {/* Composer */}
             <div className="shrink-0 border-t border-[#DCE4EE] bg-white px-4 pb-4 pt-3">
               {error && (
-                <p className="mb-2 text-[11px] font-bold text-red-500">
+                <p className="mb-2 text-[16px] font-medium text-red-500">
                   {error}
                 </p>
               )}
 
               <div className="flex items-end gap-2">
                 <textarea
-                  className="max-h-[120px] min-h-[42px] flex-1 resize-none rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
+                  className="max-h-[120px] min-h-[42px] flex-1 resize-none rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
                   maxLength={2000}
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={handleKeyDown}

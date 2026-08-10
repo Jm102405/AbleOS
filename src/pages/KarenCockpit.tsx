@@ -54,13 +54,13 @@ export function KarenCockpit() {
             </div>
           </div>
 
-          <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+          <p className="mt-6 text-[16px] font-medium tracking-[0.14em] text-white/80">
             ABLE OS · Executive workspace
           </p>
-          <h1 className="mt-1 text-[32px] font-extrabold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
+          <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
             Karen&apos;s Cockpit
           </h1>
-          <p className="mt-2 max-w-md text-[13px] font-medium text-white/85 sm:text-[14px]">
+          <p className="mt-2 max-w-md text-[18px] font-medium text-white/85">
             Weekly load, leasing, and account security status.
           </p>
         </div>
@@ -78,16 +78,16 @@ export function KarenCockpit() {
           <div className="absolute inset-y-0 left-0 w-1.5 bg-[#1E3A8A]" />
           <div className="flex items-center justify-between gap-4 px-5 py-4 pl-6 sm:px-7 sm:py-5 sm:pl-8">
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                 Personal dashboard
               </p>
               <h2
-                className="mt-1 text-[16px] font-extrabold tracking-[-0.025em] sm:text-[18px]"
+                className="mt-1 text-[16px] font-semibold tracking-[-0.025em]"
                 id="profile-heading"
               >
                 Karen Grant
               </h2>
-              <p className="mt-1 text-[11px] font-medium leading-relaxed text-[#64748B] sm:text-[12px]">
+              <p className="mt-1 text-[16px] font-medium leading-relaxed text-[#64748B]">
                 Leasing · Account security · Operations
               </p>
             </div>
@@ -156,10 +156,10 @@ export function KarenCockpit() {
             <article className="mt-4 flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
               <div className="h-9 w-1 shrink-0 rounded-full bg-[#FF7832]" />
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                <h3 className="text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
                   83(b) election — file by Jul 30
                 </h3>
-                <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                <p className="mt-1 text-[16px] font-medium leading-snug text-[#6B7A90]">
                   Certified Mail w/ Return Receipt, copy Mooni within 5 days
                 </p>
               </div>
@@ -167,7 +167,7 @@ export function KarenCockpit() {
           </section>
         </motion.div>
 
-        <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
+        <footer className="pt-10 text-center text-[16px] font-medium tracking-[0.12em] text-[#8291A5]">
           Able OS · V1 Build
         </footer>
       </main>
@@ -204,11 +204,11 @@ function InsightCard({ label, value, tone, onClick }: InsightCardProps) {
   const content = (
     <>
       <p
-        className={`inline-flex items-center justify-center rounded-lg px-2 py-1 text-[24px] font-extrabold leading-none tracking-[-0.06em] sm:text-[27px] ${tones[tone]}`}
+        className={`inline-flex items-center justify-center rounded-lg px-2 py-1 text-[24px] font-semibold leading-none tracking-[-0.06em] sm:text-[27px] ${tones[tone]}`}
       >
         {value}
       </p>
-      <p className="mt-3 text-[9px] font-extrabold uppercase leading-tight tracking-[0.06em] text-[#718096] sm:text-[10px]">
+      <p className="mt-3 text-[14px] font-semibold leading-tight tracking-[0.06em] text-[#718096]">
         {label}
       </p>
     </>
@@ -237,7 +237,7 @@ type SectionHeadingProps = {
 function SectionHeading({ id, children }: SectionHeadingProps) {
   return (
     <h2
-      className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+      className="text-[19px] font-semibold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
       id={id}
     >
       {children}
@@ -261,7 +261,7 @@ function ChecklistRow({ label, done }: ChecklistRowProps) {
         <span className="h-6 w-6 shrink-0 rounded-md border-2 border-[#93A3B8]" />
       )}
       <p
-        className={`text-[13px] font-bold leading-snug sm:text-[14px] ${
+        className={`text-[18px] font-medium leading-snug ${
           done ? "text-[#93A3B8] line-through" : "text-[#1A1A2E]"
         }`}
       >

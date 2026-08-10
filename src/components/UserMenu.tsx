@@ -91,7 +91,7 @@ export function UserMenu() {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Account menu"
-        className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/70 bg-[#1E3A8A] text-xs font-extrabold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
+        className="grid h-9 w-9 place-items-center rounded-full border-2 border-white/70 bg-[#1E3A8A] text-xs font-semibold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#3B82C4]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
@@ -110,10 +110,10 @@ export function UserMenu() {
           >
             {/* Who you are */}
             <div className="border-b border-[#E6ECF2] px-4 py-3">
-              <p className="text-[13px] font-extrabold tracking-[-0.015em] text-[#1A1A2E]">
+              <p className="text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
                 {profile?.full_name ?? "Signed in"}
               </p>
-              <p className="mt-0.5 truncate text-[11px] font-medium text-[#6B7A90]">
+              <p className="mt-0.5 truncate text-[16px] font-medium text-[#6B7A90]">
                 {session?.user?.email}
               </p>
             </div>
@@ -121,7 +121,7 @@ export function UserMenu() {
             {/* Other cockpits */}
             {others.length > 0 && (
               <div className="max-h-[280px] overflow-y-auto">
-                <p className="px-4 pb-1.5 pt-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                <p className="px-4 pb-1.5 pt-3 text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                   Open a cockpit
                 </p>
 
@@ -136,19 +136,19 @@ export function UserMenu() {
                     role="menuitem"
                     type="button"
                   >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1E3A8A] text-[11px] font-extrabold text-white">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1E3A8A] text-[16px] font-semibold text-white">
                       {cockpit.initial}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-extrabold tracking-[-0.015em] text-[#1A1A2E]">
+                      <span className="block text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
                         {cockpit.name}
                         {cockpit.key === profile?.cockpit && (
-                          <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-[#418BFF]">
+                          <span className="ml-1.5 text-[16px] font-medium tracking-wide text-[#418BFF]">
                             yours
                           </span>
                         )}
                       </span>
-                      <span className="block text-[11px] font-medium text-[#6B7A90]">
+                      <span className="block text-[16px] font-medium text-[#6B7A90]">
                         {cockpit.role}
                       </span>
                     </span>
@@ -172,7 +172,7 @@ export function UserMenu() {
                 size={15}
                 strokeWidth={2.5}
               />
-              <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#DC2626]">
+              <span className="text-[16px] font-semibold tracking-wide text-[#DC2626]">
                 Sign out
               </span>
             </button>

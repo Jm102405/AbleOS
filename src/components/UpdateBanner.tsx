@@ -30,10 +30,10 @@ export function UpdateBanner() {
             size={14}
             strokeWidth={2.75}
           />
-          <span className="text-[12px] font-extrabold text-white">
+          <span className="text-[16px] font-semibold text-white">
             New version ready
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-wide text-white/70">
+          <span className="text-[16px] font-medium tracking-wide text-white/70">
             Tap to update
           </span>
         </motion.button>

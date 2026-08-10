@@ -125,14 +125,14 @@ export function PipelineBoard() {
                 className="flex items-center gap-1 rounded-full bg-white/15 p-1"
               >
                 <Link
-                  className="rounded-full px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                  className="rounded-full px-3 py-1.5 text-[16px] font-semibold tracking-[0.08em] text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                   to="/raj"
                 >
                   Cockpit
                 </Link>
                 <span
                   aria-current="page"
-                  className="rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#1E3A8A]"
+                  className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold tracking-[0.08em] text-[#1E3A8A]"
                 >
                   Pipeline
                 </span>
@@ -142,13 +142,13 @@ export function PipelineBoard() {
             </div>
           </div>
 
-          <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+          <p className="mt-6 text-[16px] font-medium tracking-[0.14em] text-white/80">
             ABLE OS · Deal flow
           </p>
-          <h1 className="mt-1 text-[32px] font-extrabold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
+          <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
             Pipeline
           </h1>
-          <p className="mt-2 max-w-md text-[13px] font-medium text-white/85 sm:text-[14px]">
+          <p className="mt-2 max-w-md text-[18px] font-medium text-white/85">
             Reliable sourcing, visible at every stage.
           </p>
         </>
@@ -182,7 +182,7 @@ export function PipelineBoard() {
 
       <section aria-labelledby="bird-dog-filter-label" className="pt-7">
         <label
-          className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#3B82C4]"
+          className="text-[16px] font-semibold tracking-[0.14em] text-[#3B82C4]"
           htmlFor="bird-dog-filter"
           id="bird-dog-filter-label"
         >
@@ -191,7 +191,7 @@ export function PipelineBoard() {
         <div className="mt-2">
           <div className="relative">
             <select
-              className="h-12 w-full appearance-none rounded-xl border border-[#DCE4EE] bg-white px-4 pr-10 text-[13px] font-extrabold text-[#1A1A2E] shadow-[0_4px_10px_rgba(30,58,138,0.04)] focus:outline-none focus:ring-2 focus:ring-[#3B82C4]"
+              className="h-12 w-full appearance-none rounded-xl border border-[#DCE4EE] bg-white px-4 pr-10 text-[18px] font-semibold text-[#1A1A2E] shadow-[0_4px_10px_rgba(30,58,138,0.04)] focus:outline-none focus:ring-2 focus:ring-[#3B82C4]"
               id="bird-dog-filter"
               onChange={(event) => setSelectedBirdDog(event.target.value)}
               value={selectedBirdDog}
@@ -212,13 +212,13 @@ export function PipelineBoard() {
       </section>
 
       {error ? (
-        <p className="pt-3 text-[11px] font-bold text-[#DC2626]">{error}</p>
+        <p className="pt-3 text-[16px] font-medium text-[#DC2626]">{error}</p>
       ) : null}
 
       <section aria-labelledby="stage-browser-title" className="pt-8">
         <div className="flex items-center justify-between gap-3">
           <h2
-            className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+            className="text-[19px] font-semibold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
             id="stage-browser-title"
           >
             Deals by stage
@@ -247,10 +247,10 @@ export function PipelineBoard() {
             <LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+            <span className="block text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
               Browse all {stages.length} stages
             </span>
-            <span className="mt-1 block text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+            <span className="mt-1 block text-[16px] font-medium leading-snug text-[#6B7A90]">
               {STAGE_LABELS[selectedStage]} · {displayedDeals.length} deal
               {displayedDeals.length === 1 ? "" : "s"} · {activeBirdDogLabel}
             </span>
@@ -264,7 +264,7 @@ export function PipelineBoard() {
         </button>
       </section>
 
-      <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
+      <footer className="pt-10 text-center text-[16px] font-medium tracking-[0.12em] text-[#8291A5]">
         Able OS · V1 Build
       </footer>
 

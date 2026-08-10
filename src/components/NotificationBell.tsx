@@ -160,7 +160,7 @@ export function NotificationBell() {
       >
         <BellIcon aria-hidden="true" size={17} strokeWidth={2.25} />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-[#4BA3D6] bg-[#FF7832] px-1 text-[9px] font-extrabold leading-none text-white">
+          <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-[#4BA3D6] bg-[#FF7832] px-1 text-[14px] font-semibold leading-none text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -177,7 +177,7 @@ export function NotificationBell() {
             transition={{ duration: 0.16, ease: "easeOut" }}
           >
             <div className="flex items-center justify-between border-b border-[#E6ECF2] px-4 py-3">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                 Notifications
               </p>
               {items.length > 0 && (
@@ -192,13 +192,13 @@ export function NotificationBell() {
 
             <div className="max-h-[320px] overflow-y-auto">
               {loading && (
-                <p className="px-4 py-5 text-[12px] font-medium text-[#8A99AC]">
+                <p className="px-4 py-5 text-[16px] font-medium text-[#8A99AC]">
                   Loading...
                 </p>
               )}
 
               {!loading && items.length === 0 && (
-                <p className="px-4 py-5 text-[12px] font-medium leading-snug text-[#8A99AC]">
+                <p className="px-4 py-5 text-[16px] font-medium leading-snug text-[#8A99AC]">
                   Nothing new. You&apos;re all caught up.
                 </p>
               )}
@@ -220,15 +220,15 @@ export function NotificationBell() {
                     <div
                       className={item.read_at ? "min-w-0 pl-[18px]" : "min-w-0"}
                     >
-                      <p className="text-[12px] font-extrabold leading-snug tracking-[-0.01em] text-[#1A1A2E]">
+                      <p className="text-[16px] font-semibold leading-snug tracking-[-0.01em] text-[#1A1A2E]">
                         {item.title}
                       </p>
                       {item.body && (
-                        <p className="mt-0.5 text-[11px] font-medium leading-snug text-[#6B7A90]">
+                        <p className="mt-0.5 text-[16px] font-medium leading-snug text-[#6B7A90]">
                           {item.body}
                         </p>
                       )}
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
+                      <p className="mt-1 text-[16px] font-medium tracking-wide text-[#A3B0C0]">
                         {timeAgo(item.created_at)}
                       </p>
                     </div>

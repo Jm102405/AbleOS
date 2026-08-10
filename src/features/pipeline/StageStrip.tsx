@@ -26,7 +26,7 @@ export function StageStrip({
         return (
           <button
             aria-selected={active}
-            className={`shrink-0 rounded-full border px-3.5 py-2 text-[11px] font-extrabold tracking-[-0.01em] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82C4] ${
+            className={`shrink-0 rounded-full border px-3.5 py-2 text-[16px] font-semibold tracking-[-0.01em] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82C4] ${
               active
                 ? "border-[#1E3A8A] bg-[#1E3A8A] text-white"
                 : terminal

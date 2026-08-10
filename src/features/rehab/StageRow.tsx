@@ -85,7 +85,7 @@ export function StageRow({
             <CheckIcon aria-hidden="true" size={14} strokeWidth={3} />
           </span>
           <p
-            className={`flex-1 text-[13px] font-bold leading-snug sm:text-[14px] ${
+            className={`flex-1 text-[18px] font-medium leading-snug ${
               stage.rajApproved
                 ? "text-[#93A3B8] line-through"
                 : "text-[#1A1A2E]"
@@ -96,7 +96,7 @@ export function StageRow({
           {stage.drivePhotoLink && (
             
             <a
-              className="flex items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
+              className="flex items-center gap-1 text-[16px] font-medium text-[#418BFF] hover:underline"
               href={stage.drivePhotoLink}
               rel="noopener noreferrer"
               target="_blank"
@@ -109,11 +109,11 @@ export function StageRow({
 
         <div className="mt-2.5 flex items-center gap-2 pl-9">
           <span
-            className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${state.className}`}
+            className={`rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-wide ${state.className}`}
           >
             {state.text}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
+          <span className="text-[16px] font-medium tracking-wide text-[#A3B0C0]">
             {stage.jeremiahApproved && "Jeremiah ok"}
             {stage.karenApproved && " · Karen ok"}
             {stage.rajApproved && " · Raj ok"}
@@ -128,17 +128,17 @@ export function StageRow({
     <article className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
       <div className="flex items-center gap-3">
         <span className="h-6 w-6 shrink-0 rounded-md border-2 border-[#93A3B8]" />
-        <p className="flex-1 text-[13px] font-bold leading-snug text-[#1A1A2E] sm:text-[14px]">
+        <p className="flex-1 text-[18px] font-medium leading-snug text-[#1A1A2E]">
           {stage.stageName}
         </p>
       </div>
 
       {wasDeclined && (
         <div className="mt-3 rounded-xl border border-[#FED7BE] bg-[#FFF8F4] px-3.5 py-2.5">
-          <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#B94A18]">
+          <p className="text-[16px] font-semibold tracking-wide text-[#B94A18]">
             Sent back
           </p>
-          <p className="mt-1 text-[11px] font-medium leading-snug text-[#733614]">
+          <p className="mt-1 text-[16px] font-medium leading-snug text-[#733614]">
             {stage.notes}
           </p>
         </div>
@@ -162,7 +162,7 @@ export function StageRow({
 
         {!us.uploading && (
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-3 text-[12px] font-bold text-[#418BFF] transition-colors hover:bg-[#DBEAFE] sm:text-[13px]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-3 text-[16px] font-medium text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
             onClick={() => fileInputRef.current?.click()}
             type="button"
           >
@@ -178,7 +178,7 @@ export function StageRow({
               size={16}
               strokeWidth={2.5}
             />
-            <span className="text-[12px] font-bold text-[#5B6B82]">
+            <span className="text-[16px] font-medium text-[#5B6B82]">
               {us.progress
                 ? `Uploading ${us.progress} to Google Drive…`
                 : "Uploading to Google Drive…"}
@@ -187,7 +187,7 @@ export function StageRow({
         )}
 
         <input
-          className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium text-[#5B6B82] placeholder:text-[#A3B0C0] sm:text-[12px]"
+          className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[16px] font-medium text-[#5B6B82] placeholder:text-[#A3B0C0]"
           placeholder="Drive folder link appears here after upload"
           readOnly
           type="text"
@@ -195,7 +195,7 @@ export function StageRow({
         />
 
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[12px] font-bold text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC] sm:text-[13px]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
           disabled={!us.driveUrl || us.saving}
           onClick={() => onDone(stage.notionPageId)}
           type="button"
@@ -214,7 +214,7 @@ export function StageRow({
         </button>
 
         {us.error && (
-          <p className="text-[11px] font-bold text-red-500">{us.error}</p>
+          <p className="text-[16px] font-medium text-red-500">{us.error}</p>
         )}
       </div>
     </article>

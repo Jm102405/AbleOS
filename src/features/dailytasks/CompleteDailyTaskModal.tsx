@@ -143,10 +143,10 @@ export function CompleteDailyTaskModal({
             <div className="shrink-0 border-b border-[#DCE4EE] px-5 pb-4 pt-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Mark as done
                   </p>
-                  <h2 className="mt-1 truncate text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                  <h2 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                     {task.title}
                   </h2>
                 </div>
@@ -164,11 +164,11 @@ export function CompleteDailyTaskModal({
 
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
               <label className="block" htmlFor="daily-task-note">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#8291A5]">
+                <span className="text-[16px] font-semibold tracking-[0.08em] text-[#8291A5]">
                   What did you do?
                 </span>
                 <textarea
-                  className="mt-1.5 w-full resize-none rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[13px] font-medium leading-relaxed text-[#1A1A2E] outline-none transition-colors focus:border-[#1E3A8A] focus:bg-white"
+                  className="mt-1.5 w-full resize-none rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[18px] font-medium leading-relaxed text-[#1A1A2E] outline-none transition-colors focus:border-[#1E3A8A] focus:bg-white"
                   disabled={busy}
                   id="daily-task-note"
                   maxLength={2000}
@@ -180,7 +180,7 @@ export function CompleteDailyTaskModal({
               </label>
 
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#8291A5]">
+                <span className="text-[16px] font-semibold tracking-[0.08em] text-[#8291A5]">
                   Proof
                 </span>
 
@@ -194,7 +194,7 @@ export function CompleteDailyTaskModal({
                 />
 
                 <button
-                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#B7C7DC] bg-[#F8FAFC] px-3 py-3 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-60"
+                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#B7C7DC] bg-[#F8FAFC] px-3 py-3 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-60"
                   disabled={busy}
                   onClick={() => inputRef.current?.click()}
                   type="button"
@@ -216,7 +216,7 @@ export function CompleteDailyTaskModal({
                   )}
                 </button>
 
-                <p className="mt-1.5 text-[10px] font-medium text-[#A3B0C0]">
+                <p className="mt-1.5 text-[16px] font-medium text-[#A3B0C0]">
                   Optional. Photos are shrunk automatically. PDFs up to 10 MB.
                 </p>
 
@@ -241,7 +241,7 @@ export function CompleteDailyTaskModal({
                             target="_blank"
                           >
                             <FileTextIcon size={18} strokeWidth={2.5} />
-                            <span className="px-1 text-center text-[8px] font-bold leading-tight">
+                            <span className="px-1 text-center text-[8px] font-medium leading-tight">
                               {readableSize(file.sizeBytes)}
                             </span>
                           </a>
@@ -263,14 +263,14 @@ export function CompleteDailyTaskModal({
               </div>
 
               {error ? (
-                <p className="text-[11px] font-bold text-[#DC2626]">{error}</p>
+                <p className="text-[16px] font-medium text-[#DC2626]">{error}</p>
               ) : null}
             </div>
 
             <div className="shrink-0 border-t border-[#DCE4EE] px-5 py-4">
               <div className="flex gap-2.5">
                 <button
-                  className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
                   disabled={busy}
                   onClick={onClose}
                   type="button"
@@ -278,7 +278,7 @@ export function CompleteDailyTaskModal({
                   Not yet
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={busy}
                   onClick={handleDone}
                   type="button"

@@ -282,13 +282,13 @@ export function ColtonCockpit() {
             </div>
           </div>
 
-          <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+          <p className="mt-6 text-[16px] font-medium tracking-[0.14em] text-white/80">
             ABLE OS · Executive workspace
           </p>
-          <h1 className="mt-1 text-[32px] font-extrabold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
+          <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
             Colton&apos;s Cockpit
           </h1>
-          <p className="mt-2 max-w-md text-[13px] font-medium text-white/85 sm:text-[14px]">
+          <p className="mt-2 max-w-md text-[18px] font-medium text-white/85">
             Phase progress and checklist for your current build.
           </p>
         </div>
@@ -306,16 +306,16 @@ export function ColtonCockpit() {
           <div className="absolute inset-y-0 left-0 w-1.5 bg-[#1E3A8A]" />
           <div className="flex items-center justify-between gap-4 px-5 py-4 pl-6 sm:px-7 sm:py-5 sm:pl-8">
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                 Personal dashboard
               </p>
               <h2
-                className="mt-1 text-[16px] font-extrabold tracking-[-0.025em] sm:text-[18px]"
+                className="mt-1 text-[16px] font-semibold tracking-[-0.025em]"
                 id="profile-heading"
               >
                 Colton · Sunflower Builders
               </h2>
-              <p className="mt-1 text-[11px] font-medium leading-relaxed text-[#64748B] sm:text-[12px]">
+              <p className="mt-1 text-[16px] font-medium leading-relaxed text-[#64748B]">
                 HTM Duplex — Side A
               </p>
             </div>
@@ -330,7 +330,7 @@ export function ColtonCockpit() {
           transition={{ delay: 0.08, duration: 0.35, ease: "easeOut" }}
           variants={reveal}
         >
-          <span className="text-[68px] font-extrabold leading-[0.8] tracking-[-0.075em] text-[#FF7832] sm:text-[80px] lg:text-[92px]">
+          <span className="text-[68px] font-semibold leading-[0.8] tracking-[-0.075em] text-[#FF7832] sm:text-[80px] lg:text-[92px]">
             {(() => {
               const phases = ["Phase 1", "Phase 2", "Phase 3", "Phase 4"];
               const currentIdx = phases.findIndex((p) =>
@@ -340,7 +340,7 @@ export function ColtonCockpit() {
             })()}
           </span>
           <h2
-            className="mt-2 text-[16px] font-extrabold tracking-[-0.02em] text-[#1A1A2E] sm:text-[18px]"
+            className="mt-2 text-[16px] font-semibold tracking-[-0.02em] text-[#1A1A2E]"
             id="phase-heading"
           >
             {
@@ -380,10 +380,10 @@ export function ColtonCockpit() {
           variants={reveal}
         >
           <div className="rounded-2xl border border-[#FF7832] bg-[#1A1A2E] px-5 py-4 text-center">
-            <p className="text-[12px] font-extrabold uppercase tracking-[0.04em] text-[#FF7832] sm:text-[13px]">
+            <p className="text-[16px] font-semibold tracking-[0.04em] text-[#FF7832]">
               No photo, no next stage, no draw.
             </p>
-            <p className="mt-1 text-[11px] font-medium text-white/85 sm:text-[12px]">
+            <p className="mt-1 text-[16px] font-medium text-white/85">
               Upload phase-complete photos before requesting advance.
             </p>
           </div>
@@ -401,7 +401,7 @@ export function ColtonCockpit() {
             </SectionHeading>
             <div className="mt-4 space-y-6">
               {loading ? (
-                <p className="text-[12px] font-medium text-[#8A99AC]">
+                <p className="text-[16px] font-medium text-[#8A99AC]">
                   Loading checklist…
                 </p>
               ) : (
@@ -424,7 +424,7 @@ export function ColtonCockpit() {
 
                   return (
                     <div key={phase.key}>
-                      <h3 className="mb-3 text-[14px] font-extrabold uppercase tracking-[0.06em] text-[#5B6B82] sm:text-[15px]">
+                      <h3 className="mb-3 text-[18px] font-semibold tracking-[0.06em] text-[#5B6B82] sm:text-[15px]">
                         {phase.label}
                       </h3>
                       <div className="space-y-3">
@@ -450,7 +450,7 @@ export function ColtonCockpit() {
               Escalate only for
             </SectionHeading>
             <div className="mt-4 rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
-              <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+              <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                 Hidden damage · safety issue · budget overage — iMessage
                 Jeremiah directly. Everything else stays in Notion.
               </p>
@@ -458,7 +458,7 @@ export function ColtonCockpit() {
           </section>
         </motion.div>
 
-        <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
+        <footer className="pt-10 text-center text-[16px] font-medium tracking-[0.12em] text-[#8291A5]">
           Able OS · V1 Build
         </footer>
       </main>
@@ -476,7 +476,7 @@ type SectionHeadingProps = {
 function SectionHeading({ id, children }: SectionHeadingProps) {
   return (
     <h2
-      className="text-[19px] font-extrabold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
+      className="text-[19px] font-semibold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
       id={id}
     >
       {children}

@@ -58,10 +58,10 @@ export function Login() {
             className="h-16 w-16 rounded-2xl bg-[#191919] p-1 object-contain shadow-[0_8px_20px_rgba(26,26,46,0.22)]"
             src="/able-logo.png"
           />
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-white/85">
+          <p className="mt-4 text-[16px] font-medium tracking-[0.14em] text-white/85">
             Able OS · Executive workspace
           </p>
-          <h1 className="mt-1 text-[30px] font-extrabold leading-tight tracking-[-0.04em] text-white">
+          <h1 className="mt-1 text-[30px] font-semibold leading-tight tracking-[-0.04em] text-white">
             Sign in
           </h1>
         </div>
@@ -71,13 +71,13 @@ export function Login() {
           onSubmit={handleSubmit}
         >
           <label className="block">
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+            <span className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
               Email
             </span>
             <input
               autoCapitalize="none"
               autoComplete="email"
-              className="mt-1.5 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
+              className="mt-1.5 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@ablebuyshomes.com"
               type="email"
@@ -86,13 +86,13 @@ export function Login() {
           </label>
 
           <label className="mt-4 block">
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+            <span className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
               Password
             </span>
             <div className="relative mt-1.5">
               <input
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 pr-11 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
+                className="w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 pr-11 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"
                 type={showPassword ? "text" : "password"}
@@ -114,13 +114,13 @@ export function Login() {
           </label>
 
           {error && (
-            <p className="mt-4 rounded-xl bg-[#FFF1E9] px-3 py-2.5 text-[11px] font-bold leading-snug text-[#D95717]">
+            <p className="mt-4 rounded-xl bg-[#FFF1E9] px-3 py-2.5 text-[16px] font-medium leading-snug text-[#D95717]">
               {error}
             </p>
           )}
 
           <button
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
             disabled={!canSubmit}
             type="submit"
           >
@@ -138,12 +138,12 @@ export function Login() {
             )}
           </button>
 
-          <p className="mt-4 text-center text-[11px] font-medium leading-snug text-[#8A99AC]">
+          <p className="mt-4 text-center text-[16px] font-medium leading-snug text-[#8A99AC]">
             Trouble signing in? Ask Dane to reset your password.
           </p>
         </form>
 
-        <p className="mt-6 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-white/70">
+        <p className="mt-6 text-center text-[16px] font-medium tracking-[0.12em] text-white/70">
           Able OS · V1 Build
         </p>
       </motion.div>
