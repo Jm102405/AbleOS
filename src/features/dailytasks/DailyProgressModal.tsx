@@ -1,8 +1,11 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { XIcon } from "lucide-react";
-import { DailyTaskCard } from "./DailyTaskCard";
-import { TaskCard, type Task } from "../tasks/TaskCard";
+import { DailyTaskRow } from "./DailyTaskRow";
+import { DailyTaskDetailModal } from "./DailyTaskDetailModal";
+import { TaskRow } from "../tasks/TaskRow";
+import { TaskDetailModal } from "../tasks/TaskDetailModal";
+import type { Task } from "../tasks/TaskCard";
 import type { DailyTask } from "./useDailyTasks";
 
 type View = "in_progress" | "completed";
@@ -81,6 +84,8 @@ export function DailyProgressModal({
   approvedTasks = [],
 }: DailyProgressModalProps) {
   const [view, setView] = React.useState<View>("in_progress");
+  const [dailyId, setDailyId] = React.useState<string | null>(null);
+  const [assignedId, setAssignedId] = React.useState<string | null>(null);
   const [mode, setMode] = React.useState<Mode>("today");
   const [date, setDate] = React.useState("");
 
@@ -89,7 +94,14 @@ export function DailyProgressModal({
     setView("in_progress");
     setMode("today");
     setDate(today);
+    setDailyId(null);
+    setAssignedId(null);
   }, [open, today]);
+
+  // Read from the live lists so the sheets stay current.
+  const dailyDetail = tasks.find((task) => task.id === dailyId) ?? null;
+  const assignedDetail =
+    approvedTasks.find((task) => task.id === assignedId) ?? null;
 
   React.useEffect(() => {
     if (!open) return;
@@ -282,7 +294,11 @@ export function DailyProgressModal({
               )}
 
               {visible.map((task) => (
-                <DailyTaskCard key={task.id} task={task} />
+                <DailyTaskRow
+                  key={task.id}
+                  onOpen={() => setDailyId(task.id)}
+                  task={task}
+                />
               ))}
 
               {view === "completed" && visibleApproved.length > 0 && (
@@ -293,16 +309,27 @@ export function DailyProgressModal({
 
               {view === "completed" &&
                 visibleApproved.map((task) => (
-                  <TaskCard
+                  <TaskRow
                     key={task.id}
-                    onStatusChange={() => {}}
-                    readOnly
-                    saving={false}
+                    onOpen={() => setAssignedId(task.id)}
                     task={task}
                   />
                 ))}
             </div>
           </motion.div>
+
+          <DailyTaskDetailModal
+            onClose={() => setDailyId(null)}
+            open={Boolean(dailyDetail)}
+            task={dailyDetail}
+          />
+
+          <TaskDetailModal
+            metaLabel="Assigned to"
+            onClose={() => setAssignedId(null)}
+            open={Boolean(assignedDetail)}
+            task={assignedDetail}
+          />
         </motion.div>
       )}
     </AnimatePresence>
