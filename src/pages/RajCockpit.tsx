@@ -1,17 +1,14 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronRightIcon,
-  LoaderIcon,
-  PlusIcon,
-  XIcon,
-} from "lucide-react";
+import { LoaderIcon, PlusIcon, XIcon } from "lucide-react";
 import { UserMenu } from "../components/UserMenu";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/apiFetch";
 import { NotificationBell } from "../components/NotificationBell";
 import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
+import { OrderRow } from "../features/orders/OrderRow";
+import { FilterMenu } from "../components/FilterMenu";
 import { DailyProgressModal } from "../features/dailytasks/DailyProgressModal";
 import { useDailyTasks } from "../features/dailytasks/useDailyTasks";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
@@ -133,10 +130,21 @@ export function RajCockpit() {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = React.useState(true);
   const [ordersError, setOrdersError] = React.useState("");
+  const [orderFilter, setOrderFilter] = React.useState<
+    "All" | "Pending" | "Approved" | "Declined"
+  >("Pending");
+
+  /* Counts and KPIs mean "waiting on me", not "every order ever sent". */
+  const pendingOrders = orders.filter((order) => order.status === "Pending");
+
+  const visibleOrders =
+    orderFilter === "All"
+      ? orders
+      : orders.filter((order) => order.status === orderFilter);
   const loadOrders = React.useCallback(async () => {
     setOrdersError("");
     try {
-      const res = await apiFetch("/api/orders?status=Pending");
+      const res = await apiFetch("/api/orders");
       // Signed out mid-poll - not an error, just stop.
       if (res.status === 401) {
         setOrders([]);
@@ -389,7 +397,7 @@ export function RajCockpit() {
               <StatCard
                 label="Approval requests"
                 tone={orders.length ? "urgent" : "primary"}
-                value={ordersLoading ? "..." : String(orders.length)}
+                value={ordersLoading ? "..." : String(pendingOrders.length)}
               />
               <StatCard
                 label="Dane's progress"
@@ -483,7 +491,7 @@ export function RajCockpit() {
                     Approval requests
                   </h2>
                   <NavCard
-                    count={ordersLoading ? null : orders.length}
+                    count={ordersLoading ? null : pendingOrders.length}
                     icon={<FileTextIcon size={20} strokeWidth={2.25} />}
                     onClick={() => setOrdersOpen(true)}
                     subtitle="Orders submitted for your decision"
@@ -493,8 +501,34 @@ export function RajCockpit() {
                 </section>
 
                 <GateQueueModal
-                  count={ordersLoading ? null : orders.length}
+                  count={ordersLoading ? null : pendingOrders.length}
                   eyebrow="From the team"
+                  toolbar={
+                    <FilterMenu
+                      onChange={setOrderFilter}
+                      options={[
+                        {
+                          key: "Pending",
+                          label: "Pending",
+                          count: pendingOrders.length,
+                        },
+                        {
+                          key: "Approved",
+                          label: "Approved",
+                          count: orders.filter((o) => o.status === "Approved")
+                            .length,
+                        },
+                        {
+                          key: "Declined",
+                          label: "Declined",
+                          count: orders.filter((o) => o.status === "Declined")
+                            .length,
+                        },
+                        { key: "All", label: "All", count: orders.length },
+                      ]}
+                      value={orderFilter}
+                    />
+                  }
                   onClose={() => setOrdersOpen(false)}
                   open={ordersOpen}
                   title="Approval requests"
@@ -529,41 +563,14 @@ export function RajCockpit() {
                       </div>
                     )}
 
-                    {orders.map((order) => {
-                      const cost = formatCost(order.estimated_cost);
-                      return (
-                        <button
-                          className="group flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] sm:px-5"
-                          key={order.id}
-                          onClick={() => setSelectedOrder(order)}
-                          type="button"
-                        >
-                          <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start gap-2">
-                              <h3 className="min-w-0 flex-1 text-[18px] font-medium leading-[1.4] tracking-[-0.01em] text-[#1A1A2E]">
-                                {order.order_name}
-                              </h3>
-                              <span
-                                className={`shrink-0 rounded-full px-2.5 py-1 text-[14px] font-medium ${priorityStyles[order.priority]}`}
-                              >
-                                {order.priority}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-[16px] font-normal leading-[1.5] text-[#6B7A90]">
-                              {order.requested_by} · needed{" "}
-                              {formatDate(order.date_needed)}
-                              {cost ? ` · ${cost}` : ""}
-                            </p>
-                          </div>
-                          <ChevronRightIcon
-                            aria-hidden="true"
-                            className="shrink-0 text-[#93A3B8] transition-transform group-hover:translate-x-0.5"
-                            size={18}
-                          />
-                        </button>
-                      );
-                    })}
+                    {visibleOrders.map((order) => (
+                      <OrderRow
+                        key={order.id}
+                        onOpen={() => setSelectedOrder(order)}
+                        order={order}
+                        showRequester
+                      />
+                    ))}
                   </div>
                 </GateQueueModal>
               </div>
@@ -659,9 +666,7 @@ export function RajCockpit() {
             role="status"
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            <p className="text-[16px] font-medium text-white">
-              {taskToast}
-            </p>
+            <p className="text-[16px] font-medium text-white">{taskToast}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -903,9 +908,7 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-[16px] font-normal text-[#8A99AC]">
-        {label}
-      </dt>
+      <dt className="text-[16px] font-normal text-[#8A99AC]">{label}</dt>
       <dd className="text-[16px] font-medium text-[#1A1A2E]">{value}</dd>
     </div>
   );

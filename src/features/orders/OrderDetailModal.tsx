@@ -19,8 +19,8 @@ export type OrderLike = {
   requested_by: string;
   status: "Pending" | "Approved" | "Declined";
   created_at: string;
-  decided_at: string | null;
-  decided_by: string | null;
+  decided_at?: string | null;
+  decided_by?: string | null;
 };
 
 const STATUS_STYLES: Record<OrderLike["status"], string> = {

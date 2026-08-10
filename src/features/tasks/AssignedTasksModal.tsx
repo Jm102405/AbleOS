@@ -1,13 +1,33 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LoaderIcon, TriangleAlertIcon, XIcon } from "lucide-react";
-import { TASK_STATUSES, taskStatusStyles, type Task } from "./TaskCard";
+import {
+  ChevronDownIcon,
+  LoaderIcon,
+  SlidersHorizontalIcon,
+  TriangleAlertIcon,
+  XIcon,
+} from "lucide-react";
+import { TASK_STATUSES, type Task } from "./TaskCard";
 import { TaskRow } from "./TaskRow";
 import { TaskDetailModal } from "./TaskDetailModal";
 
-type Filter = "All" | Task["status"];
+type Filter = "All" | "Waiting" | "Approved" | Task["status"];
 
-const FILTERS: Filter[] = ["All", ...TASK_STATUSES];
+// Done is split into two mutually exclusive filters - waiting on Raj, and
+// signed off. A raw Done tab put the same task in two places at once.
+const FILTERS: Filter[] = [
+  "All",
+  "Waiting",
+  ...TASK_STATUSES.filter((status) => status !== "Done"),
+  "Approved",
+];
+
+/** Done by the assignee, not yet signed off by Raj. */
+function isWaiting(task: Task) {
+  return task.status === "Done" && !task.approved_at;
+}
+
+const FILTER_LABELS: Record<string, string> = { Waiting: "Waiting on you" };
 
 const STAFF_LABELS: Record<string, string> = {
   dane: "Dane",
@@ -47,6 +67,24 @@ export function AssignedTasksModal({
 }: AssignedTasksModalProps) {
   const [filter, setFilter] = React.useState<Filter>("All");
   const [detailId, setDetailId] = React.useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = React.useState(false);
+  const filterRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!filterOpen) return;
+
+    function handleOutside(event: MouseEvent) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setFilterOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [filterOpen]);
   const [confirming, setConfirming] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -84,18 +122,25 @@ export function AssignedTasksModal({
   }, [open, onClose]);
 
   const counts = React.useMemo(() => {
-    const result: Record<string, number> = { All: tasks.length };
+    const result: Record<string, number> = {
+      All: tasks.length,
+      Waiting: tasks.filter(isWaiting).length,
+      Approved: tasks.filter((task) => Boolean(task.approved_at)).length,
+    };
     for (const status of TASK_STATUSES) {
       result[status] = tasks.filter((task) => task.status === status).length;
     }
     return result;
   }, [tasks]);
 
-  const visible = React.useMemo(
-    () =>
-      filter === "All" ? tasks : tasks.filter((task) => task.status === filter),
-    [filter, tasks],
-  );
+  const visible = React.useMemo(() => {
+    if (filter === "All") return tasks;
+    if (filter === "Waiting") return tasks.filter(isWaiting);
+    if (filter === "Approved") {
+      return tasks.filter((task) => Boolean(task.approved_at));
+    }
+    return tasks.filter((task) => task.status === filter);
+  }, [filter, tasks]);
 
   return (
     <AnimatePresence>
@@ -109,7 +154,7 @@ export function AssignedTasksModal({
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex h-full max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)] sm:h-[85vh]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -136,26 +181,54 @@ export function AssignedTasksModal({
                 </button>
               </div>
 
-              <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
-                {FILTERS.map((option) => {
-                  const active = filter === option;
-                  return (
-                    <button
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
-                        active
-                          ? option === "All"
-                            ? "bg-[#1E3A8A] text-white"
-                            : taskStatusStyles[option]
-                          : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                      }`}
-                      key={option}
-                      onClick={() => setFilter(option)}
-                      type="button"
-                    >
-                      {option} ({counts[option] ?? 0})
-                    </button>
-                  );
-                })}
+              <div className="relative mt-3" ref={filterRef}>
+                <button
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#DCE4EE] bg-white px-3.5 py-2.5 text-[16px] font-medium text-[#526176] transition-colors hover:bg-[#F8FAFC]"
+                  onClick={() => setFilterOpen((value) => !value)}
+                  type="button"
+                >
+                  <SlidersHorizontalIcon
+                    aria-hidden="true"
+                    size={16}
+                    strokeWidth={2.25}
+                  />
+                  {FILTER_LABELS[filter] ?? filter} ({counts[filter] ?? 0})
+                  <ChevronDownIcon
+                    aria-hidden="true"
+                    className={
+                      filterOpen
+                        ? "rotate-180 transition-transform"
+                        : "transition-transform"
+                    }
+                    size={16}
+                    strokeWidth={2.25}
+                  />
+                </button>
+
+                {filterOpen && (
+                  <div className="absolute left-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border border-[#DCE4EE] bg-white shadow-[0_12px_28px_rgba(30,58,138,0.16)]">
+                    {FILTERS.map((option) => (
+                      <button
+                        className={`flex w-full items-center justify-between border-b border-[#F1F5F9] px-4 py-3 text-left text-[16px] transition-colors last:border-b-0 hover:bg-[#F8FAFC] ${
+                          filter === option
+                            ? "font-semibold text-[#1E3A8A]"
+                            : "font-normal text-[#526176]"
+                        }`}
+                        key={option}
+                        onClick={() => {
+                          setFilter(option);
+                          setFilterOpen(false);
+                        }}
+                        type="button"
+                      >
+                        {FILTER_LABELS[option] ?? option}
+                        <span className="text-[14px] font-normal text-[#8291A5]">
+                          {counts[option] ?? 0}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -179,6 +252,7 @@ export function AssignedTasksModal({
 
               {visible.map((task) => (
                 <TaskRow
+                  commentCount={commentCounts[task.id] ?? 0}
                   key={task.id}
                   onOpen={() => setDetailId(task.id)}
                   task={task}
@@ -191,9 +265,7 @@ export function AssignedTasksModal({
             approving={approvingId === detailTask?.id}
             commentCount={detailTask ? (commentCounts[detailTask.id] ?? 0) : 0}
             metaLabel="Assigned to"
-            onApprove={
-              detailTask ? () => onApprove(detailTask.id) : undefined
-            }
+            onApprove={detailTask ? () => onApprove(detailTask.id) : undefined}
             onClose={() => setDetailId(null)}
             onDelete={detailTask ? () => setConfirming(detailTask) : undefined}
             onOpenChat={detailTask ? () => onOpenChat(detailTask) : undefined}

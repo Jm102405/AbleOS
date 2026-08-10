@@ -15,6 +15,7 @@ import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import { TaskRow } from "../features/tasks/TaskRow";
+import { FilterMenu } from "../components/FilterMenu";
 import { OrderRow } from "../features/orders/OrderRow";
 import { OrderDetailModal } from "../features/orders/OrderDetailModal";
 import { TaskDetailModal } from "../features/tasks/TaskDetailModal";
@@ -46,10 +47,6 @@ type Order = {
   decided_at: string | null;
   decided_by: string | null;
 };
-
-
-
-
 
 const reveal = {
   hidden: { opacity: 0, y: 12 },
@@ -91,14 +88,39 @@ export function DaneCockpit() {
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [taskDetailId, setTaskDetailId] = React.useState<string | null>(null);
+  const [taskFilter, setTaskFilter] = React.useState("All");
+
+  /** Done by Dane, not yet signed off by Raj. */
+  const waitingTasks = tasks.filter(
+    (task) => task.status === "Done" && !task.approved_at,
+  );
+
+  const visibleTasks =
+    taskFilter === "All"
+      ? tasks
+      : taskFilter === "Waiting"
+        ? waitingTasks
+        : taskFilter === "Approved"
+          ? tasks.filter((task) => Boolean(task.approved_at))
+          : tasks.filter((task) => task.status === taskFilter);
   const [ordersOpen, setOrdersOpen] = React.useState(false);
   const [orderDetailId, setOrderDetailId] = React.useState<string | null>(null);
+  const [orderFilter, setOrderFilter] = React.useState("All");
+
+  /** Waiting means waiting on Raj, which is only the pending ones. */
+  const pendingOrders = orders.filter((order) => order.status === "Pending");
+
+  const visibleOrders =
+    orderFilter === "All"
+      ? orders
+      : orders.filter((order) => order.status === orderFilter);
 
   /* Dane's own daily work, separate from what Raj assigns him. */
   const daily = useDailyTasks();
   const [dailyOpen, setDailyOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [dailyDetailId, setDailyDetailId] = React.useState<string | null>(null);
+  const [dailyFilter, setDailyFilter] = React.useState("All");
   const [completing, setCompleting] = React.useState<DailyTask | null>(null);
 
   const openTaskCount = tasks.filter((task) => task.status !== "Done").length;
@@ -338,6 +360,42 @@ export function DaneCockpit() {
             <GateQueueModal
               count={tasksLoading ? null : openTaskCount}
               eyebrow="From Raj"
+              toolbar={
+                <FilterMenu
+                  onChange={setTaskFilter}
+                  options={[
+                    { key: "All", label: "All", count: tasks.length },
+                    {
+                      key: "Waiting",
+                      label: "Waiting on Raj",
+                      count: waitingTasks.length,
+                    },
+                    {
+                      key: "Not started",
+                      label: "Not started",
+                      count: tasks.filter((t) => t.status === "Not started")
+                        .length,
+                    },
+                    {
+                      key: "In progress",
+                      label: "In progress",
+                      count: tasks.filter((t) => t.status === "In progress")
+                        .length,
+                    },
+                    {
+                      key: "Blocked",
+                      label: "Blocked",
+                      count: tasks.filter((t) => t.status === "Blocked").length,
+                    },
+                    {
+                      key: "Approved",
+                      label: "Approved",
+                      count: tasks.filter((t) => Boolean(t.approved_at)).length,
+                    },
+                  ]}
+                  value={taskFilter}
+                />
+              }
               onClose={() => setTasksOpen(false)}
               open={tasksOpen}
               title="Tasks from Raj"
@@ -372,14 +430,16 @@ export function DaneCockpit() {
                   </div>
                 )}
 
-                {tasks.map((task) => (
+                {visibleTasks.map((task) => (
                   <TaskRow
+                    commentCount={commentCounts[task.id] ?? 0}
                     key={task.id}
                     onOpen={() => setTaskDetailId(task.id)}
                     task={task}
+                    waitingLabel="Waiting on Raj"
                   />
                 ))}
-              </div>  
+              </div>
             </GateQueueModal>
 
             <section aria-labelledby="daily-heading" className="pt-3">
@@ -409,6 +469,30 @@ export function DaneCockpit() {
             <GateQueueModal
               count={daily.loading ? null : daily.inProgress.length}
               eyebrow="Daily work"
+              toolbar={
+                <FilterMenu
+                  onChange={setDailyFilter}
+                  options={[
+                    { key: "All", label: "All", count: daily.tasks.length },
+                    {
+                      key: "draft",
+                      label: "Drafts",
+                      count: daily.drafts.length,
+                    },
+                    {
+                      key: "in_progress",
+                      label: "In progress",
+                      count: daily.inProgress.length,
+                    },
+                    {
+                      key: "completed",
+                      label: "Completed",
+                      count: daily.completed.length,
+                    },
+                  ]}
+                  value={dailyFilter}
+                />
+              }
               onClose={() => setDailyOpen(false)}
               open={dailyOpen}
               title="My tasks"
@@ -428,45 +512,18 @@ export function DaneCockpit() {
                   </div>
                 )}
 
-                {daily.drafts.length > 0 && (
-                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
-                    Drafts
-                  </p>
-                )}
-
-                {daily.drafts.map((task) => (
+                {(dailyFilter === "All"
+                  ? [...daily.drafts, ...daily.inProgress, ...daily.completed]
+                  : dailyFilter === "draft"
+                    ? daily.drafts
+                    : dailyFilter === "in_progress"
+                      ? daily.inProgress
+                      : daily.completed
+                ).map((task) => (
                   <DailyTaskRow
                     key={task.id}
                     onOpen={() => setDailyDetailId(task.id)}
                     task={task}
-                  />
-                ))}
-
-                {daily.drafts.length > 0 && daily.inProgress.length > 0 && (
-                  <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
-                    In progress
-                  </p>
-                )}
-
-                {daily.inProgress.map((task) => (
-                  <DailyTaskRow
-                    key={task.id}
-                    onOpen={() => setDailyDetailId(task.id)}
-                    task={task}
-                  />
-                ))}
-
-                {daily.completed.length > 0 && (
-                  <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
-                    Completed
-                  </p>
-                )}
-
-                {daily.completed.map((task) => (
-                  <DailyTaskRow
-                    key={task.id}
-                    onOpen={() => setDailyDetailId(task.id)}
-                    task={task} 
                   />
                 ))}
               </div>
@@ -497,8 +554,34 @@ export function DaneCockpit() {
             </section>
 
             <GateQueueModal
-              count={ordersLoading ? null : orders.length}
+              count={ordersLoading ? null : pendingOrders.length}
               eyebrow="Sent to Raj"
+              toolbar={
+                <FilterMenu
+                  onChange={setOrderFilter}
+                  options={[
+                    { key: "All", label: "All", count: orders.length },
+                    {
+                      key: "Pending",
+                      label: "Pending",
+                      count: pendingOrders.length,
+                    },
+                    {
+                      key: "Approved",
+                      label: "Approved",
+                      count: orders.filter((o) => o.status === "Approved")
+                        .length,
+                    },
+                    {
+                      key: "Declined",
+                      label: "Declined",
+                      count: orders.filter((o) => o.status === "Declined")
+                        .length,
+                    },
+                  ]}
+                  value={orderFilter}
+                />
+              }
               onClose={() => setOrdersOpen(false)}
               open={ordersOpen}
               title="Your orders"
@@ -533,14 +616,13 @@ export function DaneCockpit() {
                   </div>
                 )}
 
-                {orders.map((order) => (
+                {visibleOrders.map((order) => (
                   <OrderRow
                     key={order.id}
                     onOpen={() => setOrderDetailId(order.id)}
                     order={order}
                   />
                 ))}
-
               </div>
             </GateQueueModal>
           </div>
@@ -599,9 +681,7 @@ export function DaneCockpit() {
 
       <TaskDetailModal
         canUpload
-        commentCount={
-          taskDetailId ? (commentCounts[taskDetailId] ?? 0) : 0
-        }
+        commentCount={taskDetailId ? (commentCounts[taskDetailId] ?? 0) : 0}
         metaLabel="From"
         onClose={() => setTaskDetailId(null)}
         onOpenChat={() => {
@@ -644,9 +724,7 @@ export function DaneCockpit() {
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#16A34A] text-white">
               <CheckIcon aria-hidden="true" size={14} strokeWidth={3} />
             </span>
-            <p className="text-[16px] font-medium text-white">
-              {toast}
-            </p>
+            <p className="text-[16px] font-medium text-white">{toast}</p>
             <button
               aria-label="Dismiss"
               className="ml-1 shrink-0 text-[16px] font-semibold tracking-wide text-white/60 transition-colors hover:text-white"

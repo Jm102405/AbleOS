@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react";
 import { DailyTaskRow } from "./DailyTaskRow";
 import { DailyTaskDetailModal } from "./DailyTaskDetailModal";
 import { TaskRow } from "../tasks/TaskRow";
+import { FilterMenu } from "../../components/FilterMenu";
 import { TaskDetailModal } from "../tasks/TaskDetailModal";
 import type { Task } from "../tasks/TaskCard";
 import type { DailyTask } from "./useDailyTasks";
@@ -171,7 +172,7 @@ export function DailyProgressModal({
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex h-full max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)] sm:h-[85vh]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -224,21 +225,15 @@ export function DailyProgressModal({
 
               {view === "completed" && (
                 <>
-                  <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
-                    {MODES.map((option) => (
-                      <button
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
-                          mode === option.key
-                            ? "bg-[#EEF5FF] text-[#418BFF]"
-                            : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                        }`}
-                        key={option.key}
-                        onClick={() => setMode(option.key)}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                  <div className="mt-3">
+                    <FilterMenu
+                      onChange={(next) => setMode(next as Mode)}
+                      options={MODES.map((option) => ({
+                        key: option.key,
+                        label: option.label,
+                      }))}
+                      value={mode}
+                    />
                   </div>
 
                   <div className="mt-2 flex items-center gap-2">

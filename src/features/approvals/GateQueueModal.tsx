@@ -8,6 +8,8 @@ type GateQueueModalProps = {
   count: number | null;
   eyebrow: string;
   title: string;
+  /** Optional control under the header, e.g. a filter menu. */
+  toolbar?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -23,6 +25,7 @@ export function GateQueueModal({
   count,
   eyebrow,
   title,
+  toolbar,
   children,
 }: GateQueueModalProps) {
   React.useEffect(() => {
@@ -47,7 +50,7 @@ export function GateQueueModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+        className="flex h-full max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)] sm:h-[85vh]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-4 pt-5">
@@ -74,6 +77,8 @@ export function GateQueueModal({
               </button>
             </div>
           </div>
+
+          {toolbar && <div className="mt-3">{toolbar}</div>}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
