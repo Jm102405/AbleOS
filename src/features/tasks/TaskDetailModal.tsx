@@ -8,12 +8,18 @@ import {
   FileTextIcon,
   LoaderIcon,
   MessageSquareIcon,
+  PaperclipIcon,
   Trash2Icon,
   UserRoundIcon,
   XIcon,
 } from "lucide-react";
-import { loadEvidenceUrls, type EvidenceFile } from "../dailytasks/evidence";
-import { taskStatusStyles, type Task } from "./TaskCard";
+import {
+  ACCEPT_ATTRIBUTE,
+  loadEvidenceUrls,
+  uploadEvidence,
+  type EvidenceFile,
+} from "../dailytasks/evidence";
+import { TASK_STATUSES, taskStatusStyles, type Task } from "./TaskCard";
 
 const priorityStyles: Record<Task["priority"], string> = {
   Low: "bg-[#EEF2F6] text-[#526176]",
@@ -43,6 +49,11 @@ type TaskDetailModalProps = {
   commentCount?: number;
   /** Who it went to, or who it came from. */
   metaLabel?: string;
+  /** Provide to let this person change the status. */
+  onStatusChange?: (status: Task["status"]) => void;
+  saving?: boolean;
+  /** Provide to let this person attach proof. */
+  canUpload?: boolean;
 };
 
 export function TaskDetailModal({
@@ -56,9 +67,16 @@ export function TaskDetailModal({
   onOpenChat,
   commentCount = 0,
   metaLabel = "Assigned to",
+  onStatusChange,
+  saving = false,
+  canUpload = false,
 }: TaskDetailModalProps) {
   const [files, setFiles] = React.useState<EvidenceFile[]>([]);
   const [loadingFiles, setLoadingFiles] = React.useState(true);
+  const [pending, setPending] = React.useState<File[]>([]);
+  const [uploading, setUploading] = React.useState(0);
+  const [fileError, setFileError] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   const taskId = task?.id ?? null;
 
@@ -93,6 +111,68 @@ export function TaskDetailModal({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
+
+  const previews = React.useMemo(
+    () => pending.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [pending],
+  );
+
+  // Object URLs leak memory until revoked.
+  React.useEffect(
+    () => () => previews.forEach((item) => URL.revokeObjectURL(item.url)),
+    [previews],
+  );
+
+  async function refreshFiles() {
+    if (!taskId) return;
+    try {
+      setFiles(await loadEvidenceUrls({ assignedTaskId: taskId }));
+    } catch (err) {
+      console.error("Could not load evidence:", err);
+    }
+  }
+
+  function handleFiles(event: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!picked.length) return;
+
+    setFileError("");
+    setPending((current) => [...current, ...picked]);
+  }
+
+  function removePending(index: number) {
+    setPending((current) =>
+      current.filter((_, position) => position !== index),
+    );
+  }
+
+  /** Nothing is stored until this runs. Raj is told once, at the end. */
+  async function submitPending() {
+    if (!pending.length || !taskId) return;
+
+    setFileError("");
+    setUploading(pending.length);
+
+    let sent = 0;
+    const batch = pending;
+
+    for (let index = 0; index < batch.length; index += 1) {
+      try {
+        await uploadEvidence({ assignedTaskId: taskId }, batch[index], {
+          notify: index === batch.length - 1,
+        });
+        sent += 1;
+      } catch (err) {
+        setFileError(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        setUploading((current) => current - 1);
+      }
+    }
+
+    if (sent > 0) setPending([]);
+    await refreshFiles();
+  }
 
   const hasFlow =
     Boolean(task) &&
@@ -266,6 +346,96 @@ export function TaskDetailModal({
               <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
                 <p className="text-[16px] font-medium text-[#5B6B82]">Proof</p>
 
+                {canUpload && (
+                  <>
+                    <input
+                      accept={ACCEPT_ATTRIBUTE}
+                      className="hidden"
+                      multiple
+                      onChange={handleFiles}
+                      ref={inputRef}
+                      type="file"
+                    />
+
+                    <button
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl border border-dashed border-[#B7C7DC] px-4 py-3 text-[16px] font-medium text-[#526176] transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-60"
+                      disabled={uploading > 0}
+                      onClick={() => inputRef.current?.click()}
+                      type="button"
+                    >
+                      <PaperclipIcon size={16} strokeWidth={2.25} />
+                      Add photo or PDF
+                    </button>
+
+                    {previews.length > 0 && (
+                      <>
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                          {previews.map((item, index) => (
+                            <div
+                              className="relative overflow-hidden rounded-xl border border-[#DCE4EE] bg-white"
+                              key={`${item.file.name}-${index}`}
+                            >
+                              {item.file.type.startsWith("image/") ? (
+                                <img
+                                  alt={item.file.name}
+                                  className="h-24 w-full bg-[#F1F5F9] object-contain"
+                                  src={item.url}
+                                />
+                              ) : (
+                                <div className="flex h-24 flex-col items-center justify-center gap-1 text-[#526176]">
+                                  <FileTextIcon size={18} strokeWidth={2.25} />
+                                  <span className="text-[14px] font-medium">
+                                    PDF
+                                  </span>
+                                </div>
+                              )}
+
+                              <button
+                                aria-label={`Remove ${item.file.name}`}
+                                className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-[#DC2626] shadow-sm transition-colors hover:bg-white"
+                                disabled={uploading > 0}
+                                onClick={() => removePending(index)}
+                                type="button"
+                              >
+                                <XIcon size={12} strokeWidth={3} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button
+                          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] px-4 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
+                          disabled={uploading > 0}
+                          onClick={submitPending}
+                          type="button"
+                        >
+                          {uploading > 0 ? (
+                            <>
+                              <LoaderIcon
+                                className="animate-spin"
+                                size={16}
+                                strokeWidth={2.25}
+                              />
+                              Sending {uploading}
+                            </>
+                          ) : (
+                            <>
+                              <PaperclipIcon size={16} strokeWidth={2.25} />
+                              Submit {previews.length} to Raj
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
+
+                    {fileError && (
+                      <p className="mt-2 text-[16px] font-medium text-[#DC2626]">
+                        {fileError}
+                      </p>
+                    )}
+                  </>
+                )}
+
                 {loadingFiles && (
                   <p className="mt-2 flex items-center gap-2 text-[16px] font-normal text-[#A3B0C0]">
                     <LoaderIcon
@@ -316,6 +486,34 @@ export function TaskDetailModal({
                   </div>
                 )}
               </div>
+
+              {onStatusChange && (
+                <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                  <p className="text-[16px] font-medium text-[#5B6B82]">
+                    Status
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {TASK_STATUSES.map((status) => {
+                      const active = task.status === status;
+                      return (
+                        <button
+                          className={`rounded-full px-3.5 py-2 text-[16px] font-medium transition-colors disabled:opacity-60 ${
+                            active
+                              ? taskStatusStyles[status]
+                              : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
+                          }`}
+                          disabled={saving}
+                          key={status}
+                          onClick={() => !active && onStatusChange(status)}
+                          type="button"
+                        >
+                          {status}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {onOpenChat && (
                 <button

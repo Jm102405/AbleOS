@@ -11,9 +11,11 @@ import { NavCard } from "../components/NavCard";
 import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
-import { TaskCard, type Task } from "../features/tasks/TaskCard";
+import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
+import { TaskRow } from "../features/tasks/TaskRow";
+import { TaskDetailModal } from "../features/tasks/TaskDetailModal";
 import { CompleteDailyTaskModal } from "../features/dailytasks/CompleteDailyTaskModal";
 import { CreateDailyTaskModal } from "../features/dailytasks/CreateDailyTaskModal";
 import { DailyTaskCard } from "../features/dailytasks/DailyTaskCard";
@@ -114,6 +116,7 @@ export function DaneCockpit() {
   const [tasksError, setTasksError] = React.useState("");
   const [savingTask, setSavingTask] = React.useState<string | null>(null);
   const [tasksOpen, setTasksOpen] = React.useState(false);
+  const [taskDetailId, setTaskDetailId] = React.useState<string | null>(null);
   const [ordersOpen, setOrdersOpen] = React.useState(false);
 
   /* Dane's own daily work, separate from what Raj assigns him. */
@@ -394,18 +397,13 @@ export function DaneCockpit() {
                 )}
 
                 {tasks.map((task) => (
-                  <TaskCard
-                    commentCount={commentCounts[task.id] ?? 0}
+                  <TaskRow
                     key={task.id}
-                    onOpenChat={() => setChatTask(task)}
-                    onStatusChange={(status) =>
-                      updateTaskStatus(task.id, status)
-                    }
-                    saving={savingTask === task.id}
+                    onOpen={() => setTaskDetailId(task.id)}
                     task={task}
                   />
                 ))}
-              </div>
+              </div>  
             </GateQueueModal>
 
             <section aria-labelledby="daily-heading" className="pt-3">
@@ -635,6 +633,25 @@ export function DaneCockpit() {
         onComplete={daily.completeTask}
         open={Boolean(completing)}
         task={completing}
+      />
+
+      <TaskDetailModal
+        canUpload
+        commentCount={
+          taskDetailId ? (commentCounts[taskDetailId] ?? 0) : 0
+        }
+        metaLabel="From"
+        onClose={() => setTaskDetailId(null)}
+        onOpenChat={() => {
+          const found = tasks.find((task) => task.id === taskDetailId);
+          if (found) setChatTask(found);
+        }}
+        onStatusChange={(status) => {
+          if (taskDetailId) updateTaskStatus(taskDetailId, status);
+        }}
+        open={Boolean(taskDetailId)}
+        saving={savingTask === taskDetailId}
+        task={tasks.find((task) => task.id === taskDetailId) ?? null}
       />
 
       <TaskChatModal
