@@ -53,15 +53,15 @@ export function GateQueueModal({
         <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-4 pt-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                 {eyebrow}
               </p>
-              <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+              <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                 {title}
               </h2>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#2465B5]">
+              <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[16px] font-semibold tracking-[0.06em] text-[#2465B5]">
                 {count === null ? "..." : count} waiting
               </span>
               <button

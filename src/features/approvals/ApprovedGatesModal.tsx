@@ -92,10 +92,10 @@ export function ApprovedGatesModal({
             <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-3 pt-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Signed off by you
                   </p>
-                  <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                  <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                     Gates approved
                   </h2>
                 </div>
@@ -114,7 +114,7 @@ export function ApprovedGatesModal({
                   const active = filter === option;
                   return (
                     <button
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                      className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                         active
                           ? "bg-[#1E3A8A] text-white"
                           : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
@@ -133,14 +133,14 @@ export function ApprovedGatesModal({
             {/* Body */}
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
               {loading && (
-                <p className="text-[12px] font-medium text-[#8A99AC]">
+                <p className="text-[16px] font-medium text-[#8A99AC]">
                   Loading…
                 </p>
               )}
 
               {!loading && visible.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
-                  <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                  <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                     Nothing approved yet. Stages appear here once you sign them
                     off.
                   </p>
@@ -154,7 +154,7 @@ export function ApprovedGatesModal({
 
                   return (
                     <div key={phase}>
-                      <h3 className="mb-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+                      <h3 className="mb-2.5 text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
                         {phase}
                         <span className="ml-1.5 text-[#A3B0C0]">
                           ({inPhase.length})
@@ -176,17 +176,17 @@ export function ApprovedGatesModal({
                             </span>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
+                              <p className="text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
                                 {stage.stageName}
                               </p>
-                              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8A99AC]">
+                              <p className="mt-0.5 text-[16px] font-medium tracking-wide text-[#8A99AC]">
                                 {stage.side}
                               </p>
                             </div>
 
                             {stage.drivePhotoLink ? (
                               <a
-                                className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
+                                className="flex shrink-0 items-center gap-1 text-[16px] font-medium text-[#418BFF] hover:underline"
                                 href={stage.drivePhotoLink}
                                 rel="noopener noreferrer"
                                 target="_blank"
@@ -195,7 +195,7 @@ export function ApprovedGatesModal({
                                 <ExternalLinkIcon size={12} strokeWidth={2.5} />
                               </a>
                             ) : (
-                              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-[#CBD5E1]">
+                              <span className="shrink-0 text-[16px] font-medium tracking-wide text-[#CBD5E1]">
                                 No link
                               </span>
                             )}

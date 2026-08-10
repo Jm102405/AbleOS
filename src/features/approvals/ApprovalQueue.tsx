@@ -164,18 +164,18 @@ export function ApprovalQueue({
     <>
       <div className="mt-4 space-y-3">
         {loading && (
-          <p className="text-[12px] font-medium text-[#8A99AC]">
+          <p className="text-[16px] font-medium text-[#8A99AC]">
             Loading queue…
           </p>
         )}
 
         {!loading && error && (
           <div className="rounded-2xl border border-dashed border-[#FFC9AE] bg-[#FFF6F1] px-5 py-4">
-            <p className="text-[12px] font-bold leading-snug text-[#D95717]">
+            <p className="text-[16px] font-medium leading-snug text-[#D95717]">
               {error}
             </p>
             <button
-              className="mt-2 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+              className="mt-2 text-[16px] font-semibold tracking-wide text-[#418BFF] hover:underline"
               onClick={load}
               type="button"
             >
@@ -186,7 +186,7 @@ export function ApprovalQueue({
 
         {!loading && !error && queue.length === 0 && (
           <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
-            <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+            <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
               Nothing waiting on you. Next up comes from {WAITING_ON[role]}.
             </p>
           </div>
@@ -203,17 +203,17 @@ export function ApprovalQueue({
               <div className="flex items-start gap-3">
                 <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                  <h3 className="text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
                     {stage.stageName}
                   </h3>
-                  <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                  <p className="mt-1 text-[16px] font-medium leading-snug text-[#6B7A90]">
                     {stage.side} · {stage.phase}
                   </p>
                 </div>
 
                 {stage.drivePhotoLink && (
                   <a
-                    className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#418BFF] hover:underline"
+                    className="flex shrink-0 items-center gap-1 text-[16px] font-medium text-[#418BFF] hover:underline"
                     href={stage.drivePhotoLink}
                     rel="noopener noreferrer"
                     target="_blank"
@@ -226,7 +226,7 @@ export function ApprovalQueue({
 
               <div className="mt-3 flex gap-2.5 pl-4">
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
                   disabled={working}
                   onClick={() => {
                     setNote("");
@@ -237,7 +237,7 @@ export function ApprovalQueue({
                   Decline
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
                   disabled={working}
                   onClick={() => decide(stage, "approve")}
                   type="button"
@@ -283,10 +283,10 @@ export function ApprovalQueue({
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Send back
                   </p>
-                  <h3 className="mt-1 text-[16px] font-extrabold tracking-[-0.02em] text-[#1A1A2E]">
+                  <h3 className="mt-1 text-[16px] font-semibold tracking-[-0.02em] text-[#1A1A2E]">
                     {declining.stageName}
                   </h3>
                 </div>
@@ -300,14 +300,14 @@ export function ApprovalQueue({
                 </button>
               </div>
 
-              <p className="mt-3 text-[11px] font-medium leading-relaxed text-[#6B7A90]">
+              <p className="mt-3 text-[16px] font-medium leading-relaxed text-[#6B7A90]">
                 This clears the photo and sends the stage back to the crew lead.
                 Tell them exactly what to redo.
               </p>
 
               <textarea
                 autoFocus
-                className="mt-3 min-h-[100px] w-full resize-y rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
+                className="mt-3 min-h-[100px] w-full resize-y rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]"
                 maxLength={500}
                 onChange={(event) => setNote(event.target.value)}
                 placeholder="e.g. Need a wide shot of the whole wall, not a close-up"
@@ -316,7 +316,7 @@ export function ApprovalQueue({
 
               <div className="mt-5 flex gap-3">
                 <button
-                  className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
+                  className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
                   disabled={busy !== null}
                   onClick={() => setDeclining(null)}
                   type="button"
@@ -324,7 +324,7 @@ export function ApprovalQueue({
                   Cancel
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#DC2626] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#DC2626] px-4 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
                   disabled={note.trim().length < 5 || busy !== null}
                   onClick={() => decide(declining, "decline", note)}
                   type="button"

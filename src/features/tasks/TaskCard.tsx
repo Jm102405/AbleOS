@@ -197,7 +197,7 @@ export function TaskCard({
       <div className="px-4 py-4 sm:px-5">
         <div className="flex items-start gap-2">
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-wide ${
               task.task_type === "Feature"
                 ? "bg-[#F0EDFF] text-[#5B44BE]"
                 : "bg-[#EEF2F6] text-[#526176]"
@@ -205,44 +205,44 @@ export function TaskCard({
           >
             {task.task_type}
           </span>
-          <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+          <h3 className="min-w-0 flex-1 text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
             {task.title}
           </h3>
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${priorityStyles[task.priority]}`}
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-wide ${priorityStyles[task.priority]}`}
           >
             {task.priority}
           </span>
         </div>
 
-        <p className="mt-2 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+        <p className="mt-2 text-[16px] font-medium leading-snug text-[#6B7A90]">
           {expanded ? "" : task.description.slice(0, 120)}
           {!expanded && task.description.length > 120 ? "..." : ""}
         </p>
 
         {expanded && (
           <div className="mt-2 space-y-4">
-            <p className="whitespace-pre-line text-[12px] font-medium leading-relaxed text-[#526176]">
+            <p className="whitespace-pre-line text-[16px] font-medium leading-relaxed text-[#526176]">
               {task.description}
             </p>
 
             {hasFlow && (
               <div className="rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-3.5">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+                <p className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
                   The flow
                 </p>
                 <ol className="mt-2.5 space-y-2">
                   {task.flow_steps.map((step, index) => (
                     <li className="flex gap-2.5" key={index}>
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#1E3A8A] text-[9px] font-extrabold text-white">
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#1E3A8A] text-[14px] font-semibold text-white">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-extrabold text-[#1A1A2E]">
+                        <p className="text-[16px] font-semibold text-[#1A1A2E]">
                           {step.from || "?"} to {step.to || "?"}
                         </p>
                         {step.action && (
-                          <p className="mt-0.5 text-[11px] font-medium leading-snug text-[#6B7A90]">
+                          <p className="mt-0.5 text-[16px] font-medium leading-snug text-[#6B7A90]">
                             {step.action}
                           </p>
                         )}
@@ -252,7 +252,7 @@ export function TaskCard({
                 </ol>
 
                 {task.flow_notes && (
-                  <p className="mt-3 whitespace-pre-line border-t border-[#DCE4EE] pt-2.5 text-[11px] font-medium leading-relaxed text-[#6B7A90]">
+                  <p className="mt-3 whitespace-pre-line border-t border-[#DCE4EE] pt-2.5 text-[16px] font-medium leading-relaxed text-[#6B7A90]">
                     {task.flow_notes}
                   </p>
                 )}
@@ -261,10 +261,10 @@ export function TaskCard({
 
             {task.definition_of_done && (
               <div className="rounded-xl border border-[#C9E9E1] bg-[#F1FCF8] p-3.5">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#0F766E]">
+                <p className="text-[16px] font-semibold tracking-[0.08em] text-[#0F766E]">
                   Done when
                 </p>
-                <p className="mt-1.5 whitespace-pre-line text-[11px] font-medium leading-relaxed text-[#0F766E]">
+                <p className="mt-1.5 whitespace-pre-line text-[16px] font-medium leading-relaxed text-[#0F766E]">
                   {task.definition_of_done}
                 </p>
               </div>
@@ -272,7 +272,7 @@ export function TaskCard({
 
             {task.reference_link && (
               <a
-                className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#418BFF] hover:underline"
+                className="inline-flex items-center gap-1.5 text-[16px] font-semibold text-[#418BFF] hover:underline"
                 href={task.reference_link}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -283,7 +283,7 @@ export function TaskCard({
             )}
 
             <div className="rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-3.5">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+              <p className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
                 Proof
               </p>
 
@@ -299,7 +299,7 @@ export function TaskCard({
                   />
 
                   <button
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[#B7C7DC] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-60"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[#B7C7DC] px-3 py-2 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-60"
                     disabled={uploading > 0}
                     onClick={() => inputRef.current?.click()}
                     type="button"
@@ -325,7 +325,7 @@ export function TaskCard({
                             ) : (
                               <div className="flex h-20 flex-col items-center justify-center gap-1 text-[#526176]">
                                 <FileTextIcon size={16} strokeWidth={2.5} />
-                                <span className="text-[8px] font-bold">PDF</span>
+                                <span className="text-[8px] font-medium">PDF</span>
                               </div>
                             )}
 
@@ -343,7 +343,7 @@ export function TaskCard({
                       </div>
 
                       <button
-                        className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
+                        className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
                         disabled={uploading > 0}
                         onClick={submitPending}
                         type="button"
@@ -370,7 +370,7 @@ export function TaskCard({
               )}
 
               {fileError && (
-                <p className="mt-2 text-[10px] font-bold text-[#DC2626]">
+                <p className="mt-2 text-[16px] font-medium text-[#DC2626]">
                   {fileError}
                 </p>
               )}
@@ -401,13 +401,13 @@ export function TaskCard({
                         target="_blank"
                       >
                         <FileTextIcon size={18} strokeWidth={2.5} />
-                        <span className="text-[8px] font-bold">PDF</span>
+                        <span className="text-[8px] font-medium">PDF</span>
                       </a>
                     ),
                   )}
                 </div>
               ) : loadingFiles ? (
-                <p className="mt-2 flex items-center gap-1.5 text-[10px] font-medium text-[#A3B0C0]">
+                <p className="mt-2 flex items-center gap-1.5 text-[16px] font-medium text-[#A3B0C0]">
                   <LoaderIcon
                     className="animate-spin"
                     size={11}
@@ -416,7 +416,7 @@ export function TaskCard({
                   Loading proof...
                 </p>
               ) : (
-                <p className="mt-2 text-[10px] font-medium text-[#A3B0C0]">
+                <p className="mt-2 text-[16px] font-medium text-[#A3B0C0]">
                   Nothing attached yet.
                 </p>
               )}
@@ -424,26 +424,26 @@ export function TaskCard({
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wide text-[#8A99AC]">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[16px] font-medium tracking-wide text-[#8A99AC]">
           <span>{metaLabel}</span>
           {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
           {onOpenChat && (
             <button
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[16px] font-semibold tracking-wide text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
               onClick={onOpenChat}
               type="button"
             >
               <MessageSquareIcon size={11} strokeWidth={2.75} />
               Chat
               {commentCount > 0 && (
-                <span className="rounded-full bg-[#418BFF] px-1.5 text-[9px] font-extrabold text-white">
+                <span className="rounded-full bg-[#418BFF] px-1.5 text-[14px] font-semibold text-white">
                   {commentCount}
                 </span>
               )}
             </button>
           )}
           <button
-            className={`inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline ${
+            className={`inline-flex items-center gap-1 text-[16px] font-semibold tracking-wide text-[#418BFF] hover:underline ${
               onOpenChat ? "" : "ml-auto"
             }`}
             onClick={() => setExpanded((value) => !value)}
@@ -466,14 +466,14 @@ export function TaskCard({
       {readOnly ? (
         <div className="flex items-center justify-between gap-3 border-t border-[#E6ECF2] px-4 py-2.5 sm:px-5">
           <span
-            className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${taskStatusStyles[task.status]}`}
+            className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide ${taskStatusStyles[task.status]}`}
           >
             {task.approved_at ? "Approved" : task.status}
           </span>
 
           {onApprove && task.status === "Done" && !task.approved_at && (
             <button
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-1.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:opacity-60"
               disabled={approving}
               onClick={onApprove}
               type="button"
@@ -493,7 +493,7 @@ export function TaskCard({
 
           {onDelete && (
             <button
-              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#DC2626] transition-colors hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[16px] font-semibold tracking-wide text-[#DC2626] transition-colors hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={deleting}
               onClick={onDelete}
               type="button"
@@ -514,13 +514,13 @@ export function TaskCard({
       ) : (
         <div className="flex items-center gap-1.5 overflow-x-auto border-t border-[#E6ECF2] px-4 py-2.5 sm:px-5">
           {task.approved_at && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EAF8EF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#16A34A]">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EAF8EF] px-2.5 py-1 text-[16px] font-semibold tracking-wide text-[#16A34A]">
               <CheckIcon size={10} strokeWidth={3} />
               Approved
             </span>
           )}
           {saving ? (
-            <span className="flex items-center gap-2 text-[11px] font-bold text-[#5B6B82]">
+            <span className="flex items-center gap-2 text-[16px] font-medium text-[#5B6B82]">
               <LoaderIcon
                 className="animate-spin"
                 size={13}
@@ -533,7 +533,7 @@ export function TaskCard({
               const active = task.status === status;
               return (
                 <button
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                     active
                       ? taskStatusStyles[status]
                       : "text-[#A3B0C0] hover:bg-[#F1F5F9]"

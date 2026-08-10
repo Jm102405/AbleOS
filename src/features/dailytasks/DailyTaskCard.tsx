@@ -64,16 +64,16 @@ export function DailyTaskCard({
   return (
     <article className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5">
       <div className="flex items-start gap-2">
-        <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+        <h3 className="min-w-0 flex-1 text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
           {task.title}
         </h3>
         {isDraft && (
-          <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#8291A5]">
+          <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[14px] font-semibold tracking-wide text-[#8291A5]">
             Draft
           </span>
         )}
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-wide ${
             task.priority === "Urgent"
               ? "bg-[#FEE2E2] text-[#DC2626]"
               : "bg-[#F1F5F9] text-[#8291A5]"
@@ -84,12 +84,12 @@ export function DailyTaskCard({
       </div>
 
       {task.description ? (
-        <p className="mt-1.5 whitespace-pre-line text-[11px] font-medium leading-relaxed text-[#6B7A90] sm:text-[12px]">
+        <p className="mt-1.5 whitespace-pre-line text-[16px] font-medium leading-relaxed text-[#6B7A90]">
           {task.description}
         </p>
       ) : null}
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[16px] font-medium tracking-wide text-[#A3B0C0]">
         <span>Started {shortTime(task.created_at)}</span>
         {done && task.completed_at ? (
           <span className="text-[#16A34A]">
@@ -99,7 +99,7 @@ export function DailyTaskCard({
       </div>
 
       {done && task.completion_note ? (
-        <p className="mt-2.5 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[11px] font-medium leading-relaxed text-[#526176]">
+        <p className="mt-2.5 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2 text-[16px] font-medium leading-relaxed text-[#526176]">
           {task.completion_note}
         </p>
       ) : null}
@@ -108,7 +108,7 @@ export function DailyTaskCard({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {fileCount > 0 && (
             <button
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#418BFF] transition-colors hover:bg-[#DFEBFF]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[16px] font-semibold tracking-[0.06em] text-[#418BFF] transition-colors hover:bg-[#DFEBFF]"
               onClick={toggleFiles}
               type="button"
             >
@@ -119,7 +119,7 @@ export function DailyTaskCard({
 
           {onStart && isDraft && (
             <button
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
               disabled={busy}
               onClick={() => onStart(task)}
               type="button"
@@ -135,7 +135,7 @@ export function DailyTaskCard({
 
           {onComplete && task.state === "in_progress" && (
             <button
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#16A34A] px-3 py-2 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#128A3E] disabled:opacity-60"
               disabled={busy}
               onClick={() => onComplete(task)}
               type="button"
@@ -155,7 +155,7 @@ export function DailyTaskCard({
 
           {onReopen && done && (
             <button
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-[#DCE4EE] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-[#DCE4EE] px-3 py-2 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
               disabled={busy}
               onClick={() => onReopen(task)}
               type="button"
@@ -178,7 +178,7 @@ export function DailyTaskCard({
       {expanded && (
         <div className="mt-3">
           {loadingFiles && (
-            <p className="text-[11px] font-medium text-[#8A99AC]">
+            <p className="text-[16px] font-medium text-[#8A99AC]">
               Loading files...
             </p>
           )}
@@ -209,7 +209,7 @@ export function DailyTaskCard({
                     target="_blank"
                   >
                     <FileTextIcon size={18} strokeWidth={2.5} />
-                    <span className="px-1 text-center text-[8px] font-bold leading-tight">
+                    <span className="px-1 text-center text-[8px] font-medium leading-tight">
                       PDF
                     </span>
                   </a>

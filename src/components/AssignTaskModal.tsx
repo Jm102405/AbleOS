@@ -42,7 +42,7 @@ const EMPTY = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[13px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]";
+  "w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:text-[#A3B0C0] focus:border-[#418BFF]";
 
 export function AssignTaskModal({
   open,
@@ -159,10 +159,10 @@ export function AssignTaskModal({
             {/* Header */}
             <div className="flex shrink-0 items-start justify-between gap-4 px-6 pt-6">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                   Assign work
                 </p>
-                <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                   New task
                 </h2>
               </div>
@@ -196,7 +196,7 @@ export function AssignTaskModal({
                   ))}
                 </select>
                 {assignee && (
-                  <p className="mt-1.5 text-[11px] font-medium text-[#8A99AC]">
+                  <p className="mt-1.5 text-[16px] font-medium text-[#8A99AC]">
                     {assignee.label} sees this in their cockpit and gets a bell
                     notification.
                   </p>
@@ -209,7 +209,7 @@ export function AssignTaskModal({
                     const active = form.taskType === type;
                     return (
                       <button
-                        className={`rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-colors ${
+                        className={`rounded-xl border px-3 py-2.5 text-[16px] font-medium transition-colors ${
                           active
                             ? "border-[#418BFF] bg-[#EBF3FF] text-[#418BFF]"
                             : "border-[#DCE4EE] bg-white text-[#6B7A90] hover:bg-[#F8FAFC]"
@@ -250,17 +250,17 @@ export function AssignTaskModal({
                   }
                   value={form.description}
                 />
-                <p className="mt-1 text-right text-[10px] font-bold text-[#A3B0C0]">
+                <p className="mt-1 text-right text-[16px] font-medium text-[#A3B0C0]">
                   {form.description.length} / 5000
                 </p>
               </Field>
 
               {isFeature && (
                 <div className="rounded-2xl border border-[#DCE4EE] bg-[#F8FAFC] p-4">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
                     The flow
                   </p>
-                  <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90]">
+                  <p className="mt-1 text-[16px] font-medium leading-snug text-[#6B7A90]">
                     Who hands what to whom. One row per handoff.
                   </p>
 
@@ -271,7 +271,7 @@ export function AssignTaskModal({
                         key={index}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wide text-[#8A99AC]">
+                          <span className="text-[16px] font-semibold tracking-wide text-[#8A99AC]">
                             Step {index + 1}
                           </span>
                           {steps.length > 1 && (
@@ -292,7 +292,7 @@ export function AssignTaskModal({
 
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           <input
-                            className={`${inputClass} py-2 text-[12px]`}
+                            className={`${inputClass} py-2 text-[16px]`}
                             onChange={(e) =>
                               updateStep(index, "from", e.target.value)
                             }
@@ -301,7 +301,7 @@ export function AssignTaskModal({
                             value={step.from}
                           />
                           <input
-                            className={`${inputClass} py-2 text-[12px]`}
+                            className={`${inputClass} py-2 text-[16px]`}
                             onChange={(e) =>
                               updateStep(index, "to", e.target.value)
                             }
@@ -312,7 +312,7 @@ export function AssignTaskModal({
                         </div>
 
                         <input
-                          className={`${inputClass} mt-2 py-2 text-[12px]`}
+                          className={`${inputClass} mt-2 py-2 text-[16px]`}
                           onChange={(e) =>
                             updateStep(index, "action", e.target.value)
                           }
@@ -325,7 +325,7 @@ export function AssignTaskModal({
                   </div>
 
                   <button
-                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
+                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-[#418BFF] bg-[#EBF3FF] px-4 py-2.5 text-[16px] font-semibold tracking-wide text-[#418BFF] transition-colors hover:bg-[#DBEAFE]"
                     onClick={() =>
                       setSteps((prev) => [
                         ...prev,
@@ -390,7 +390,7 @@ export function AssignTaskModal({
                     const active = form.priority === level;
                     return (
                       <button
-                        className={`rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-colors ${
+                        className={`rounded-xl border px-3 py-2.5 text-[16px] font-medium transition-colors ${
                           active
                             ? "border-[#418BFF] bg-[#EBF3FF] text-[#418BFF]"
                             : "border-[#DCE4EE] bg-white text-[#6B7A90] hover:bg-[#F8FAFC]"
@@ -410,20 +410,20 @@ export function AssignTaskModal({
             {/* Footer */}
             <div className="shrink-0 border-t border-[#E6ECF2] px-6 pb-6 pt-4">
               {error && (
-                <p className="mb-3 text-[11px] font-bold text-red-500">
+                <p className="mb-3 text-[16px] font-medium text-red-500">
                   {error}
                 </p>
               )}
               <div className="flex gap-3">
                 <button
-                  className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-3 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
+                  className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-3 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9]"
                   onClick={onClose}
                   type="button"
                 >
                   Cancel
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-4 py-3 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
                   disabled={!canSubmit}
                   type="submit"
                 >
@@ -460,14 +460,14 @@ function Field({ label, required, hint, children }: FieldProps) {
   return (
     <label className="block">
       <span className="mb-1.5 flex items-center gap-2">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#5B6B82]">
+        <span className="text-[16px] font-semibold tracking-[0.08em] text-[#5B6B82]">
           {label}
         </span>
         {required && (
-          <span className="text-[11px] font-bold text-[#FF7832]">*</span>
+          <span className="text-[16px] font-medium text-[#FF7832]">*</span>
         )}
         {hint && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-[#A3B0C0]">
+          <span className="text-[16px] font-medium tracking-wide text-[#A3B0C0]">
             {hint}
           </span>
         )}

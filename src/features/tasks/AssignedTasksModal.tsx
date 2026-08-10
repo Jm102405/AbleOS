@@ -114,10 +114,10 @@ export function AssignedTasksModal({
             <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-3 pt-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Assigned work
                   </p>
-                  <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                  <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                     Tasks you assigned
                   </h2>
                 </div>
@@ -136,7 +136,7 @@ export function AssignedTasksModal({
                   const active = filter === option;
                   return (
                     <button
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                         active
                           ? option === "All"
                             ? "bg-[#1E3A8A] text-white"
@@ -157,14 +157,14 @@ export function AssignedTasksModal({
             {/* Body */}
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
               {loading && (
-                <p className="text-[12px] font-medium text-[#8A99AC]">
+                <p className="text-[16px] font-medium text-[#8A99AC]">
                   Loading tasks…
                 </p>
               )}
 
               {!loading && visible.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
-                  <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                  <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                     {tasks.length === 0
                       ? "You haven't assigned anything yet."
                       : `Nothing ${filter.toLowerCase()}.`}
@@ -217,11 +217,11 @@ export function AssignedTasksModal({
                       <TriangleAlertIcon size={17} strokeWidth={2.5} />
                     </span>
                     <div className="min-w-0">
-                      <h3 className="text-[14px] font-extrabold tracking-[-0.02em] text-[#DC2626]">
+                      <h3 className="text-[18px] font-semibold tracking-[-0.02em] text-[#DC2626]">
                         Delete permanently?
                       </h3>
-                      <p className="mt-1.5 text-[11px] font-medium leading-relaxed text-[#6B7A90]">
-                        <span className="font-extrabold text-[#1A1A2E]">
+                      <p className="mt-1.5 text-[16px] font-medium leading-relaxed text-[#6B7A90]">
+                        <span className="font-semibold text-[#1A1A2E]">
                           {confirming.title}
                         </span>{" "}
                         will be removed from the database for good.{" "}
@@ -234,7 +234,7 @@ export function AssignedTasksModal({
 
                   <div className="mt-5 flex gap-2.5">
                     <button
-                      className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
+                      className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
                       disabled={deleting}
                       onClick={() => setConfirming(null)}
                       type="button"
@@ -242,7 +242,7 @@ export function AssignedTasksModal({
                       Keep it
                     </button>
                     <button
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#DC2626] px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#DC2626] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={deleting}
                       onClick={handleConfirmedDelete}
                       type="button"

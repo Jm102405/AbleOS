@@ -168,10 +168,10 @@ export function DailyProgressModal({
             <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-3 pt-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Daily work
                   </p>
-                  <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                  <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                     {personLabel}
                   </h2>
                 </div>
@@ -187,7 +187,7 @@ export function DailyProgressModal({
 
               <div className="mt-3 flex gap-1.5">
                 <button
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                  className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                     view === "in_progress"
                       ? "bg-[#1E3A8A] text-white"
                       : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
@@ -198,7 +198,7 @@ export function DailyProgressModal({
                   In progress ({inProgress.length})
                 </button>
                 <button
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                  className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                     view === "completed"
                       ? "bg-[#16A34A] text-white"
                       : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
@@ -215,7 +215,7 @@ export function DailyProgressModal({
                   <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
                     {MODES.map((option) => (
                       <button
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide transition-colors ${
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
                           mode === option.key
                             ? "bg-[#EEF5FF] text-[#418BFF]"
                             : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
@@ -230,12 +230,12 @@ export function DailyProgressModal({
                   </div>
 
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[9px] font-extrabold uppercase tracking-[0.08em] text-[#A3B0C0]">
+                    <span className="text-[14px] font-semibold tracking-[0.08em] text-[#A3B0C0]">
                       Or pick a day
                     </span>
                     <input
                       aria-label="Filter by completion date"
-                      className={`rounded-xl border bg-[#F8FAFC] px-2.5 py-1.5 text-[11px] font-bold text-[#1A1A2E] outline-none transition-colors focus:bg-white ${
+                      className={`rounded-xl border bg-[#F8FAFC] px-2.5 py-1.5 text-[16px] font-medium text-[#1A1A2E] outline-none transition-colors focus:bg-white ${
                         mode === "date"
                           ? "border-[#418BFF]"
                           : "border-[#DCE4EE] focus:border-[#1E3A8A]"
@@ -254,13 +254,13 @@ export function DailyProgressModal({
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
               {loading && (
-                <p className="text-[12px] font-medium text-[#8A99AC]">
+                <p className="text-[16px] font-medium text-[#8A99AC]">
                   Loading...
                 </p>
               )}
 
               {view === "completed" && !loading && (
-                <p className="text-[11px] font-bold text-[#526176]">
+                <p className="text-[16px] font-medium text-[#526176]">
                   {visibleCompleted.length + visibleApproved.length}{" "}
                   {visibleCompleted.length + visibleApproved.length === 1
                     ? "task"
@@ -273,7 +273,7 @@ export function DailyProgressModal({
                 visible.length === 0 &&
                 (view === "in_progress" || visibleApproved.length === 0) && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
-                  <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                  <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                     {view === "in_progress"
                       ? "Nothing in progress right now."
                       : "Nothing completed in this range."}
@@ -286,7 +286,7 @@ export function DailyProgressModal({
               ))}
 
               {view === "completed" && visibleApproved.length > 0 && (
-                <p className="pt-2 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
                   Assigned by Raj
                 </p>
               )}

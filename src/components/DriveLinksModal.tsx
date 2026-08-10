@@ -78,10 +78,10 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
             <div className="shrink-0 border-b border-[#DCE4EE] bg-white px-5 pb-4 pt-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Deal documents
                   </p>
-                  <h2 className="mt-1 text-[18px] font-extrabold tracking-[-0.025em] text-[#1A1A2E]">
+                  <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
                     Google Drive
                   </h2>
                 </div>
@@ -99,7 +99,7 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
               {groups.map(([group, folders]) => (
                 <div key={group}>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#8291A5]">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
                     {group}
                   </p>
                   <div className="mt-2 space-y-2">
@@ -118,7 +118,7 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
                             strokeWidth={2.5}
                           />
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-[13px] font-extrabold tracking-[-0.015em] text-[#1A1A2E]">
+                        <span className="min-w-0 flex-1 truncate text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
                           {folder.label}
                         </span>
                         <ExternalLinkIcon
