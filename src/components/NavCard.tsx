@@ -22,9 +22,9 @@ const TONES: Record<NavCardTone, { icon: string; badge: string }> = {
   },
 };
 
-/** Standalone card. */
+/** Standalone card. Min height clears the 48px touch target comfortably. */
 const CARD_SHELL =
-  "rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5";
+  "rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5";
 
 /** A row inside a shared container - the container owns the border. */
 const ROW_SHELL = "px-4 py-4 transition-colors hover:bg-[#F8FAFC] sm:px-5";
@@ -69,16 +69,16 @@ export function NavCard({
   const leading = (
     <>
       <span
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${styles.icon}`}
+        className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${styles.icon}`}
       >
         {icon}
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+        <span className="block text-[18px] font-medium leading-[1.4] tracking-[-0.01em] text-[#1A1A2E]">
           {title}
         </span>
-        <span className="mt-0.5 block text-[11px] font-medium leading-snug text-[#8291A5] sm:text-[12px]">
+        <span className="mt-0.5 block text-[16px] font-normal leading-[1.5] text-[#6B7A90]">
           {subtitle}
         </span>
       </span>
@@ -88,7 +88,7 @@ export function NavCard({
   const trailing = (
     <>
       <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${styles.badge}`}
+        className={`shrink-0 rounded-full px-2.5 py-1 text-[16px] font-medium ${styles.badge}`}
       >
         {count === null ? "..." : count}
       </span>
@@ -96,8 +96,8 @@ export function NavCard({
       <ChevronRightIcon
         aria-hidden="true"
         className="shrink-0 text-[#C3CEDC]"
-        size={16}
-        strokeWidth={2.5}
+        size={20}
+        strokeWidth={2.25}
       />
     </>
   );

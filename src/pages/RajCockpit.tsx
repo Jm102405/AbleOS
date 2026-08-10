@@ -307,12 +307,12 @@ export function RajCockpit() {
                 >
                   <span
                     aria-current="page"
-                    className="rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#1E3A8A]"
+                    className="rounded-full bg-white px-3 py-2 text-[16px] font-medium text-[#1E3A8A]"
                   >
                     Cockpit
                   </span>
                   <Link
-                    className="rounded-full px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                    className="rounded-full px-3 py-2 text-[16px] font-medium text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                     to="/raj/pipeline"
                   >
                     Pipeline
@@ -323,13 +323,13 @@ export function RajCockpit() {
               </div>
             </div>
 
-            <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+            <p className="mt-6 text-[16px] font-medium tracking-[0.01em] text-white/85">
               ABLE OS · Executive workspace
             </p>
             <h1 className="mt-1 text-[32px] font-extrabold leading-tight tracking-[-0.045em] sm:text-[38px] lg:text-[44px]">
               Raj&apos;s Cockpit
             </h1>
-            <p className="mt-2 max-w-md text-[13px] font-medium text-white/85 sm:text-[14px]">
+            <p className="mt-2 max-w-md text-[18px] font-normal leading-[1.5] text-white/90">
               A clear view of today&apos;s decisions and operating load.
             </p>
           </div>
@@ -347,21 +347,21 @@ export function RajCockpit() {
             <div className="absolute inset-y-0 left-0 w-1.5 bg-[#1E3A8A]" />
             <div className="flex items-center justify-between gap-4 px-5 py-4 pl-6 sm:px-7 sm:py-5 sm:pl-8">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+                <p className="text-[16px] font-medium text-[#5B6B82]">
                   Personal dashboard
                 </p>
                 <h2
-                  className="mt-1 text-[16px] font-extrabold tracking-[-0.025em] sm:text-[18px]"
+                  className="mt-1 text-[22px] font-semibold tracking-[-0.02em]"
                   id="profile-heading"
                 >
                   Raj · CEO
                 </h2>
-                <p className="mt-1 text-[11px] font-medium leading-relaxed text-[#64748B] sm:text-[12px]">
+                <p className="mt-1 text-[16px] font-normal leading-[1.5] text-[#64748B]">
                   Vision · Acquisitions · Capital · Partnerships
                 </p>
               </div>
               <button
-                className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2 sm:text-[12px]"
+                className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2"
                 onClick={() => setAssignOpen(true)}
                 type="button"
               >
@@ -428,7 +428,7 @@ export function RajCockpit() {
                   </h2>
                   <NavCard
                     count={gateCount}
-                    icon={<CameraIcon size={17} strokeWidth={2.5} />}
+                    icon={<CameraIcon size={20} strokeWidth={2.25} />}
                     onClick={() => setGatesOpen(true)}
                     subtitle="Photos submitted for your sign-off"
                     title="Gates awaiting you"
@@ -456,7 +456,7 @@ export function RajCockpit() {
                   </h2>
                   <NavCard
                     count={approvedCount}
-                    icon={<ShieldCheckIcon size={17} strokeWidth={2.5} />}
+                    icon={<ShieldCheckIcon size={20} strokeWidth={2.25} />}
                     onClick={() => setApprovedOpen(true)}
                     subtitle="Every stage you have signed off"
                     title="Gates approved"
@@ -470,7 +470,7 @@ export function RajCockpit() {
                   </h2>
                   <NavCard
                     count={openTaskCount}
-                    icon={<ClipboardListIcon size={17} strokeWidth={2.5} />}
+                    icon={<ClipboardListIcon size={20} strokeWidth={2.25} />}
                     onClick={() => setTasksOpen(true)}
                     subtitle="Work you assigned to the team"
                     title="Tasks assigned"
@@ -484,7 +484,7 @@ export function RajCockpit() {
                   </h2>
                   <NavCard
                     count={ordersLoading ? null : orders.length}
-                    icon={<FileTextIcon size={17} strokeWidth={2.5} />}
+                    icon={<FileTextIcon size={20} strokeWidth={2.25} />}
                     onClick={() => setOrdersOpen(true)}
                     subtitle="Orders submitted for your decision"
                     title="Approval requests"
@@ -501,18 +501,18 @@ export function RajCockpit() {
                 >
                   <div className="space-y-3">
                     {ordersLoading && (
-                      <p className="text-[12px] font-medium text-[#8A99AC]">
+                      <p className="text-[16px] font-normal text-[#8A99AC]">
                         Loading requests…
                       </p>
                     )}
 
                     {!ordersLoading && ordersError && (
                       <div className="rounded-2xl border border-dashed border-[#FFC9AE] bg-[#FFF6F1] px-5 py-4">
-                        <p className="text-[12px] font-bold leading-snug text-[#D95717]">
+                        <p className="text-[16px] font-medium leading-[1.5] text-[#D95717]">
                           {ordersError}
                         </p>
                         <button
-                          className="mt-2 text-[11px] font-extrabold uppercase tracking-wide text-[#418BFF] hover:underline"
+                          className="mt-2 text-[16px] font-medium text-[#418BFF] hover:underline"
                           onClick={loadOrders}
                           type="button"
                         >
@@ -523,7 +523,7 @@ export function RajCockpit() {
 
                     {!ordersLoading && !ordersError && orders.length === 0 && (
                       <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-5 py-4">
-                        <p className="text-[12px] font-medium leading-snug text-[#8A99AC]">
+                        <p className="text-[16px] font-normal leading-[1.5] text-[#8A99AC]">
                           Nothing awaiting your approval
                         </p>
                       </div>
@@ -541,16 +541,16 @@ export function RajCockpit() {
                           <div className="h-9 w-1 shrink-0 rounded-full bg-[#1E3A8A]" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start gap-2">
-                              <h3 className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug tracking-[-0.015em] text-[#1A1A2E] sm:text-[14px]">
+                              <h3 className="min-w-0 flex-1 text-[18px] font-medium leading-[1.4] tracking-[-0.01em] text-[#1A1A2E]">
                                 {order.order_name}
                               </h3>
                               <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${priorityStyles[order.priority]}`}
+                                className={`shrink-0 rounded-full px-2.5 py-1 text-[14px] font-medium ${priorityStyles[order.priority]}`}
                               >
                                 {order.priority}
                               </span>
                             </div>
-                            <p className="mt-1 text-[11px] font-medium leading-snug text-[#6B7A90] sm:text-[12px]">
+                            <p className="mt-1 text-[16px] font-normal leading-[1.5] text-[#6B7A90]">
                               {order.requested_by} · needed{" "}
                               {formatDate(order.date_needed)}
                               {cost ? ` · ${cost}` : ""}
@@ -575,7 +575,7 @@ export function RajCockpit() {
             </h2>
             <NavCard
               count={daneDaily.loading ? null : daneDaily.inProgress.length}
-              icon={<TrendingUpIcon size={17} strokeWidth={2.5} />}
+              icon={<TrendingUpIcon size={20} strokeWidth={2.25} />}
               onClick={() => setProgressOpen(true)}
               subtitle="What Dane is working on, and what he finished"
               title="Dane's Progress"
@@ -599,7 +599,7 @@ export function RajCockpit() {
             tasks={daneDaily.tasks}
             today={daneDaily.today}
           />
-          <footer className="pt-10 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#8291A5]">
+          <footer className="pt-10 text-center text-[16px] font-normal text-[#8291A5]">
             Able OS · V1 Build
           </footer>
         </main>
@@ -659,7 +659,7 @@ export function RajCockpit() {
             role="status"
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            <p className="text-[12px] font-bold text-white sm:text-[13px]">
+            <p className="text-[16px] font-medium text-white">
               {taskToast}
             </p>
           </motion.div>
@@ -697,11 +697,11 @@ function StatCard({
   const content = (
     <>
       <p
-        className={`inline-flex rounded-lg px-2 py-1 text-[24px] font-extrabold leading-none tracking-[-0.06em] sm:text-[27px] ${tones[tone]}`}
+        className={`inline-flex rounded-lg px-2.5 py-1.5 text-[28px] font-semibold leading-none tracking-[-0.03em] ${tones[tone]}`}
       >
         {value}
       </p>
-      <p className="mt-3 text-[9px] font-extrabold uppercase leading-tight tracking-[0.06em] text-[#718096] sm:text-[10px]">
+      <p className="mt-2.5 text-[16px] font-normal leading-[1.4] text-[#718096]">
         {label}
       </p>
     </>
@@ -811,7 +811,7 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
           >
             {/* Header — pinned */}
             <div className="flex shrink-0 items-start justify-between gap-4 px-6 pt-6">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#5B6B82]">
+              <p className="text-[16px] font-medium text-[#5B6B82]">
                 Approval request
               </p>
               <button
@@ -831,13 +831,13 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
                   {order.order_name}
                 </h3>
                 <span
-                  className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${priorityStyles[order.priority]}`}
+                  className={`mt-0.5 shrink-0 rounded-full px-2.5 py-1 text-[14px] font-medium ${priorityStyles[order.priority]}`}
                 >
                   {order.priority}
                 </span>
               </div>
 
-              <p className="mt-3 whitespace-pre-line text-[12px] font-medium leading-relaxed text-[#526176]">
+              <p className="mt-3 whitespace-pre-line text-[16px] font-normal leading-[1.6] text-[#526176]">
                 {order.description}
               </p>
 
@@ -855,14 +855,14 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
             {/* Footer — pinned, so Approve/Decline are always reachable */}
             <div className="shrink-0 border-t border-[#E6ECF2] px-6 pb-6 pt-4">
               {error && (
-                <p className="mb-3 text-[11px] font-bold text-red-500">
+                <p className="mb-3 text-[16px] font-medium text-red-500">
                   {error}
                 </p>
               )}
 
               <div className="flex gap-3">
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-5 py-3 text-[16px] font-medium text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={busy !== null}
                   onClick={() => decide("Declined")}
                   type="button"
@@ -877,7 +877,7 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
                   Decline
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#15803D] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#8A99AC]"
                   disabled={busy !== null}
                   onClick={() => decide("Approved")}
                   type="button"
@@ -903,10 +903,10 @@ function ApprovalModal({ order, onClose, onDecided }: ApprovalModalProps) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#8A99AC]">
+      <dt className="text-[16px] font-normal text-[#8A99AC]">
         {label}
       </dt>
-      <dd className="text-[12px] font-bold text-[#1A1A2E]">{value}</dd>
+      <dd className="text-[16px] font-medium text-[#1A1A2E]">{value}</dd>
     </div>
   );
 }
