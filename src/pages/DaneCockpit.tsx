@@ -18,7 +18,8 @@ import { TaskRow } from "../features/tasks/TaskRow";
 import { TaskDetailModal } from "../features/tasks/TaskDetailModal";
 import { CompleteDailyTaskModal } from "../features/dailytasks/CompleteDailyTaskModal";
 import { CreateDailyTaskModal } from "../features/dailytasks/CreateDailyTaskModal";
-import { DailyTaskCard } from "../features/dailytasks/DailyTaskCard";
+import { DailyTaskRow } from "../features/dailytasks/DailyTaskRow";
+import { DailyTaskDetailModal } from "../features/dailytasks/DailyTaskDetailModal";
 import {
   useDailyTasks,
   type DailyTask,
@@ -123,6 +124,7 @@ export function DaneCockpit() {
   const daily = useDailyTasks();
   const [dailyOpen, setDailyOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [dailyDetailId, setDailyDetailId] = React.useState<string | null>(null);
   const [completing, setCompleting] = React.useState<DailyTask | null>(null);
 
   const openTaskCount = tasks.filter((task) => task.status !== "Done").length;
@@ -459,10 +461,9 @@ export function DaneCockpit() {
                 )}
 
                 {daily.drafts.map((task) => (
-                  <DailyTaskCard
-                    busy={daily.busyId === task.id}
+                  <DailyTaskRow
                     key={task.id}
-                    onStart={(item) => daily.publishTask(item.id)}
+                    onOpen={() => setDailyDetailId(task.id)}
                     task={task}
                   />
                 ))}
@@ -474,10 +475,9 @@ export function DaneCockpit() {
                 )}
 
                 {daily.inProgress.map((task) => (
-                  <DailyTaskCard
-                    busy={daily.busyId === task.id}
+                  <DailyTaskRow
                     key={task.id}
-                    onComplete={setCompleting}
+                    onOpen={() => setDailyDetailId(task.id)}
                     task={task}
                   />
                 ))}
@@ -489,11 +489,10 @@ export function DaneCockpit() {
                 )}
 
                 {daily.completed.map((task) => (
-                  <DailyTaskCard
-                    busy={daily.busyId === task.id}
+                  <DailyTaskRow
                     key={task.id}
-                    onReopen={(item) => daily.reopenTask(item.id)}
-                    task={task}
+                    onOpen={() => setDailyDetailId(task.id)}
+                    task={task} 
                   />
                 ))}
               </div>
@@ -621,6 +620,20 @@ export function DaneCockpit() {
           Able OS · V1 Build
         </footer>
       </main>
+
+      <DailyTaskDetailModal
+        busy={daily.busyId === dailyDetailId}
+        onClose={() => setDailyDetailId(null)}
+        onComplete={(task) => {
+          // Completing needs a note and proof, which lives in its own modal.
+          setDailyDetailId(null);
+          setCompleting(task);
+        }}
+        onReopen={(task) => daily.reopenTask(task.id)}
+        onStart={(task) => daily.publishTask(task.id)}
+        open={Boolean(dailyDetailId)}
+        task={daily.tasks.find((task) => task.id === dailyDetailId) ?? null}
+      />
 
       <CreateDailyTaskModal
         onClose={() => setCreateOpen(false)}
