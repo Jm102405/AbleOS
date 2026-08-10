@@ -15,6 +15,8 @@ import type { Task } from "../features/tasks/TaskCard";
 import { TaskChatModal } from "../features/tasks/TaskChatModal";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import { TaskRow } from "../features/tasks/TaskRow";
+import { OrderRow } from "../features/orders/OrderRow";
+import { OrderDetailModal } from "../features/orders/OrderDetailModal";
 import { TaskDetailModal } from "../features/tasks/TaskDetailModal";
 import { CompleteDailyTaskModal } from "../features/dailytasks/CompleteDailyTaskModal";
 import { CreateDailyTaskModal } from "../features/dailytasks/CreateDailyTaskModal";
@@ -45,38 +47,9 @@ type Order = {
   decided_by: string | null;
 };
 
-function formatDate(value: string) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
-function formatCost(value: string | number | null) {
-  if (value === null || value === undefined || value === "") return null;
-  const amount = Number(value);
-  if (!Number.isFinite(amount) || amount === 0) return null;
-  return amount.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  });
-}
 
-const statusStyles: Record<Order["status"], string> = {
-  Pending: "bg-[#FEF3C7] text-[#B45309]",
-  Approved: "bg-[#EAF8EF] text-[#16A34A]",
-  Declined: "bg-[#FFF1E9] text-[#D95717]",
-};
 
-const priorityStyles: Record<Order["priority"], string> = {
-  Low: "bg-[#EEF2F6] text-[#526176]",
-  Normal: "bg-[#EEF5FF] text-[#418BFF]",
-  Urgent: "bg-[#FFF1E9] text-[#D95717]",
-};
 
 const reveal = {
   hidden: { opacity: 0, y: 12 },
@@ -119,6 +92,7 @@ export function DaneCockpit() {
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [taskDetailId, setTaskDetailId] = React.useState<string | null>(null);
   const [ordersOpen, setOrdersOpen] = React.useState(false);
+  const [orderDetailId, setOrderDetailId] = React.useState<string | null>(null);
 
   /* Dane's own daily work, separate from what Raj assigns him. */
   const daily = useDailyTasks();
@@ -559,45 +533,14 @@ export function DaneCockpit() {
                   </div>
                 )}
 
-                {orders.map((order) => {
-                  const cost = formatCost(order.estimated_cost);
-                  return (
-                    <article
-                      className="rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_5px_14px_rgba(30,58,138,0.055)] sm:px-5"
-                      key={order.id}
-                    >
-                      <div className="flex items-start gap-2">
-                        <h3 className="min-w-0 flex-1 text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
-                          {order.order_name}
-                        </h3>
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[14px] font-semibold tracking-wide ${statusStyles[order.status]}`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
+                {orders.map((order) => (
+                  <OrderRow
+                    key={order.id}
+                    onOpen={() => setOrderDetailId(order.id)}
+                    order={order}
+                  />
+                ))}
 
-                      <p className="mt-1.5 line-clamp-2 text-[16px] font-medium leading-snug text-[#6B7A90]">
-                        {order.description}
-                      </p>
-
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[16px] font-medium tracking-wide text-[#8A99AC]">
-                        <span
-                          className={`rounded-full px-2 py-0.5 ${priorityStyles[order.priority]}`}
-                        >
-                          {order.priority}
-                        </span>
-                        <span>Needed {formatDate(order.date_needed)}</span>
-                        {cost && <span>· {cost}</span>}
-                        {order.decided_at && (
-                          <span>
-                            · {order.status} {formatDate(order.decided_at)}
-                          </span>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
               </div>
             </GateQueueModal>
           </div>
@@ -620,6 +563,12 @@ export function DaneCockpit() {
           Able OS · V1 Build
         </footer>
       </main>
+
+      <OrderDetailModal
+        onClose={() => setOrderDetailId(null)}
+        open={Boolean(orderDetailId)}
+        order={orders.find((order) => order.id === orderDetailId) ?? null}
+      />
 
       <DailyTaskDetailModal
         busy={daily.busyId === dailyDetailId}
