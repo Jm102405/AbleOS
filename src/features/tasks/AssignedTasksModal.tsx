@@ -1,12 +1,9 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LoaderIcon, TriangleAlertIcon, XIcon } from "lucide-react";
-import {
-  TaskCard,
-  TASK_STATUSES,
-  taskStatusStyles,
-  type Task,
-} from "./TaskCard";
+import { TASK_STATUSES, taskStatusStyles, type Task } from "./TaskCard";
+import { TaskRow } from "./TaskRow";
+import { TaskDetailModal } from "./TaskDetailModal";
 
 type Filter = "All" | Task["status"];
 
@@ -41,8 +38,6 @@ export function AssignedTasksModal({
   onClose,
   tasks,
   loading,
-  savingTask,
-  onStatusChange,
   onDelete,
   onOpenChat,
   commentCounts,
@@ -51,6 +46,7 @@ export function AssignedTasksModal({
   focusTaskId,
 }: AssignedTasksModalProps) {
   const [filter, setFilter] = React.useState<Filter>("All");
+  const [detailId, setDetailId] = React.useState<string | null>(null);
   const [confirming, setConfirming] = React.useState<Task | null>(null);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -67,7 +63,16 @@ export function AssignedTasksModal({
 
   React.useEffect(() => {
     if (open) setFilter("All");
+    if (!open) setDetailId(null);
   }, [open]);
+
+  // Arriving from a notification opens that task straight away.
+  React.useEffect(() => {
+    if (open && focusTaskId) setDetailId(focusTaskId);
+  }, [open, focusTaskId]);
+
+  // Read from the live list so the sheet updates after an approve.
+  const detailTask = tasks.find((task) => task.id === detailId) ?? null;
 
   React.useEffect(() => {
     if (!open) return;
@@ -173,30 +178,35 @@ export function AssignedTasksModal({
               )}
 
               {visible.map((task) => (
-                <TaskCard
-                  approving={approvingId === task.id}
-                  defaultExpanded={focusTaskId === task.id}
-                  commentCount={commentCounts[task.id] ?? 0}
+                <TaskRow
                   key={task.id}
-                  onApprove={() => onApprove(task.id)}
-                  metaLabel={`To ${STAFF_LABELS[task.assigned_to] ?? task.assigned_to}`}
-                  onDelete={() => setConfirming(task)}
-                  onOpenChat={() => onOpenChat(task)}
-                  onStatusChange={(status) => onStatusChange(task.id, status)}
-                  readOnly
-                  saving={savingTask === task.id}
+                  onOpen={() => setDetailId(task.id)}
                   task={task}
                 />
               ))}
             </div>
           </motion.div>
 
+          <TaskDetailModal
+            approving={approvingId === detailTask?.id}
+            commentCount={detailTask ? (commentCounts[detailTask.id] ?? 0) : 0}
+            metaLabel="Assigned to"
+            onApprove={
+              detailTask ? () => onApprove(detailTask.id) : undefined
+            }
+            onClose={() => setDetailId(null)}
+            onDelete={detailTask ? () => setConfirming(detailTask) : undefined}
+            onOpenChat={detailTask ? () => onOpenChat(detailTask) : undefined}
+            open={Boolean(detailTask)}
+            task={detailTask}
+          />
+
           {/* Delete confirmation, layered over the list */}
           <AnimatePresence>
             {confirming && (
               <motion.div
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 z-10 flex items-center justify-center bg-[#1A1A2E]/60 px-5"
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1A1A2E]/60 px-5"
                 exit={{ opacity: 0 }}
                 initial={{ opacity: 0 }}
                 onClick={(event) => {
