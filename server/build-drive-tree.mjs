@@ -28,7 +28,7 @@ const property = (base) => TEMPLATE.map((folder) => `${base}/${folder}`);
 
 const lots = Array.from({ length: HOMETOWN_LOTS }, (_, index) => {
     const number = String(index + 1).padStart(2, "0");
-    return `20-KUBERA-HOMES/10-Hometown-Meadows-MHP/04-Leases-and-Tenants/Lot-${number}`;
+    return `20-KUBERA-HOMES/Hometown-Meadows-MHP/04-Leases-and-Tenants/Lot-${number}`;
 });
 
 const PATHS = [
@@ -55,8 +55,8 @@ const PATHS = [
     "10-ABLE-CONGLOMERATE/20-Able-Can-Help/OaaS",
     "10-ABLE-CONGLOMERATE/30-Able-Has-Deals",
     "10-ABLE-CONGLOMERATE/40-Able-Builds",
-    "10-ABLE-CONGLOMERATE/50-Justiceburg-75",
-    ...property("10-ABLE-CONGLOMERATE/50-Justiceburg-75"),
+    "10-ABLE-CONGLOMERATE/Justiceburg-75",
+    ...property("10-ABLE-CONGLOMERATE/Justiceburg-75"),
 
     // ---- Drive 3 ----
     "20-KUBERA-HOMES/00-Entity-Docs",
@@ -64,22 +64,22 @@ const PATHS = [
     "20-KUBERA-HOMES/00-Entity-Docs/Tax",
     "20-KUBERA-HOMES/00-Entity-Docs/Banking",
 
-    "20-KUBERA-HOMES/10-Hometown-Meadows-MHP",
-    ...property("20-KUBERA-HOMES/10-Hometown-Meadows-MHP"),
-    "20-KUBERA-HOMES/10-Hometown-Meadows-MHP/01-Acquisition-and-Title/Home-Titles",
-    "20-KUBERA-HOMES/10-Hometown-Meadows-MHP/02-Financing-and-Lender/Refi-Oct-2026",
+    "20-KUBERA-HOMES/Hometown-Meadows-MHP",
+    ...property("20-KUBERA-HOMES/Hometown-Meadows-MHP"),
+    "20-KUBERA-HOMES/Hometown-Meadows-MHP/01-Acquisition-and-Title/Home-Titles",
+    "20-KUBERA-HOMES/Hometown-Meadows-MHP/02-Financing-and-Lender/Refi-Oct-2026",
     ...lots,
-    "20-KUBERA-HOMES/10-Hometown-Meadows-MHP/05-Rehab-and-Maintenance/HTM-Duplex-Build",
-    "20-KUBERA-HOMES/10-Hometown-Meadows-MHP/06-Financials/Rent-Roll",
+    "20-KUBERA-HOMES/Hometown-Meadows-MHP/05-Rehab-and-Maintenance/HTM-Duplex-Build",
+    "20-KUBERA-HOMES/Hometown-Meadows-MHP/06-Financials/Rent-Roll",
 
-    "20-KUBERA-HOMES/20-106-Fox-Run",
-    ...property("20-KUBERA-HOMES/20-106-Fox-Run"),
-    "20-KUBERA-HOMES/20-106-Fox-Run/02-Financing-and-Lender/VAS-Refi-2026",
+    "20-KUBERA-HOMES/106-Fox-Run",
+    ...property("20-KUBERA-HOMES/106-Fox-Run"),
+    "20-KUBERA-HOMES/106-Fox-Run/02-Financing-and-Lender/VAS-Refi-2026",
 
-    "20-KUBERA-HOMES/30-406-408-Harrison-St",
-    ...property("20-KUBERA-HOMES/30-406-408-Harrison-St"),
-    "20-KUBERA-HOMES/30-406-408-Harrison-St/04-Leases-and-Tenants/Unit-406",
-    "20-KUBERA-HOMES/30-406-408-Harrison-St/04-Leases-and-Tenants/Unit-408",
+    "20-KUBERA-HOMES/406-408-Harrison-St",
+    ...property("20-KUBERA-HOMES/406-408-Harrison-St"),
+    "20-KUBERA-HOMES/406-408-Harrison-St/04-Leases-and-Tenants/Unit-406",
+    "20-KUBERA-HOMES/406-408-Harrison-St/04-Leases-and-Tenants/Unit-408",
 
     // ---- Drive 4 ----
     "30-AHTX/00-Entity-Docs",
@@ -88,21 +88,21 @@ const PATHS = [
     "30-AHTX/00-Entity-Docs/Tax",
     "30-AHTX/00-Entity-Docs/Banking",
 
-    "30-AHTX/10-4821-24th-St-Lubbock",
-    ...property("30-AHTX/10-4821-24th-St-Lubbock"),
-    "30-AHTX/20-3416-39th-St-Lubbock",
-    ...property("30-AHTX/20-3416-39th-St-Lubbock"),
-    "30-AHTX/30-2816-41st-St-Lubbock",
-    ...property("30-AHTX/30-2816-41st-St-Lubbock"),
-    "30-AHTX/40-1690-W-US-Hwy-70-Plainview",
-    ...property("30-AHTX/40-1690-W-US-Hwy-70-Plainview"),
-    "30-AHTX/50-11507-Topeka-Ave-Lubbock",
-    ...property("30-AHTX/50-11507-Topeka-Ave-Lubbock"),
+    "30-AHTX/4821-24th-St-Lubbock",
+    ...property("30-AHTX/4821-24th-St-Lubbock"),
+    "30-AHTX/3416-39th-St-Lubbock",
+    ...property("30-AHTX/3416-39th-St-Lubbock"),
+    "30-AHTX/2816-41st-St-Lubbock",
+    ...property("30-AHTX/2816-41st-St-Lubbock"),
+    "30-AHTX/1690-W-US-Hwy-70-Plainview",
+    ...property("30-AHTX/1690-W-US-Hwy-70-Plainview"),
+    "30-AHTX/11507-Topeka-Ave-Lubbock",
+    ...property("30-AHTX/11507-Topeka-Ave-Lubbock"),
 
-    "30-AHTX/60-1920-27th-St-Duplex",
-    ...property("30-AHTX/60-1920-27th-St-Duplex"),
-    "30-AHTX/60-1920-27th-St-Duplex/04-Leases-and-Tenants/Unit-A",
-    "30-AHTX/60-1920-27th-St-Duplex/04-Leases-and-Tenants/Unit-B",
+    "30-AHTX/1920-27th-St-Duplex",
+    ...property("30-AHTX/1920-27th-St-Duplex"),
+    "30-AHTX/1920-27th-St-Duplex/04-Leases-and-Tenants/Unit-A",
+    "30-AHTX/1920-27th-St-Duplex/04-Leases-and-Tenants/Unit-B",
 
     // ---- Drive 5 ----
     "40-MINE-CREEK/00-Entity-Docs",
