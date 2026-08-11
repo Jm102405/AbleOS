@@ -173,7 +173,7 @@ export function TaskChatModal({
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex h-full max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)] sm:h-[85vh]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}

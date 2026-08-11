@@ -9,6 +9,7 @@ import { ApprovalQueue, type Stage } from "../features/approvals/ApprovalQueue";
 import { GateQueueModal } from "../features/approvals/GateQueueModal";
 import { OrderRow } from "../features/orders/OrderRow";
 import { FilterMenu } from "../components/FilterMenu";
+import { AskAble } from "../features/assistant/AskAble";
 import { DailyProgressModal } from "../features/dailytasks/DailyProgressModal";
 import { useDailyTasks } from "../features/dailytasks/useDailyTasks";
 import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
@@ -630,6 +631,17 @@ export function RajCockpit() {
         onChanged={loadCommentCounts}
         onClose={() => setChatTask(null)}
         task={chatTask}
+      />
+
+      <AskAble
+        context={{
+          approvalRequests: ordersLoading ? null : pendingOrders.length,
+          daneInProgress: daneDaily.loading
+            ? null
+            : daneDaily.inProgress.length,
+          gatesAwaiting: gateCount,
+          openTasks: openTaskCount,
+        }}
       />
 
       <AssignedTasksModal
