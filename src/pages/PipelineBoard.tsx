@@ -9,6 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
+import { LeadsPanel } from "../features/leads/LeadsPanel";
 import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
 import { KpiTile } from "../features/pipeline/KpiTile";
@@ -214,6 +215,10 @@ export function PipelineBoard() {
       {error ? (
         <p className="pt-3 text-[16px] font-medium text-[#DC2626]">{error}</p>
       ) : null}
+
+      <div className="pt-8">
+        <LeadsPanel />
+      </div>
 
       <section aria-labelledby="stage-browser-title" className="pt-8">
         <div className="flex items-center justify-between gap-3">

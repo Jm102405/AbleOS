@@ -11,7 +11,8 @@ export type CockpitKey =
   | "karen"
   | "jeremiah"
   | "colton"
-  | "zo";
+  | "zo"
+  | "rex";
 
 export type Profile = {
   id: string;

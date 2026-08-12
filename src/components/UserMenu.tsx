@@ -42,6 +42,13 @@ const COCKPITS = [
     path: "/zo",
     initial: "Z",
   },
+  {
+    key: "rex",
+    name: "Rex",
+    role: "Field, West Texas",
+    path: "/rex",
+    initial: "R",
+  },
 ];
 
 export function UserMenu() {

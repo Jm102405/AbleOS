@@ -10,6 +10,7 @@ import approveStage from "../routes/approve-stage.js";
 import dailyTasks from "../routes/daily-tasks.js";
 import deals from "../routes/deals.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
+import leads from "../routes/leads.js";
 import notifications from "../routes/notifications.js";
 import orders from "../routes/orders.js";
 import pushSubscribe from "../routes/push-subscribe.js";
@@ -27,6 +28,7 @@ const ROUTES = {
     "daily-tasks": dailyTasks,
     deals,
     "drive-upload-url": driveUploadUrl,
+    leads,
     notifications,
     orders,
     "push-subscribe": pushSubscribe,

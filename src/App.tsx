@@ -9,6 +9,7 @@ import { JeremiahCockpit } from "./pages/JeremiahCockpit";
 import { ColtonCockpit } from "./pages/ColtonCockpit";
 import { ZoCockpit } from "./pages/ZoCockpit";
 import { KarenCockpit } from "./pages/KarenCockpit";
+import { RexCockpit } from "./pages/RexCockpit";
 import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
@@ -68,6 +69,14 @@ export function App() {
             }
           />
 
+          <Route
+            path="/rex"
+            element={
+              <ProtectedRoute cockpit="rex">
+                <RexCockpit />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/raj/pipeline"
             element={

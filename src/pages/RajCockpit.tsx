@@ -326,7 +326,7 @@ export function RajCockpit() {
                   >
                     Pipeline
                   </Link>
-                </nav>
+                  </nav>
                 <NotificationBell />
                 <UserMenu />
               </div>
