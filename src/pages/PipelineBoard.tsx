@@ -1,15 +1,12 @@
 import React from "react";
 import { AnimatePresence } from "framer-motion";
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  LayersIcon,
-  RefreshCwIcon,
-} from "lucide-react";
+import { LayersIcon, RefreshCwIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
-import { LeadsPanel } from "../features/leads/LeadsPanel";
+import { NavCard } from "../components/NavCard";
+import { FilterMenu } from "../components/FilterMenu";
+import { LeadsCard } from "../features/leads/LeadsCard";
 import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
 import { KpiTile } from "../features/pipeline/KpiTile";
@@ -126,14 +123,14 @@ export function PipelineBoard() {
                 className="flex items-center gap-1 rounded-full bg-white/15 p-1"
               >
                 <Link
-                  className="rounded-full px-3 py-1.5 text-[16px] font-semibold tracking-[0.08em] text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                  className="rounded-full px-3 py-2 text-[16px] font-medium text-white/80 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                   to="/raj"
                 >
                   Cockpit
                 </Link>
                 <span
                   aria-current="page"
-                  className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold tracking-[0.08em] text-[#1E3A8A]"
+                  className="rounded-full bg-white px-3 py-2 text-[16px] font-medium text-[#1E3A8A]"
                 >
                   Pipeline
                 </span>
@@ -181,92 +178,49 @@ export function PipelineBoard() {
         />
       </section>
 
-      <section aria-labelledby="bird-dog-filter-label" className="pt-7">
-        <label
-          className="text-[16px] font-semibold tracking-[0.14em] text-[#3B82C4]"
-          htmlFor="bird-dog-filter"
-          id="bird-dog-filter-label"
-        >
-          Bird dog view
-        </label>
-        <div className="mt-2">
-          <div className="relative">
-            <select
-              className="h-12 w-full appearance-none rounded-xl border border-[#DCE4EE] bg-white px-4 pr-10 text-[18px] font-semibold text-[#1A1A2E] shadow-[0_4px_10px_rgba(30,58,138,0.04)] focus:outline-none focus:ring-2 focus:ring-[#3B82C4]"
-              id="bird-dog-filter"
-              onChange={(event) => setSelectedBirdDog(event.target.value)}
-              value={selectedBirdDog}
-            >
-              {birdDogOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon
-              aria-hidden="true"
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B]"
-              size={18}
-            />
-          </div>
-        </div>
-      </section>
-
       {error ? (
         <p className="pt-3 text-[16px] font-medium text-[#DC2626]">{error}</p>
       ) : null}
+      <section aria-label="Pipeline lists" className="pt-8">
+        <div className="flex items-center gap-2">
+          <FilterMenu
+            value={selectedBirdDog}
+            options={birdDogOptions.map((option) => ({
+              key: option.value,
+              label: option.label,
+            }))}
+            onChange={setSelectedBirdDog}
+          />
 
-      <div className="pt-8">
-        <LeadsPanel />
-      </div>
-
-      <section aria-labelledby="stage-browser-title" className="pt-8">
-        <div className="flex items-center justify-between gap-3">
-          <h2
-            className="text-[19px] font-semibold leading-none tracking-[-0.035em] text-[#1A1A2E] sm:text-[21px]"
-            id="stage-browser-title"
-          >
-            Deals by stage
-          </h2>
           <button
             aria-label="Refresh deals"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#E3EDF8] hover:text-[#526176]"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#E3EDF8] hover:text-[#526176]"
             onClick={refresh}
             type="button"
           >
             <RefreshCwIcon
               aria-hidden="true"
               className={loading ? "animate-spin" : ""}
-              size={15}
+              size={16}
               strokeWidth={2.5}
             />
           </button>
         </div>
 
-        <button
-          className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 text-left shadow-[0_5px_14px_rgba(30,58,138,0.055)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)] sm:px-5"
-          onClick={() => setBrowserOpen(true)}
-          type="button"
-        >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EEF5FF] text-[#1E3A8A]">
-            <LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
-              Browse all {stages.length} stages
-            </span>
-            <span className="mt-1 block text-[16px] font-medium leading-snug text-[#6B7A90]">
-              {STAGE_LABELS[selectedStage]} · {displayedDeals.length} deal
-              {displayedDeals.length === 1 ? "" : "s"} · {activeBirdDogLabel}
-            </span>
-          </span>
-          <ChevronRightIcon
-            aria-hidden="true"
-            className="shrink-0 text-[#93A3B8]"
-            size={16}
-            strokeWidth={2.5}
+        <div className="mt-3 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
+          <LeadsCard />
+
+          <NavCard
+            icon={<LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />}
+            title="Deals by stage"
+            subtitle={`${STAGE_LABELS[selectedStage]} · ${activeBirdDogLabel}`}
+            count={loading ? null : displayedDeals.length}
+            tone="green"
+            variant="row"
+            divider
+            onClick={() => setBrowserOpen(true)}
           />
-        </button>
+        </div>
       </section>
 
       <footer className="pt-10 text-center text-[16px] font-medium tracking-[0.12em] text-[#8291A5]">

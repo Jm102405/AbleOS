@@ -2,7 +2,7 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SearchIcon, XIcon } from "lucide-react";
 import { DealCard } from "./DealCard";
-import { StageStrip } from "./StageStrip";
+import { FilterMenu } from "../../components/FilterMenu";
 import { STAGE_LABELS, type Deal, type DealStage } from "./types";
 
 type StageBrowserModalProps = {
@@ -29,6 +29,18 @@ export function StageBrowserModal({
   birdDogLabel,
 }: StageBrowserModalProps) {
   const [query, setQuery] = React.useState("");
+
+  // Every stage, with its count, so the dropdown carries the same
+  // information the old tab strip did without running off the screen.
+  const stageOptions = React.useMemo(
+    () =>
+      (Object.keys(STAGE_LABELS) as DealStage[]).map((stage) => ({
+        key: stage,
+        label: STAGE_LABELS[stage],
+        count: counts[stage] ?? 0,
+      })),
+    [counts],
+  );
 
   React.useEffect(() => {
     if (open) setQuery("");
@@ -69,7 +81,7 @@ export function StageBrowserModal({
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -82,9 +94,6 @@ export function StageBrowserModal({
                   <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
                     Pipeline stages
                   </p>
-                  <h2 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.025em] text-[#1A1A2E]">
-                    {STAGE_LABELS[selectedStage]}
-                  </h2>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[16px] font-semibold tracking-[0.06em] text-[#2465B5]">
@@ -101,40 +110,41 @@ export function StageBrowserModal({
                 </div>
               </div>
 
-              <StageStrip
-                counts={counts}
-                onSelect={onSelectStage}
-                selectedStage={selectedStage}
-              />
+              <div className="mt-2">
+                <FilterMenu
+                  value={selectedStage}
+                  options={stageOptions}
+                  onChange={onSelectStage}
+                />
+              </div>
 
-              <div className="relative mt-3">
-                <SearchIcon
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#93A3B8]"
-                  size={15}
-                  strokeWidth={2.5}
-                />
-                <input
-                  aria-label="Search deals"
-                  className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pl-9 pr-9 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:font-medium placeholder:text-[#A3B0C0] focus:border-[#1E3A8A] focus:bg-white"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search name, address or bird dog"
-                  type="text"
-                  value={query}
-                />
-                {query && (
-                  <button
-                    aria-label="Clear search"
-                    className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9]"
-                    onClick={() => setQuery("")}
-                    type="button"
-                  >
-                    <XIcon aria-hidden="true" size={14} />
-                  </button>
-                )}
+              <div className="relative mt-2">
+                  <SearchIcon
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#93A3B8]"
+                    size={15}
+                    strokeWidth={2.5}
+                  />
+                  <input
+                    aria-label="Search deals"
+                    className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pl-9 pr-9 text-[18px] font-medium text-[#1A1A2E] outline-none transition-colors placeholder:font-medium placeholder:text-[#A3B0C0] focus:border-[#1E3A8A] focus:bg-white"
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search name, address or bird dog"
+                    type="text"
+                    value={query}
+                  />
+                  {query && (
+                    <button
+                      aria-label="Clear search"
+                      className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9]"
+                      onClick={() => setQuery("")}
+                      type="button"
+                    >
+                      <XIcon aria-hidden="true" size={14} />
+                    </button>
+                  )}
               </div>
             </div>
-
             {/* Scrolling deal list */}
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
               {filtered.length > 0 ? (
