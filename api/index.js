@@ -14,6 +14,7 @@ import driveUploadUrl from "../routes/drive-upload-url.js";
 import leads from "../routes/leads.js";
 import notifications from "../routes/notifications.js";
 import orders from "../routes/orders.js";
+import pipelineDeals from "../routes/pipeline-deals.js";
 import pushSubscribe from "../routes/push-subscribe.js";
 import rehabStages from "../routes/rehab-stages.js";
 import resetRehab from "../routes/reset-rehab.js";
@@ -33,6 +34,7 @@ const ROUTES = {
     leads,
     notifications,
     orders,
+    "pipeline-deals": pipelineDeals,
     "push-subscribe": pushSubscribe,
     "rehab-stages": rehabStages,
     "reset-rehab": resetRehab,

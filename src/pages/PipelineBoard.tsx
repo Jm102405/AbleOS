@@ -7,6 +7,7 @@ import { UserMenu } from "../components/UserMenu";
 import { NavCard } from "../components/NavCard";
 import { FilterMenu } from "../components/FilterMenu";
 import { LeadsCard } from "../features/leads/LeadsCard";
+import { DraftDealsCard } from "../features/pipeline/DraftDealsCard";
 import { AskAble } from "../features/assistant/AskAble";
 import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
@@ -210,7 +211,9 @@ export function PipelineBoard() {
         </div>
 
         <div className="mt-3 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
-          <LeadsCard />
+          <DraftDealsCard onConfirmed={refresh} />
+
+          <LeadsCard divider />
 
           <NavCard
             icon={<LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />}

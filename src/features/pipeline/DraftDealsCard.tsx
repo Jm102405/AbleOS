@@ -1,0 +1,362 @@
+// src/features/pipeline/DraftDealsCard.tsx
+// The inbox queue. Each email is a draft until someone reads it, fills in
+// what the email didn't say, and confirms it onto the board.
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { InboxIcon, XIcon } from "lucide-react";
+import { NavCard } from "../../components/NavCard";
+import { DEAL_STAGES, STAGE_LABELS, type DealStage } from "./types";
+import { useDraftDeals, type DraftDeal } from "./useDraftDeals";
+
+type Form = {
+  name: string;
+  address: string;
+  source: string;
+  purchasePrice: string;
+  monthlyCashFlow: string;
+  dscr: string;
+  notes: string;
+  stage: DealStage;
+};
+
+function formFor(draft: DraftDeal): Form {
+  const str = (v: string | number | null) => (v === null ? "" : String(v));
+
+  return {
+    name: draft.name ?? "",
+    address: draft.address ?? "",
+    source: draft.source ?? "",
+    purchasePrice: str(draft.purchase_price),
+    monthlyCashFlow: str(draft.monthly_cash_flow),
+    dscr: str(draft.dscr),
+    notes: draft.notes ?? "",
+    stage: draft.stage ?? "docs_submitted",
+  };
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+        {label}
+      </span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+      />
+    </label>
+  );
+}
+
+export function DraftDealsCard({
+  divider = false,
+  onConfirmed,
+}: {
+  divider?: boolean;
+  /** Refresh the board once a draft joins it. */
+  onConfirmed?: () => void;
+}) {
+  const { drafts, loading, error, confirm, dismiss } = useDraftDeals();
+
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<DraftDeal | null>(null);
+  const [form, setForm] = useState<Form | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  function openDraft(draft: DraftDeal) {
+    setActive(draft);
+    setForm(formFor(draft));
+    setProblem(null);
+  }
+
+  async function handleConfirm() {
+    if (!active || !form) return;
+
+    if (!form.name.trim()) {
+      setProblem("A deal name is required");
+      return;
+    }
+
+    setBusy("confirm");
+    setProblem(null);
+
+    try {
+      await confirm(active.id, form);
+      setActive(null);
+      onConfirmed?.();
+    } catch (err) {
+      setProblem(err instanceof Error ? err.message : "Could not confirm");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleDismiss() {
+    if (!active) return;
+
+    setBusy("dismiss");
+    setProblem(null);
+
+    try {
+      await dismiss(active.id);
+      setActive(null);
+    } catch (err) {
+      setProblem(err instanceof Error ? err.message : "Could not dismiss");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const set = (key: keyof Form) => (v: string) =>
+    setForm((f) => (f ? { ...f, [key]: v } : f));
+
+  return (
+    <>
+      <NavCard
+        icon={<InboxIcon aria-hidden="true" size={17} strokeWidth={2.5} />}
+        title="From the inbox"
+        subtitle="Emails waiting to become deals"
+        count={loading ? null : drafts.length}
+        tone="orange"
+        variant="row"
+        divider={divider}
+        onClick={() => setOpen(true)}
+      />
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden bg-[#1A1A2E]/50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center sm:px-4 sm:py-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setOpen(false);
+              setActive(null);
+            }}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              className="flex h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#DCE4EE] bg-white px-5 pb-4 pt-5">
+                <div className="min-w-0">
+                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
+                    Underwriting inbox
+                  </p>
+                  <h2 className="mt-1 text-[20px] font-bold text-[#0F1E33]">
+                    {active
+                      ? "Review this email"
+                      : `${drafts.length} waiting for you`}
+                  </h2>
+                </div>
+
+                <button
+                  aria-label="Close"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#93A3B8] transition-colors hover:bg-[#F1F5F9]"
+                  onClick={() => {
+                    if (active) setActive(null);
+                    else setOpen(false);
+                  }}
+                  type="button"
+                >
+                  <XIcon aria-hidden="true" size={16} />
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                {/* ---- LIST ---- */}
+                {!active && (
+                  <>
+                    {loading && (
+                      <div className="space-y-3">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="h-[84px] animate-pulse rounded-2xl bg-white"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {!loading && error && (
+                      <div className="rounded-xl bg-[#FEF2F2] px-4 py-3 text-[16px] text-[#B91C1C]">
+                        {error}
+                      </div>
+                    )}
+
+                    {!loading && !error && drafts.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-10 text-center">
+                        <p className="text-[18px] font-semibold text-[#526176]">
+                          Inbox clear
+                        </p>
+                        <p className="mt-1 text-[16px] text-[#8291A5]">
+                          New emails to underwriting@ show up here.
+                        </p>
+                      </div>
+                    )}
+
+                    {!loading && !error && drafts.length > 0 && (
+                      <div className="space-y-3">
+                        {drafts.map((draft) => (
+                          <button
+                            key={draft.id}
+                            type="button"
+                            onClick={() => openDraft(draft)}
+                            className="w-full rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 text-left transition hover:border-[#B9C7DB]"
+                          >
+                            <span className="block truncate text-[18px] font-semibold text-[#0F1E33]">
+                              {draft.email_subject || draft.name}
+                            </span>
+                            <span className="mt-0.5 block truncate text-[16px] text-[#5A6B85]">
+                              {draft.email_from || "Added by hand"}
+                            </span>
+                            <span className="mt-1.5 block text-[14px] text-[#7A8AA3]">
+                              {new Date(
+                                draft.email_received_at || draft.created_at,
+                              ).toLocaleString()}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ---- REVIEW ---- */}
+                {active && form && (
+                  <div className="space-y-3">
+                    {active.email_excerpt && (
+                      <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                        <div className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          The email
+                        </div>
+                        <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-line text-[16px] leading-relaxed text-[#3A4A62]">
+                          {active.email_excerpt}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-3 rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                      <Field
+                        label="Deal name"
+                        value={form.name}
+                        onChange={set("name")}
+                      />
+                      <Field
+                        label="Address"
+                        value={form.address}
+                        onChange={set("address")}
+                      />
+                      <Field
+                        label="Bird dog / source"
+                        value={form.source}
+                        onChange={set("source")}
+                      />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field
+                          label="Purchase price"
+                          value={form.purchasePrice}
+                          onChange={set("purchasePrice")}
+                        />
+                        <Field
+                          label="Monthly cash flow"
+                          value={form.monthlyCashFlow}
+                          onChange={set("monthlyCashFlow")}
+                        />
+                      </div>
+
+                      <Field
+                        label="DSCR"
+                        value={form.dscr}
+                        onChange={set("dscr")}
+                      />
+
+                      <label className="block">
+                        <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Starting stage
+                        </span>
+                        <select
+                          value={form.stage}
+                          onChange={(e) =>
+                            setForm((f) =>
+                              f
+                                ? { ...f, stage: e.target.value as DealStage }
+                                : f,
+                            )
+                          }
+                          className="mt-1 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+                        >
+                          {DEAL_STAGES.map((stage) => (
+                            <option key={stage} value={stage}>
+                              {STAGE_LABELS[stage]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Notes
+                        </span>
+                        <textarea
+                          rows={3}
+                          value={form.notes}
+                          onChange={(e) => set("notes")(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+                        />
+                      </label>
+                    </div>
+
+                    {problem && (
+                      <div className="rounded-xl bg-[#FEF2F2] px-4 py-3 text-[16px] text-[#B91C1C]">
+                        {problem}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pb-2">
+                      <button
+                        type="button"
+                        onClick={handleDismiss}
+                        disabled={busy !== null}
+                        className="flex-1 rounded-xl border border-[#DCE4EE] bg-white px-4 py-3 text-[18px] font-semibold text-[#5A6B85] hover:border-[#B9C7DB] disabled:opacity-60"
+                      >
+                        {busy === "dismiss" ? "Dismissing…" : "Not a deal"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleConfirm}
+                        disabled={busy !== null}
+                        className="flex-1 rounded-xl bg-[#16A34A] px-4 py-3 text-[18px] font-semibold text-white hover:bg-[#15803D] disabled:opacity-60"
+                      >
+                        {busy === "confirm" ? "Adding…" : "Add to pipeline"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

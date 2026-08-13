@@ -28,6 +28,9 @@ const STAGES = [
     "dead",
 ];
 
+const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Import residue, not live deals.
 const EXCLUDED_CATEGORY = "Orphaned - source tab";
 
@@ -147,8 +150,31 @@ export default async function handler(req, res) {
             // hidden keeps the request fast and avoids burning API quota.
             const deals = SHOW_NOTION_DEALS ? await fetchNotionDeals() : [];
 
+            // Deals born inside Able OS - confirmed drafts from the
+            // underwriting inbox. Their stage lives on the row itself.
+            const { data: ownRows, error: ownError } = await supabase
+                .from("pipeline_deals")
+                .select("*")
+                .eq("confirmed", true)
+                .is("dismissed_at", null);
+
+            if (ownError) throw new Error(ownError.message);
+
+            const ownDeals = (ownRows ?? []).map((row) => ({
+                id: row.id,
+                name: row.name,
+                address: row.address ?? "",
+                source: row.source ?? "Unassigned",
+                category: "",
+                notes: row.notes ?? "",
+                stage: row.stage,
+                stageChangedAt: row.stage_changed_at,
+                movedBy: row.moved_by,
+                daysInStage: daysBetween(row.stage_changed_at),
+            }));
+
             if (deals.length === 0) {
-                return res.status(200).json({ deals: [], stages: STAGES });
+                return res.status(200).json({ deals: ownDeals, stages: STAGES });
             }
 
             const { data: rows, error } = await supabase
@@ -170,7 +196,9 @@ export default async function handler(req, res) {
                 };
             });
 
-            return res.status(200).json({ deals: merged, stages: STAGES });
+            return res
+                .status(200)
+                .json({ deals: [...ownDeals, ...merged], stages: STAGES });
         }
 
         /* ---- MOVE ---- */
@@ -187,6 +215,31 @@ export default async function handler(req, res) {
             }
 
             const now = new Date().toISOString();
+
+            // Deals created in Able OS keep their stage on the row itself,
+            // so they never touch deal_stages.
+            if (UUID_RE.test(id)) {
+                const { data: own, error: ownError } = await supabase
+                    .from("pipeline_deals")
+                    .update({
+                        stage,
+                        stage_changed_at: now,
+                        moved_by: profile.cockpit,
+                        updated_at: now,
+                    })
+                    .eq("id", id)
+                    .eq("confirmed", true)
+                    .select("id")
+                    .maybeSingle();
+
+                if (ownError) throw new Error(ownError.message);
+
+                if (own) {
+                    return res
+                        .status(200)
+                        .json({ ok: true, id, stage, stageChangedAt: now });
+                }
+            }
 
             const { error } = await supabase.from("deal_stages").upsert(
                 {
