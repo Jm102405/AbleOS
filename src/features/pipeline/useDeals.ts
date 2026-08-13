@@ -5,7 +5,7 @@ import { TERMINAL_STAGES, type Deal, type DealStage } from "./types";
 export type DealKpis = {
   /** Deals still moving through the pipeline (excludes closed, dead, find a buyer). */
   active: number;
-  awaitingDocs: number;
+  inReview: number;
   /** Null until at least one deal has actually been moved. */
   avgDaysInStage: number | null;
   stalled: number;
@@ -91,7 +91,7 @@ export function useDeals() {
 
     return {
       active: active.length,
-      awaitingDocs: deals.filter((deal) => deal.stage === "awaiting_docs")
+      inReview: deals.filter((deal) => deal.stage === "final_review")
         .length,
       avgDaysInStage: avg,
       stalled: timed.filter((deal) => (deal.daysInStage as number) >= 4).length,

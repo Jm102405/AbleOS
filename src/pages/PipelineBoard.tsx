@@ -7,6 +7,7 @@ import { UserMenu } from "../components/UserMenu";
 import { NavCard } from "../components/NavCard";
 import { FilterMenu } from "../components/FilterMenu";
 import { LeadsCard } from "../features/leads/LeadsCard";
+import { AskAble } from "../features/assistant/AskAble";
 import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
 import { KpiTile } from "../features/pipeline/KpiTile";
@@ -24,7 +25,8 @@ export function PipelineBoard() {
   const { deals, error, loading, moveDeal, movingId, refresh } = useDeals();
 
   const [selectedBirdDog, setSelectedBirdDog] = React.useState("All");
-  const [selectedStage, setSelectedStage] = React.useState<DealStage>("intake");
+  const [selectedStage, setSelectedStage] =
+    React.useState<DealStage>("docs_submitted");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = React.useState(false);
 
@@ -66,7 +68,7 @@ export function PipelineBoard() {
 
     return {
       active: active.length,
-      awaitingDocs: scopedDeals.filter((deal) => deal.stage === "awaiting_docs")
+      inReview: scopedDeals.filter((deal) => deal.stage === "final_review")
         .length,
       avgDays: timed.length
         ? (
@@ -162,9 +164,9 @@ export function PipelineBoard() {
           value={loading ? "..." : String(metrics.active)}
         />
         <KpiTile
-          label="Awaiting docs"
-          tone={metrics.awaitingDocs > 0 ? "urgent" : "neutral"}
-          value={loading ? "..." : String(metrics.awaitingDocs)}
+          label="In review"
+          tone={metrics.inReview > 0 ? "urgent" : "neutral"}
+          value={loading ? "..." : String(metrics.inReview)}
         />
         <KpiTile
           label="Avg days in stage"
@@ -226,6 +228,13 @@ export function PipelineBoard() {
       <footer className="pt-10 text-center text-[16px] font-medium tracking-[0.12em] text-[#8291A5]">
         Able OS · V1 Build
       </footer>
+
+      <AskAble
+        context={{
+          dealsInPipe: loading ? null : metrics.active,
+          stalledDeals: loading ? null : metrics.stalled,
+        }}
+      />
 
       <StageBrowserModal
         birdDogLabel={activeBirdDogLabel}

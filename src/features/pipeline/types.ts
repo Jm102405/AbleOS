@@ -3,39 +3,39 @@
  * on public.deal_stages in Supabase and the STAGES array in api/deals.js.
  */
 export const DEAL_STAGES = [
-  "intake",
-  "underwriting",
-  "awaiting_docs",
-  "docs_complete",
+  "docs_submitted",
   "final_review",
   "proof_of_funds",
+  "submit_to_broker",
   "awaiting_signatures",
   "under_contract",
-  "post_contract",
-  "closed",
+  "funded_emd",
+  "due_diligence",
+  "coe",
   "dead",
-  "find_a_buyer",
 ] as const;
 
 export type DealStage = (typeof DEAL_STAGES)[number];
 
 export const STAGE_LABELS: Record<DealStage, string> = {
-  intake: "Intake",
-  underwriting: "Underwriting",
-  awaiting_docs: "Awaiting docs",
-  docs_complete: "Docs complete",
-  final_review: "Final review",
-  proof_of_funds: "Proof of funds",
-  awaiting_signatures: "Awaiting signatures",
-  under_contract: "Under contract",
-  post_contract: "Post contract",
-  closed: "Closed",
-  dead: "Dead",
-  find_a_buyer: "Find a buyer",
+  docs_submitted: "Docs Submitted",
+  final_review: "Final Review",
+  proof_of_funds: "Proof of Funds",
+  submit_to_broker: "Submit to Broker/Seller",
+  awaiting_signatures: "Awaiting Signatures",
+  under_contract: "Under Contract",
+  funded_emd: "Funded EMD",
+  due_diligence: "Due Diligence",
+  coe: "COE",
+  dead: "Dead Deal",
 };
 
-/** Stages where a deal has left the active pipeline. */
-export const TERMINAL_STAGES: DealStage[] = ["closed", "dead", "find_a_buyer"];
+/**
+ * Stages where a deal has left the active pipeline. Wholesale deals stay on
+ * the board through Due Diligence, so Find a buyer is no longer terminal -
+ * it's a decision made inside Under Contract.
+ */
+export const TERMINAL_STAGES: DealStage[] = ["coe", "dead"];
 
 /**
  * Who sourced the deal. Comes from the Notion "Deal Source" select, so it is

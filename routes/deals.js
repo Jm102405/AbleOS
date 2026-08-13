@@ -1,4 +1,4 @@
-// api/deals.js
+// routes/deals.js
 // Deal pipeline. Notion holds the deal identity (name, address, source),
 // Supabase holds the workflow state (stage, when it moved, who moved it).
 //
@@ -16,22 +16,27 @@ const DEALS_DB = "3a397b1c96b680e8af62f3a34a5c6a02";
 
 // Must stay identical to the check constraint on public.deal_stages.
 const STAGES = [
-    "intake",
-    "underwriting",
-    "awaiting_docs",
-    "docs_complete",
+    "docs_submitted",
     "final_review",
     "proof_of_funds",
+    "submit_to_broker",
     "awaiting_signatures",
     "under_contract",
-    "post_contract",
-    "closed",
+    "funded_emd",
+    "due_diligence",
+    "coe",
     "dead",
-    "find_a_buyer",
 ];
 
 // Import residue, not live deals.
 const EXCLUDED_CATEGORY = "Orphaned - source tab";
+
+/**
+ * The deals imported from Notion are legacy noise while we build email
+ * intake, so the board starts clean. Flip to true to bring them back -
+ * nothing has been deleted, and their stages are still in deal_stages.
+ */
+const SHOW_NOTION_DEALS = false;
 
 // "dane" is here so you can test the board. Tighten to ["raj"] before handover.
 const ALLOWED_COCKPITS = ["raj", "dane"];
@@ -138,7 +143,13 @@ export default async function handler(req, res) {
 
         /* ---- LIST ---- */
         if (req.method === "GET") {
-            const deals = await fetchNotionDeals();
+            // Skipping the Notion call entirely while the legacy deals are
+            // hidden keeps the request fast and avoids burning API quota.
+            const deals = SHOW_NOTION_DEALS ? await fetchNotionDeals() : [];
+
+            if (deals.length === 0) {
+                return res.status(200).json({ deals: [], stages: STAGES });
+            }
 
             const { data: rows, error } = await supabase
                 .from("deal_stages")
@@ -152,7 +163,7 @@ export default async function handler(req, res) {
                 const state = byId.get(deal.id);
                 return {
                     ...deal,
-                    stage: state?.stage ?? "intake",
+                    stage: state?.stage ?? "docs_submitted",
                     stageChangedAt: state?.stage_changed_at ?? null,
                     movedBy: state?.moved_by ?? null,
                     daysInStage: daysBetween(state?.stage_changed_at),

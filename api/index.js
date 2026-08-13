@@ -8,6 +8,7 @@
 
 import approveStage from "../routes/approve-stage.js";
 import dailyTasks from "../routes/daily-tasks.js";
+import dealIntake from "../routes/deal-intake.js";
 import deals from "../routes/deals.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
 import leads from "../routes/leads.js";
@@ -26,6 +27,7 @@ export const config = { maxDuration: 60 };
 const ROUTES = {
     "approve-stage": approveStage,
     "daily-tasks": dailyTasks,
+    "deal-intake": dealIntake,
     deals,
     "drive-upload-url": driveUploadUrl,
     leads,
