@@ -3,9 +3,14 @@
 //
 // POST /api/deal-intake
 //
+// Three jobs, in order:
+//   1. Have we read this message before? Stop early, cost nothing.
+//   2. Ask Claude what it is.
+//   3. Merge into the deal for that thread or property, or create a draft.
+//
 // There is no user session behind this call, so it authenticates with a
-// shared secret in a header. It can only ever create drafts - a deal cannot
-// reach Raj's board from here without a person confirming it first.
+// shared secret. It can only ever create drafts - a deal cannot reach
+// Raj's board from here without a person confirming it.
 
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
@@ -59,6 +64,31 @@ function num(value) {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
+/**
+ * Strip an address down to something comparable, so "789 Commerce Blvd,
+ * Houston TX 77002" and "789 Commerce Blvd, Houston, TX 77002" match.
+ * Short results are discarded - "dallas tx" would merge unrelated deals.
+ */
+function addressKeyFor(address) {
+    if (typeof address !== "string") return null;
+
+    const key = address
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return key.length >= 12 ? key : null;
+}
+
+/** Keep what we already had; only fill gaps. */
+function fill(existing, incoming) {
+    if (existing !== null && existing !== undefined && existing !== "") {
+        return existing;
+    }
+    return incoming;
+}
+
 export default async function handler(req, res) {
     if (req.method !== "POST") {
         res.setHeader("Allow", "POST");
@@ -66,7 +96,6 @@ export default async function handler(req, res) {
     }
 
     if (!secretMatches(req.headers["x-intake-secret"])) {
-        ;
         // Deliberately vague. Don't tell a prober whether the header was
         // missing, malformed or simply wrong.
         return res.status(401).json({ error: "Not authorised" });
@@ -82,41 +111,114 @@ export default async function handler(req, res) {
     try {
         const supabase = getClient();
 
-        const receivedAt = req.body?.receivedAt
-            ? new Date(req.body.receivedAt)
-            : new Date();
-
-        // Seen this email before? Skip the model call entirely - re-running a
-        // backfill shouldn't cost money to re-read the same messages.
-        const { data: existing } = await supabase
-            .from("pipeline_deals")
-            .select("id")
-            .eq("email_message_id", messageId)
+        /* ---- 1. Already read this one? ---- */
+        const { data: seen } = await supabase
+            .from("intake_messages")
+            .select("deal_id")
+            .eq("message_id", messageId)
             .maybeSingle();
 
-        if (existing) {
-            return res.status(200).json({ ok: true, duplicate: true });
+        if (seen) {
+            return res
+                .status(200)
+                .json({ ok: true, duplicate: true, id: seen.deal_id });
         }
 
         const from = clean(req.body?.from, 300);
         const body = clean(req.body?.body, MAX_EXCERPT);
+        const threadId = clean(req.body?.threadId, 200);
 
-        // Ask Claude what this is. A null means the call failed - we still
-        // store the email, just unfilled, so an outage never loses a deal.
+        const receivedAt = req.body?.receivedAt
+            ? new Date(req.body.receivedAt)
+            : new Date();
+
+        const receivedIso = Number.isNaN(receivedAt.getTime())
+            ? new Date().toISOString()
+            : receivedAt.toISOString();
+
+        /* ---- 2. What is it? ---- */
+        // A null means the call failed. Store the email unfilled rather than
+        // lose it - an outage should never cost a deal.
         const read = await extractDeal({ from, subject, body });
+        const addressKey = addressKeyFor(read?.address);
+
+        /* ---- 3. Same conversation, or same property? ---- */
+        let match = null;
+
+        if (threadId) {
+            const { data } = await supabase
+                .from("pipeline_deals")
+                .select("*")
+                .eq("email_thread_id", threadId)
+                .order("created_at", { ascending: true })
+                .limit(1);
+
+            match = data?.[0] ?? null;
+        }
+
+        if (!match && addressKey) {
+            const { data } = await supabase
+                .from("pipeline_deals")
+                .select("*")
+                .eq("address_key", addressKey)
+                .order("created_at", { ascending: true })
+                .limit(1);
+
+            match = data?.[0] ?? null;
+        }
+
+        const now = new Date().toISOString();
+
+        if (match) {
+            // A thread that opens as chatter and later carries financials
+            // should come back out of the bin.
+            const revive =
+                match.dismissed_by === "claude" &&
+                read?.is_deal === true &&
+                (read?.confidence ?? 0) >= 0.8;
+
+            const { error: mergeError } = await supabase
+                .from("pipeline_deals")
+                .update({
+                    address: fill(match.address, clean(read?.address, 300)),
+                    source: fill(match.source, clean(read?.source, 100)),
+                    notes: fill(match.notes, clean(read?.notes, 2000)),
+                    purchase_price: fill(match.purchase_price, num(read?.purchase_price)),
+                    monthly_cash_flow: fill(
+                        match.monthly_cash_flow,
+                        num(read?.monthly_cash_flow),
+                    ),
+                    dscr: fill(match.dscr, num(read?.dscr)),
+                    address_key: fill(match.address_key, addressKey),
+                    email_thread_id: fill(match.email_thread_id, threadId),
+                    email_count: (match.email_count ?? 1) + 1,
+                    dismissed_at: revive ? null : match.dismissed_at,
+                    dismissed_by: revive ? null : match.dismissed_by,
+                    updated_at: now,
+                })
+                .eq("id", match.id);
+
+            if (mergeError) throw new Error(mergeError.message);
+
+            await supabase
+                .from("intake_messages")
+                .insert({ message_id: messageId, deal_id: match.id });
+
+            return res.status(200).json({ ok: true, id: match.id, merged: true });
+        }
 
         // Confidently not a deal? File it rather than putting it in front of
-        // Raj. The row stays, so the same email can't come back and you can
-        // audit what the model binned.
+        // Raj. The row stays so you can audit what the model binned.
         const autoDismissed =
             read && read.is_deal === false && (read.confidence ?? 0) >= 0.8;
 
-        const { data, error } = await supabase
+        const { data: created, error } = await supabase
             .from("pipeline_deals")
             .insert({
                 name:
                     clean(read?.deal_name, 200) || subject || "Untitled deal from email",
                 address: clean(read?.address, 300),
+                address_key: addressKey,
                 source: clean(read?.source, 100),
                 notes: clean(read?.notes, 2000),
                 purchase_price: num(read?.purchase_price),
@@ -126,31 +228,28 @@ export default async function handler(req, res) {
                 stage: "docs_submitted",
                 origin: "email",
                 email_message_id: messageId,
+                email_thread_id: threadId,
                 email_from: from,
                 email_subject: subject,
-                email_received_at: Number.isNaN(receivedAt.getTime())
-                    ? new Date().toISOString()
-                    : receivedAt.toISOString(),
+                email_received_at: receivedIso,
                 email_excerpt: body,
+                email_count: 1,
                 confirmed: false,
-                dismissed_at: autoDismissed ? new Date().toISOString() : null,
+                dismissed_at: autoDismissed ? now : null,
                 dismissed_by: autoDismissed ? "claude" : null,
             })
             .select("id")
             .single();
 
-        if (error) {
-            // 23505 is a unique violation - n8n replayed an email we already have.
-            // That's success as far as the caller is concerned.
-            if (error.code === "23505") {
-                return res.status(200).json({ ok: true, duplicate: true });
-            }
-            throw new Error(error.message);
-        }
+        if (error) throw new Error(error.message);
+
+        await supabase
+            .from("intake_messages")
+            .insert({ message_id: messageId, deal_id: created.id });
 
         return res.status(201).json({
             ok: true,
-            id: data.id,
+            id: created.id,
             isDeal: read?.is_deal ?? null,
             dismissed: Boolean(autoDismissed),
         });
