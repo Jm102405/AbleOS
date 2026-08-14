@@ -18,6 +18,8 @@ import pipelineDeals from "../routes/pipeline-deals.js";
 import pushSubscribe from "../routes/push-subscribe.js";
 import rehabStages from "../routes/rehab-stages.js";
 import resetRehab from "../routes/reset-rehab.js";
+import subscriptionIntake from "../routes/subscription-intake.js";
+import subscriptions from "../routes/subscriptions.js";
 import taskComments from "../routes/task-comments.js";
 import taskEvidence from "../routes/task-evidence.js";
 import tasks from "../routes/tasks.js";
@@ -38,6 +40,8 @@ const ROUTES = {
     "push-subscribe": pushSubscribe,
     "rehab-stages": rehabStages,
     "reset-rehab": resetRehab,
+    "subscription-intake": subscriptionIntake,
+    subscriptions,
     "task-comments": taskComments,
     "task-evidence": taskEvidence,
     tasks,

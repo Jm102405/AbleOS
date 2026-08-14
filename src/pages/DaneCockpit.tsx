@@ -8,6 +8,7 @@ import {
   CheckIcon,
 } from "lucide-react";
 import { NavCard } from "../components/NavCard";
+import { SubscriptionsCard } from "../features/subscriptions/SubscriptionsCard";
 import { UserMenu } from "../components/UserMenu";
 import { AddOrderModal } from "../components/AddOrderModal";
 import { apiFetch } from "../lib/apiFetch";
@@ -528,6 +529,13 @@ export function DaneCockpit() {
                 ))}
               </div>
             </GateQueueModal>
+
+            <section aria-labelledby="subscriptions-heading" className="pt-3">
+              <h2 className="sr-only" id="subscriptions-heading">
+                Subscriptions
+              </h2>
+              <SubscriptionsCard />
+            </section>
 
             <section aria-labelledby="orders-heading" className="pt-3">
               <h2 className="sr-only" id="orders-heading">
