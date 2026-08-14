@@ -242,6 +242,24 @@ export function DraftDealsCard({
                 {/* ---- REVIEW ---- */}
                 {active && form && (
                   <div className="space-y-3">
+                    {active.extracted?.reasoning && (
+                      <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                            What Claude read
+                          </span>
+                          {typeof active.extracted.confidence === "number" && (
+                            <span className="shrink-0 rounded-full bg-[#EEF5FF] px-2.5 py-1 text-[14px] font-semibold text-[#2465B5]">
+                              {Math.round(active.extracted.confidence * 100)}% sure
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 text-[16px] leading-relaxed text-[#3A4A62]">
+                          {active.extracted.reasoning}
+                        </p>
+                      </div>
+                    )}
+
                     {active.email_excerpt && (
                       <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
                         <div className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">

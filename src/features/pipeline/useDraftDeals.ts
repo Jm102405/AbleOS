@@ -16,6 +16,11 @@ export type DraftDeal = {
   monthly_cash_flow: string | number | null;
   dscr: string | number | null;
   origin: string;
+  extracted: {
+    is_deal?: boolean;
+    confidence?: number;
+    reasoning?: string;
+  } | null;
   email_from: string | null;
   email_subject: string | null;
   email_received_at: string | null;

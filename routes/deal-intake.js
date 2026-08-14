@@ -9,6 +9,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
+import { extractDeal } from "../lib/extractDeal.js";
 
 const MAX_EXCERPT = 2000;
 
@@ -52,6 +53,12 @@ function clean(value, max) {
     return trimmed.slice(0, max);
 }
 
+/** Postgres numerics reject NaN and Infinity, so filter them out here. */
+function num(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
 export default async function handler(req, res) {
     if (req.method !== "POST") {
         res.setHeader("Allow", "POST");
@@ -59,7 +66,7 @@ export default async function handler(req, res) {
     }
 
     if (!secretMatches(req.headers["x-intake-secret"])) {
-    ;
+        ;
         // Deliberately vague. Don't tell a prober whether the header was
         // missing, malformed or simply wrong.
         return res.status(401).json({ error: "Not authorised" });
@@ -79,21 +86,43 @@ export default async function handler(req, res) {
             ? new Date(req.body.receivedAt)
             : new Date();
 
+        const from = clean(req.body?.from, 300);
+        const body = clean(req.body?.body, MAX_EXCERPT);
+
+        // Ask Claude what this is. A null means the call failed - we still
+        // store the email, just unfilled, so an outage never loses a deal.
+        const read = await extractDeal({ from, subject, body });
+
+        // Confidently not a deal? File it rather than putting it in front of
+        // Raj. The row stays, so the same email can't come back and you can
+        // audit what the model binned.
+        const autoDismissed =
+            read && read.is_deal === false && (read.confidence ?? 0) >= 0.8;
+
         const { data, error } = await supabase
             .from("pipeline_deals")
             .insert({
-                // Until Claude reads the body, the subject is the best name we have.
-                name: subject || "Untitled deal from email",
+                name:
+                    clean(read?.deal_name, 200) || subject || "Untitled deal from email",
+                address: clean(read?.address, 300),
+                source: clean(read?.source, 100),
+                notes: clean(read?.notes, 2000),
+                purchase_price: num(read?.purchase_price),
+                monthly_cash_flow: num(read?.monthly_cash_flow),
+                dscr: num(read?.dscr),
+                extracted: read ?? null,
                 stage: "docs_submitted",
                 origin: "email",
                 email_message_id: messageId,
-                email_from: clean(req.body?.from, 300),
+                email_from: from,
                 email_subject: subject,
                 email_received_at: Number.isNaN(receivedAt.getTime())
                     ? new Date().toISOString()
                     : receivedAt.toISOString(),
-                email_excerpt: clean(req.body?.body, MAX_EXCERPT),
+                email_excerpt: body,
                 confirmed: false,
+                dismissed_at: autoDismissed ? new Date().toISOString() : null,
+                dismissed_by: autoDismissed ? "claude" : null,
             })
             .select("id")
             .single();
@@ -107,7 +136,12 @@ export default async function handler(req, res) {
             throw new Error(error.message);
         }
 
-        return res.status(201).json({ ok: true, id: data.id });
+        return res.status(201).json({
+            ok: true,
+            id: data.id,
+            isDeal: read?.is_deal ?? null,
+            dismissed: Boolean(autoDismissed),
+        });
     } catch (err) {
         console.error("deal-intake error:", err);
         return res.status(500).json({ error: "Could not record the email" });
