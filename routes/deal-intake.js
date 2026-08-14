@@ -144,6 +144,9 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         console.error("deal-intake error:", err);
-        return res.status(500).json({ error: "Could not record the email" });
+        // TEMPORARY - surface the real cause while we debug the backfill.
+        return res
+            .status(500)
+            .json({ error: "Could not record the email", detail: err.message });
     }
 }
