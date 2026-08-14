@@ -81,6 +81,24 @@ function addressKeyFor(address) {
     return key.length >= 12 ? key : null;
 }
 
+/**
+ * Same idea for the deal name. Claude writes addresses inconsistently but
+ * tends to name a property the same way, so this catches what address
+ * matching misses. Short names are dropped - "duplex" would merge
+ * unrelated deals.
+ */
+function nameKeyFor(name) {
+    if (typeof name !== "string") return null;
+
+    const key = name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return key.length >= 12 ? key : null;
+}
+
 /** Keep what we already had; only fill gaps. */
 function fill(existing, incoming) {
     if (existing !== null && existing !== undefined && existing !== "") {
@@ -141,6 +159,7 @@ export default async function handler(req, res) {
         // lose it - an outage should never cost a deal.
         const read = await extractDeal({ from, subject, body });
         const addressKey = addressKeyFor(read?.address);
+        const nameKey = nameKeyFor(clean(read?.deal_name, 200) || subject || "");
 
         /* ---- 3. Same conversation, or same property? ---- */
         let match = null;
@@ -161,6 +180,17 @@ export default async function handler(req, res) {
                 .from("pipeline_deals")
                 .select("*")
                 .eq("address_key", addressKey)
+                .order("created_at", { ascending: true })
+                .limit(1);
+
+            match = data?.[0] ?? null;
+        }
+
+        if (!match && nameKey) {
+            const { data } = await supabase
+                .from("pipeline_deals")
+                .select("*")
+                .eq("name_key", nameKey)
                 .order("created_at", { ascending: true })
                 .limit(1);
 
@@ -190,6 +220,7 @@ export default async function handler(req, res) {
                     ),
                     dscr: fill(match.dscr, num(read?.dscr)),
                     address_key: fill(match.address_key, addressKey),
+                    name_key: fill(match.name_key, nameKey),
                     email_thread_id: fill(match.email_thread_id, threadId),
                     email_count: (match.email_count ?? 1) + 1,
                     dismissed_at: revive ? null : match.dismissed_at,
@@ -219,6 +250,7 @@ export default async function handler(req, res) {
                     clean(read?.deal_name, 200) || subject || "Untitled deal from email",
                 address: clean(read?.address, 300),
                 address_key: addressKey,
+                name_key: nameKey,
                 source: clean(read?.source, 100),
                 notes: clean(read?.notes, 2000),
                 purchase_price: num(read?.purchase_price),
