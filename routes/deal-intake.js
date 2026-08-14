@@ -86,6 +86,18 @@ export default async function handler(req, res) {
             ? new Date(req.body.receivedAt)
             : new Date();
 
+        // Seen this email before? Skip the model call entirely - re-running a
+        // backfill shouldn't cost money to re-read the same messages.
+        const { data: existing } = await supabase
+            .from("pipeline_deals")
+            .select("id")
+            .eq("email_message_id", messageId)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(200).json({ ok: true, duplicate: true });
+        }
+
         const from = clean(req.body?.from, 300);
         const body = clean(req.body?.body, MAX_EXCERPT);
 
@@ -144,9 +156,6 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         console.error("deal-intake error:", err);
-        // TEMPORARY - surface the real cause while we debug the backfill.
-        return res
-            .status(500)
-            .json({ error: "Could not record the email", detail: err.message });
+        return res.status(500).json({ error: "Could not record the email" });
     }
 }
