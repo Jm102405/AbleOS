@@ -185,25 +185,40 @@ export default async function handler(req, res) {
         const existing = matches?.[0] ?? null;
 
         if (existing) {
+            // A backfill reads newest first, so most emails arriving here are
+            // OLDER than what we already have. An old cancellation must not
+            // overwrite a current subscription - only a newer email may
+            // change the status. Older ones can still fill in blanks.
+            const isNewer =
+                !existing.email_received_at ||
+                new Date(receivedIso) >= new Date(existing.email_received_at);
+
+            const pick = (incomingValue, existingValue) =>
+                isNewer
+                    ? prefer(incomingValue, existingValue)
+                    : prefer(existingValue, incomingValue);
+
             const { error } = await supabase
                 .from("subscriptions")
                 .update({
                     vendor,
-                    plan: prefer(incoming.plan, existing.plan),
-                    amount: prefer(incoming.amount, existing.amount),
-                    currency: prefer(incoming.currency, existing.currency),
-                    billing_cycle: prefer(incoming.billing_cycle, existing.billing_cycle),
-                    status,
-                    renews_at: prefer(incoming.renews_at, existing.renews_at),
-                    last_paid_at: prefer(incoming.last_paid_at, existing.last_paid_at),
-                    invoice_url: prefer(incoming.invoice_url, existing.invoice_url),
-                    notes: prefer(incoming.notes, existing.notes),
-                    email_from: from,
-                    email_subject: subject,
-                    email_received_at: receivedIso,
-                    email_excerpt: body,
+                    plan: pick(incoming.plan, existing.plan),
+                    amount: pick(incoming.amount, existing.amount),
+                    currency: pick(incoming.currency, existing.currency),
+                    billing_cycle: pick(incoming.billing_cycle, existing.billing_cycle),
+                    status: isNewer ? status : existing.status,
+                    renews_at: pick(incoming.renews_at, existing.renews_at),
+                    last_paid_at: pick(incoming.last_paid_at, existing.last_paid_at),
+                    invoice_url: pick(incoming.invoice_url, existing.invoice_url),
+                    notes: pick(incoming.notes, existing.notes),
+                    email_from: isNewer ? from : existing.email_from,
+                    email_subject: isNewer ? subject : existing.email_subject,
+                    email_received_at: isNewer
+                        ? receivedIso
+                        : existing.email_received_at,
+                    email_excerpt: isNewer ? body : existing.email_excerpt,
                     email_count: (existing.email_count ?? 1) + 1,
-                    extracted: read,
+                    extracted: isNewer ? read : existing.extracted,
                     updated_at: now,
                 })
                 .eq("id", existing.id);
