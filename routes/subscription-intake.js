@@ -172,11 +172,17 @@ export default async function handler(req, res) {
         };
 
         /* ---- Update the card for this vendor, or create it ---- */
-        const { data: existing } = await supabase
+        // limit(1) rather than maybeSingle: if two emails for the same vendor
+        // ever race and create two rows, maybeSingle errors and we would keep
+        // creating more. This degrades quietly instead.
+        const { data: matches } = await supabase
             .from("subscriptions")
             .select("*")
             .eq("vendor_key", vendorKey)
-            .maybeSingle();
+            .order("created_at", { ascending: true })
+            .limit(1);
+
+        const existing = matches?.[0] ?? null;
 
         if (existing) {
             const { error } = await supabase
@@ -229,6 +235,28 @@ export default async function handler(req, res) {
             })
             .select("id")
             .single();
+
+        // Another request created this vendor a moment ago. Not an error -
+        // fold this email into whichever row won the race.
+        if (error?.code === "23505") {
+            const { data: winner } = await supabase
+                .from("subscriptions")
+                .select("id")
+                .eq("vendor_key", vendorKey)
+                .limit(1);
+
+            const winnerId = winner?.[0]?.id ?? null;
+
+            if (winnerId) {
+                await supabase
+                    .from("subscription_messages")
+                    .insert({ message_id: messageId, subscription_id: winnerId });
+
+                return res
+                    .status(200)
+                    .json({ ok: true, id: winnerId, vendor, status, merged: true });
+            }
+        }
 
         if (error) throw new Error(error.message);
 
