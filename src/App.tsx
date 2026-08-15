@@ -10,6 +10,7 @@ import { ColtonCockpit } from "./pages/ColtonCockpit";
 import { ZoCockpit } from "./pages/ZoCockpit";
 import { KarenCockpit } from "./pages/KarenCockpit";
 import { RexCockpit } from "./pages/RexCockpit";
+import { ElleryCockpit } from "./pages/ElleryCockpit";
 import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
@@ -86,6 +87,14 @@ export function App() {
             }
           />
 
+          <Route
+            path="/ellery"
+            element={
+              <ProtectedRoute cockpit="ellery">
+                <ElleryCockpit />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<HomeRedirect />} />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>

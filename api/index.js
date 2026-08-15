@@ -7,9 +7,11 @@
 // count, so endpoints can be added freely from here on.
 
 import approveStage from "../routes/approve-stage.js";
+import criticalDates from "../routes/critical-dates.js";
 import dailyTasks from "../routes/daily-tasks.js";
 import dealIntake from "../routes/deal-intake.js";
 import deals from "../routes/deals.js";
+import documents from "../routes/documents.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
 import leads from "../routes/leads.js";
 import notifications from "../routes/notifications.js";
@@ -29,9 +31,11 @@ export const config = { maxDuration: 60 };
 
 const ROUTES = {
     "approve-stage": approveStage,
+    "critical-dates": criticalDates,
     "daily-tasks": dailyTasks,
     "deal-intake": dealIntake,
     deals,
+    documents,
     "drive-upload-url": driveUploadUrl,
     leads,
     notifications,
