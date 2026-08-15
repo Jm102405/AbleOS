@@ -11,6 +11,7 @@ import { ZoCockpit } from "./pages/ZoCockpit";
 import { KarenCockpit } from "./pages/KarenCockpit";
 import { RexCockpit } from "./pages/RexCockpit";
 import { ElleryCockpit } from "./pages/ElleryCockpit";
+import { CorneliusCockpit } from "./pages/CorneliusCockpit";
 import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
@@ -92,6 +93,14 @@ export function App() {
             element={
               <ProtectedRoute cockpit="ellery">
                 <ElleryCockpit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cornelius"
+            element={
+              <ProtectedRoute cockpit="cornelius">
+                <CorneliusCockpit />
               </ProtectedRoute>
             }
           />

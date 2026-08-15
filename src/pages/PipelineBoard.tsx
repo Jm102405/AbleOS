@@ -8,6 +8,8 @@ import { NavCard } from "../components/NavCard";
 import { FilterMenu } from "../components/FilterMenu";
 import { LeadsCard } from "../features/leads/LeadsCard";
 import { DraftDealsCard } from "../features/pipeline/DraftDealsCard";
+import { DocumentsCard } from "../features/documents/DocumentsCard";
+import { PofCard } from "../features/pof/PofCard";
 import { AskAble } from "../features/assistant/AskAble";
 import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
@@ -214,6 +216,10 @@ export function PipelineBoard() {
           <DraftDealsCard onConfirmed={refresh} />
 
           <LeadsCard divider />
+
+          <PofCard row canSetDetails />
+
+          <DocumentsCard row canMove={false} />
 
           <NavCard
             icon={<LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />}

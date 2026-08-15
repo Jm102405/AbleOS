@@ -13,7 +13,8 @@ export type CockpitKey =
   | "colton"
   | "zo"
   | "rex"
-  | "ellery";
+  | "ellery"
+  | "cornelius";
 
 export type Profile = {
   id: string;

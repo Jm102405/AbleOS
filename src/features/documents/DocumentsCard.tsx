@@ -54,7 +54,14 @@ function isStuck(doc: AbleDocument) {
   return OPEN_STAGES.includes(doc.stage) && daysIn(doc.stage_changed_at) >= 5;
 }
 
-export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
+export function DocumentsCard({
+  canMove = true,
+  row = false,
+}: {
+  canMove?: boolean;
+  /** Render as a row inside a shared container rather than its own card. */
+  row?: boolean;
+}) {
   const { documents, loading, error, moveStage, requestDocument } =
     useDocuments();
 
@@ -177,6 +184,8 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
         subtitle="Everything moving through you"
         count={loading ? null : openDocs.length}
         tone={stuckCount > 0 ? "orange" : "blue"}
+        variant={row ? "row" : "card"}
+        divider={row}
         onClick={() => setOpen(true)}
       />
 
