@@ -42,7 +42,13 @@ const BARS: Record<DealStage, string> = {
 
 type Filter = "all" | DealStage;
 
-export function MyDealsCard() {
+export function MyDealsCard({
+  title = "My deals",
+  subtitle = "Everything you sourced, and where it sits",
+}: {
+  title?: string;
+  subtitle?: string;
+}) {
   const { deals, loading, error, kpis } = useDeals();
 
   const [open, setOpen] = useState(false);
@@ -72,8 +78,8 @@ export function MyDealsCard() {
     <>
       <NavCard
         icon={<LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />}
-        title="My deals"
-        subtitle="Everything you sourced, and where it sits"
+        title={title}
+        subtitle={subtitle}
         count={loading ? null : kpis.active}
         tone={kpis.stalled > 0 ? "orange" : "blue"}
         onClick={() => setOpen(true)}
@@ -103,7 +109,7 @@ export function MyDealsCard() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[16px] font-semibold tracking-[0.13em] text-[#5B6B82]">
-                      My deals
+                      {title}
                     </p>
                     <h2 className="mt-1 truncate text-[20px] font-bold text-[#0F1E33]">
                       {active ? active.name : `${deals.length} in play`}

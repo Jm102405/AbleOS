@@ -16,6 +16,7 @@ import { ApprovedGatesModal } from "../features/approvals/ApprovedGatesModal";
 import { DriveLinksModal } from "../components/DriveLinksModal";
 import { QuickTiles } from "../components/QuickTiles";
 import { NavCard } from "../components/NavCard";
+import { DocumentsCard } from "../features/documents/DocumentsCard";
 import {
   CameraIcon,
   ClipboardListIcon,
@@ -577,6 +578,14 @@ export function RajCockpit() {
               </div>
             </div>
           </motion.div>
+          <section aria-labelledby="documents-heading" className="pt-3">
+            <h2 className="sr-only" id="documents-heading">
+              Documents
+            </h2>
+            {/* Raj signs off, Ellery runs the pipeline - read-only here. */}
+            <DocumentsCard canMove={false} />
+          </section>
+
           <section aria-labelledby="progress-heading" className="pt-3">
             <h2 className="sr-only" id="progress-heading">
               Dane&apos;s Progress

@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
 import { DocumentsCard } from "../features/documents/DocumentsCard";
+import { MyDealsCard } from "../features/pipeline/MyDealsCard";
 import { CriticalDatesCard } from "../features/documents/CriticalDatesCard";
 import {
   useDocuments,
@@ -133,6 +134,15 @@ export function ElleryCockpit() {
           Documents
         </h2>
         <DocumentsCard />
+      </section>
+
+      <section aria-labelledby="feed-heading" className="pt-3">
+        <h2 className="sr-only" id="feed-heading">
+          Deals
+        </h2>
+        {/* Read-only. She coordinates documents on these, she doesn't
+            move deals between stages. */}
+        <MyDealsCard title="Deals" subtitle="What Rex is sourcing" />
       </section>
 
       <section aria-labelledby="dates-heading" className="pt-3">
