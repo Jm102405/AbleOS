@@ -187,6 +187,10 @@ export default async function handler(req, res) {
                 stageChangedAt: row.stage_changed_at,
                 movedBy: row.moved_by,
                 daysInStage: daysBetween(row.stage_changed_at),
+                birdDog: row.bird_dog,
+                purchasePrice: row.purchase_price,
+                monthlyCashFlow: row.monthly_cash_flow,
+                dscr: row.dscr,
             }));
 
             if (deals.length === 0) {

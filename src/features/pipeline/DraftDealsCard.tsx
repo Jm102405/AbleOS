@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { InboxIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
+import { BuyBoxBadge } from "./BuyBoxBadge";
 import { DEAL_STAGES, STAGE_LABELS, type DealStage } from "./types";
 import { useDraftDeals, type DraftDeal } from "./useDraftDeals";
 
@@ -244,6 +245,17 @@ export function DraftDealsCard({
                 {/* ---- REVIEW ---- */}
                 {active && form && (
                   <div className="space-y-3">
+                    {/* Reads off the form, not the stored row, so it
+                        re-checks live as Raj corrects the numbers. */}
+                    <BuyBoxBadge
+                      showReasons
+                      deal={{
+                        address: form.address,
+                        dscr: form.dscr,
+                        monthly_cash_flow: form.monthlyCashFlow,
+                      }}
+                    />
+
                     {active.extracted?.reasoning && (
                       <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
                         <div className="flex items-center justify-between gap-3">

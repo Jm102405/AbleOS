@@ -57,4 +57,13 @@ export type Deal = {
   stageChangedAt: string | null;
   movedBy: string | null;
   daysInStage: number | null;
+
+  /**
+   * Only on deals created inside Able OS. Notion imports carry no
+   * numbers, so these stay undefined there.
+   */
+  birdDog?: string | null;
+  purchasePrice?: string | number | null;
+  monthlyCashFlow?: string | number | null;
+  dscr?: string | number | null;
 };

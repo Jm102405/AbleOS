@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LayersIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
+import { BuyBoxBadge } from "./BuyBoxBadge";
 import { FilterMenu, type FilterOption } from "../../components/FilterMenu";
 import { useDeals } from "./useDeals";
 import { DEAL_STAGES, STAGE_LABELS, type Deal, type DealStage } from "./types";
@@ -198,10 +199,20 @@ export function MyDealsCard() {
                                 </span>
                               </span>
 
-                              <span className="mt-2 block text-[14px] text-[#7A8AA3]">
-                                {deal.daysInStage === null
-                                  ? "Not moved yet"
-                                  : `${deal.daysInStage} day${deal.daysInStage === 1 ? "" : "s"} in stage`}
+                              <span className="mt-2 flex flex-wrap items-center gap-2 text-[14px] text-[#7A8AA3]">
+                                <span>
+                                  {deal.daysInStage === null
+                                    ? "Not moved yet"
+                                    : `${deal.daysInStage} day${deal.daysInStage === 1 ? "" : "s"} in stage`}
+                                </span>
+
+                                <BuyBoxBadge
+                                  deal={{
+                                    address: deal.address,
+                                    dscr: deal.dscr,
+                                    monthly_cash_flow: deal.monthlyCashFlow,
+                                  }}
+                                />
                               </span>
                             </span>
                           </button>
@@ -252,6 +263,15 @@ export function MyDealsCard() {
                         </p>
                       )}
                     </div>
+
+                    <BuyBoxBadge
+                      showReasons
+                      deal={{
+                        address: active.address,
+                        dscr: active.dscr,
+                        monthly_cash_flow: active.monthlyCashFlow,
+                      }}
+                    />
 
                     <p className="px-1 text-[14px] text-[#7A8AA3]">
                       Raj moves deals between stages. Tell him if this one is
