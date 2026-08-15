@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FileTextIcon, PlusIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
 import { FilterMenu, type FilterOption } from "../../components/FilterMenu";
+import { useDeals } from "../pipeline/useDeals";
 import {
   DOC_STAGES,
   DOC_STAGE_LABELS,
@@ -57,6 +58,10 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
   const { documents, loading, error, moveStage, requestDocument } =
     useDocuments();
 
+  // The deals this person can see. Ellery gets all of them, Rex only his,
+  // which is exactly the list each should be choosing from.
+  const { deals } = useDeals();
+
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("open");
   const [active, setActive] = useState<AbleDocument | null>(null);
@@ -65,6 +70,7 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
   const [problem, setProblem] = useState<string | null>(null);
 
   const [form, setForm] = useState({
+    dealId: "",
     dealName: "",
     docType: "",
     dueOn: "",
@@ -122,8 +128,8 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!form.dealName.trim() || !form.docType.trim()) {
-      setProblem("Deal and document type are both needed");
+    if (!form.dealId || !form.docType.trim()) {
+      setProblem("Pick a deal and say what kind of document it is");
       return;
     }
 
@@ -132,6 +138,7 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
 
     try {
       await requestDocument({
+        dealId: form.dealId,
         dealName: form.dealName,
         docType: form.docType,
         dueOn: form.dueOn || undefined,
@@ -140,6 +147,7 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
       });
 
       setForm({
+        dealId: "",
         dealName: "",
         docType: "",
         dueOn: "",
@@ -427,8 +435,34 @@ export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
                 {adding && (
                   <form onSubmit={submit} className="space-y-3">
                     <div className="space-y-3 rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                      <label className="block">
+                        <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Deal
+                        </span>
+                        <select
+                          value={form.dealId}
+                          onChange={(e) => {
+                            const deal = deals.find(
+                              (d) => d.id === e.target.value,
+                            );
+                            setForm((f) => ({
+                              ...f,
+                              dealId: e.target.value,
+                              dealName: deal?.name ?? "",
+                            }));
+                          }}
+                          className="mt-1 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+                        >
+                          <option value="">Choose a deal</option>
+                          {deals.map((deal) => (
+                            <option key={deal.id} value={deal.id}>
+                              {deal.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
                       {[
-                        ["dealName", "Deal", "e.g. 34th St SFH"],
                         ["docType", "Document", "e.g. LOI, PSA amendment"],
                         ["counterparty", "Counterparty", "Seller, agent, lender"],
                       ].map(([key, label, hint]) => (

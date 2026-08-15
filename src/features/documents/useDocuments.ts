@@ -126,6 +126,7 @@ export function useDocuments() {
 
   const requestDocument = useCallback(
     async (input: {
+      dealId: string;
       dealName: string;
       docType: string;
       dueOn?: string;
