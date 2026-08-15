@@ -15,7 +15,7 @@ import { NotificationBell } from "../components/NotificationBell";
 import { DealDetail } from "../features/pipeline/DealDetail";
 import { KpiTile } from "../features/pipeline/KpiTile";
 import { StageBrowserModal } from "../features/pipeline/StageBrowserModal";
-import { buildBirdDogOptions, stages } from "../features/pipeline/data";
+import { stages } from "../features/pipeline/data";
 import { useDeals } from "../features/pipeline/useDeals";
 import {
   STAGE_LABELS,
@@ -33,16 +33,29 @@ export function PipelineBoard() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = React.useState(false);
 
+  // A fixed list, not one derived from the deals. Claude's extracted
+  // "source" is whatever the email happened to say - a sender name, a
+  // company - which is how "jaysonmiguel" ended up in a filter.
   const birdDogOptions = React.useMemo(
-    () => buildBirdDogOptions(deals),
-    [deals],
+    () => [
+      { value: "All", label: "All bird dogs" },
+      { value: "rex", label: "Rex" },
+      { value: "chirag", label: "Chirag" },
+      { value: "direct", label: "Direct / inbound" },
+      { value: "other", label: "Other" },
+      { value: "none", label: "Not set" },
+    ],
+    [],
   );
 
   const scopedDeals = React.useMemo(
     () =>
-      deals.filter(
-        (deal) => selectedBirdDog === "All" || deal.source === selectedBirdDog,
-      ),
+      deals.filter((deal) => {
+        if (selectedBirdDog === "All") return true;
+        // Worth having: deals nobody has attributed yet are easy to lose.
+        if (selectedBirdDog === "none") return !deal.birdDog;
+        return deal.birdDog === selectedBirdDog;
+      }),
     [deals, selectedBirdDog],
   );
 
