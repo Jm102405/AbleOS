@@ -17,6 +17,7 @@ const DEALS_DB = "3a397b1c96b680e8af62f3a34a5c6a02";
 // Must stay identical to the check constraint on public.deal_stages.
 const STAGES = [
     "docs_submitted",
+    "underwriting",
     "final_review",
     "proof_of_funds",
     "submit_to_broker",
@@ -42,7 +43,10 @@ const EXCLUDED_CATEGORY = "Orphaned - source tab";
 const SHOW_NOTION_DEALS = false;
 
 // "dane" is here so you can test the board. Tighten to ["raj"] before handover.
-const ALLOWED_COCKPITS = ["raj", "dane"];
+const ALLOWED_COCKPITS = ["raj", "dane", "rex"];
+
+// Rex works his own deals in the field but doesn't run the pipeline.
+const CAN_MOVE_STAGES = ["raj", "dane"];
 
 let cachedSupabase = null;
 let cachedNotion = null;
@@ -148,15 +152,27 @@ export default async function handler(req, res) {
         if (req.method === "GET") {
             // Skipping the Notion call entirely while the legacy deals are
             // hidden keeps the request fast and avoids burning API quota.
-            const deals = SHOW_NOTION_DEALS ? await fetchNotionDeals() : [];
+            // Legacy Notion deals have no bird dog, so they can't be scoped
+            // to Rex. He never sees them.
+            const deals =
+                SHOW_NOTION_DEALS && profile.cockpit !== "rex"
+                    ? await fetchNotionDeals()
+                    : [];
 
             // Deals born inside Able OS - confirmed drafts from the
             // underwriting inbox. Their stage lives on the row itself.
-            const { data: ownRows, error: ownError } = await supabase
+            let ownQuery = supabase
                 .from("pipeline_deals")
                 .select("*")
                 .eq("confirmed", true)
                 .is("dismissed_at", null);
+
+            // Scoped by cockpit, not by a name in a query parameter.
+            if (profile.cockpit === "rex") {
+                ownQuery = ownQuery.eq("bird_dog", "rex");
+            }
+
+            const { data: ownRows, error: ownError } = await ownQuery;
 
             if (ownError) throw new Error(ownError.message);
 
@@ -203,6 +219,11 @@ export default async function handler(req, res) {
 
         /* ---- MOVE ---- */
         if (req.method === "PATCH") {
+            if (!CAN_MOVE_STAGES.includes(profile.cockpit)) {
+                return res
+                    .status(403)
+                    .json({ error: "Only Raj moves deals between stages" });
+            }
             const id = typeof req.body?.id === "string" ? req.body.id.trim() : "";
             const stage =
                 typeof req.body?.stage === "string" ? req.body.stage.trim() : "";

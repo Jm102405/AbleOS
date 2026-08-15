@@ -4,6 +4,7 @@
  */
 export const DEAL_STAGES = [
   "docs_submitted",
+  "underwriting",
   "final_review",
   "proof_of_funds",
   "submit_to_broker",
@@ -19,6 +20,7 @@ export type DealStage = (typeof DEAL_STAGES)[number];
 
 export const STAGE_LABELS: Record<DealStage, string> = {
   docs_submitted: "Docs Submitted",
+  underwriting: "Underwriting",
   final_review: "Final Review",
   proof_of_funds: "Proof of Funds",
   submit_to_broker: "Submit to Broker/Seller",

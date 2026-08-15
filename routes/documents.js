@@ -77,12 +77,31 @@ export default async function handler(req, res) {
 
         /* ---- LIST ---- */
         if (req.method === "GET") {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("documents")
                 .select("*")
                 .order("stage_changed_at", { ascending: false })
                 .limit(300);
 
+            // Rex sees documents for his own deals and nobody else's.
+            if (profile.cockpit === "rex") {
+                const { data: mine } = await supabase
+                    .from("pipeline_deals")
+                    .select("id")
+                    .eq("bird_dog", "rex")
+                    .eq("confirmed", true);
+
+                const ids = (mine ?? []).map((d) => d.id);
+
+                // No deals means no documents. An empty in() would error, so stop.
+                if (ids.length === 0) {
+                    return res.status(200).json({ documents: [], stages: STAGES });
+                }
+
+                query = query.in("deal_id", ids);
+            }
+
+            const { data, error } = await query;
             if (error) throw new Error(error.message);
 
             return res.status(200).json({ documents: data ?? [], stages: STAGES });

@@ -53,7 +53,7 @@ function isStuck(doc: AbleDocument) {
   return OPEN_STAGES.includes(doc.stage) && daysIn(doc.stage_changed_at) >= 5;
 }
 
-export function DocumentsCard() {
+export function DocumentsCard({ canMove = true }: { canMove?: boolean }) {
   const { documents, loading, error, moveStage, requestDocument } =
     useDocuments();
 
@@ -383,6 +383,7 @@ export function DocumentsCard() {
                       )}
                     </div>
 
+                    {canMove && (
                     <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
                       <div className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
                         Move to
@@ -412,6 +413,7 @@ export function DocumentsCard() {
                         })}
                       </div>
                     </div>
+                    )}
 
                     {problem && (
                       <div className="rounded-xl bg-[#FEF2F2] px-4 py-3 text-[16px] text-[#B91C1C]">

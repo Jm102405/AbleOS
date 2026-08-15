@@ -12,6 +12,7 @@ import { useDraftDeals, type DraftDeal } from "./useDraftDeals";
 type Form = {
   name: string;
   address: string;
+  birdDog: string;
   source: string;
   purchasePrice: string;
   monthlyCashFlow: string;
@@ -26,6 +27,7 @@ function formFor(draft: DraftDeal): Form {
   return {
     name: draft.name ?? "",
     address: draft.address ?? "",
+    birdDog: draft.bird_dog ?? "",
     source: draft.source ?? "",
     purchasePrice: str(draft.purchase_price),
     monthlyCashFlow: str(draft.monthly_cash_flow),
@@ -282,8 +284,29 @@ export function DraftDealsCard({
                         value={form.address}
                         onChange={set("address")}
                       />
+                      <label className="block">
+                        <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Bird dog
+                        </span>
+                        <select
+                          value={form.birdDog}
+                          onChange={(e) =>
+                            setForm((f) =>
+                              f ? { ...f, birdDog: e.target.value } : f,
+                            )
+                          }
+                          className="mt-1 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+                        >
+                          <option value="">Not set</option>
+                          <option value="rex">Rex</option>
+                          <option value="chirag">Chirag</option>
+                          <option value="direct">Direct / inbound</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </label>
+
                       <Field
-                        label="Bird dog / source"
+                        label="Source, as the email had it"
                         value={form.source}
                         onChange={set("source")}
                       />

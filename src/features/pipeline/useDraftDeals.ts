@@ -10,6 +10,7 @@ export type DraftDeal = {
   name: string;
   address: string | null;
   source: string | null;
+  bird_dog: string | null;
   notes: string | null;
   stage: DealStage;
   purchase_price: string | number | null;
@@ -30,6 +31,7 @@ export type DraftDeal = {
 
 export type ConfirmInput = {
   name: string;
+  birdDog?: string;
   address?: string;
   source?: string;
   notes?: string;

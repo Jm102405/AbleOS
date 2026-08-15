@@ -10,6 +10,7 @@ import { requireUser } from "../lib/apiAuth.js";
 
 const STAGES = [
     "docs_submitted",
+    "underwriting",
     "final_review",
     "proof_of_funds",
     "submit_to_broker",
@@ -22,6 +23,10 @@ const STAGES = [
 ];
 
 const ALLOWED_COCKPITS = ["raj", "dane"];
+
+// Fixed list on purpose. Chirag is paid on attribution, so this is a
+// money field - it gets chosen, never inferred from an email.
+const BIRD_DOGS = ["rex", "chirag", "direct", "other"];
 
 let cachedClient = null;
 
@@ -133,12 +138,18 @@ export default async function handler(req, res) {
                     return res.status(400).json({ error: "Unknown stage" });
                 }
 
+                const birdDog = clean(req.body?.birdDog, 20);
+                if (birdDog && !BIRD_DOGS.includes(birdDog)) {
+                    return res.status(400).json({ error: "Unknown bird dog" });
+                }
+
                 const { data, error } = await supabase
                     .from("pipeline_deals")
                     .update({
                         name,
                         address: clean(req.body?.address, 300),
                         source: clean(req.body?.source, 100),
+                        bird_dog: birdDog,
                         notes: clean(req.body?.notes, 2000),
                         purchase_price: money(req.body?.purchasePrice),
                         monthly_cash_flow: money(req.body?.monthlyCashFlow),
