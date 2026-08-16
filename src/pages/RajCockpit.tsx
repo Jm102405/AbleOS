@@ -18,7 +18,6 @@ import { QuickTiles } from "../components/QuickTiles";
 import { NavCard } from "../components/NavCard";
 import {
   CameraIcon,
-  ClipboardListIcon,
   FileTextIcon,
   ShieldCheckIcon,
   TrendingUpIcon,
@@ -50,6 +49,9 @@ function formatDate(value: string) {
     year: "numeric",
   });
 }
+
+
+/** Github Password(Able): Able@2026$ */
 
 /** Returns null for empty or zero cost, so "no cost" renders as nothing. */
 function formatCost(value: string | number | null) {
@@ -473,20 +475,6 @@ export function RajCockpit() {
                   />
                 </section>
 
-                <section aria-labelledby="tasks-heading" className="pt-3">
-                  <h2 className="sr-only" id="tasks-heading">
-                    Tasks assigned
-                  </h2>
-                  <NavCard
-                    count={openTaskCount}
-                    icon={<ClipboardListIcon size={20} strokeWidth={2.25} />}
-                    onClick={() => setTasksOpen(true)}
-                    subtitle="Work you assigned to the team"
-                    title="Tasks assigned"
-                    tone="blue"
-                  />
-                </section>
-
                 <section aria-labelledby="approval-heading" className="pt-3">
                   <h2 className="sr-only" id="approval-heading">
                     Approval requests
@@ -601,12 +589,23 @@ export function RajCockpit() {
             approvedTasks={tasks.filter(
               (task) => task.assigned_to === "dane" && task.approved_at,
             )}
+            commentCounts={commentCounts}
             loading={daneDaily.loading}
             onClose={() => setProgressOpen(false)}
+            onOpenAssigned={(task) => {
+              // Hand off to the sheet that owns approve, chat and delete,
+              // opened on the task that was tapped.
+              setFocusTaskId(task.id);
+              setTasksOpen(true);
+            }}
             open={progressOpen}
+            openAssigned={tasks.filter(
+              (task) => task.assigned_to === "dane" && !task.approved_at,
+            )}
             personLabel="Dane's Progress"
             tasks={daneDaily.tasks}
             today={daneDaily.today}
+            waitingLabel="Waiting on you"
           />
           <footer className="pt-10 text-center text-[16px] font-normal text-[#8291A5]">
             Able OS · V1 Build

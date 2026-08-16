@@ -9,7 +9,7 @@ import { TaskDetailModal } from "../tasks/TaskDetailModal";
 import type { Task } from "../tasks/TaskCard";
 import type { DailyTask } from "./useDailyTasks";
 
-type View = "in_progress" | "completed";
+type View = "in_progress" | "completed" | "assigned";
 type Mode = "today" | "this_week" | "last_week" | "all" | "date";
 
 type DailyProgressModalProps = {
@@ -22,6 +22,15 @@ type DailyProgressModalProps = {
   personLabel: string;
   /** Tasks Raj assigned and has since approved. */
   approvedTasks?: Task[];
+  /** Tasks Raj assigned that are still open. */
+  openAssigned?: Task[];
+  /**
+   * Opens the assigned-task sheet, which owns approve, chat and delete.
+   * Kept there rather than duplicated here.
+   */
+  onOpenAssigned?: (task: Task) => void;
+  commentCounts?: Record<string, number>;
+  waitingLabel?: string;
 };
 
 /**
@@ -83,6 +92,10 @@ export function DailyProgressModal({
   today,
   personLabel,
   approvedTasks = [],
+  openAssigned = [],
+  onOpenAssigned,
+  commentCounts = {},
+  waitingLabel,
 }: DailyProgressModalProps) {
   const [view, setView] = React.useState<View>("in_progress");
   const [dailyId, setDailyId] = React.useState<string | null>(null);
@@ -158,7 +171,14 @@ export function DailyProgressModal({
     return `${shortDate(range.start)} to ${shortDate(range.end)}`;
   }, [range]);
 
-  const visible = view === "in_progress" ? inProgress : visibleCompleted;
+  // The assigned view lists Task rows, not daily ones, so it has no
+  // entries here.
+  const visible =
+    view === "in_progress"
+      ? inProgress
+      : view === "completed"
+        ? visibleCompleted
+        : [];
 
   return (
     <AnimatePresence>
@@ -198,29 +218,28 @@ export function DailyProgressModal({
                 </button>
               </div>
 
-              <div className="mt-3 flex gap-1.5">
-                <button
-                  className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
-                    view === "in_progress"
-                      ? "bg-[#1E3A8A] text-white"
-                      : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                  }`}
-                  onClick={() => setView("in_progress")}
-                  type="button"
-                >
-                  In progress ({inProgress.length})
-                </button>
-                <button
-                  className={`rounded-full px-2.5 py-1 text-[16px] font-semibold tracking-wide transition-colors ${
-                    view === "completed"
-                      ? "bg-[#16A34A] text-white"
-                      : "text-[#A3B0C0] hover:bg-[#F1F5F9]"
-                  }`}
-                  onClick={() => setView("completed")}
-                  type="button"
-                >
-                  Completed ({completed.length + approvedTasks.length})
-                </button>
+              <div className="mt-3">
+                <FilterMenu
+                  onChange={(next) => setView(next as View)}
+                  options={[
+                    {
+                      key: "in_progress",
+                      label: "In progress",
+                      count: inProgress.length + openAssigned.length,
+                    },
+                    {
+                      key: "completed",
+                      label: "Completed",
+                      count: completed.length + approvedTasks.length,
+                    },
+                    {
+                      key: "assigned",
+                      label: "Assigned by you",
+                      count: openAssigned.length + approvedTasks.length,
+                    },
+                  ]}
+                  value={view}
+                />
               </div>
 
               {view === "completed" && (
@@ -278,12 +297,18 @@ export function DailyProgressModal({
 
               {!loading &&
                 visible.length === 0 &&
-                (view === "in_progress" || visibleApproved.length === 0) && (
+                (view === "in_progress"
+                  ? openAssigned.length === 0
+                  : view === "completed"
+                    ? visibleApproved.length === 0
+                    : openAssigned.length + approvedTasks.length === 0) && (
                 <div className="rounded-2xl border border-dashed border-[#DCE4EE] bg-white px-5 py-8 text-center">
                   <p className="text-[16px] font-medium leading-snug text-[#8A99AC]">
                     {view === "in_progress"
                       ? "Nothing in progress right now."
-                      : "Nothing completed in this range."}
+                      : view === "completed"
+                        ? "Nothing completed in this range."
+                        : "You have not assigned anything yet."}
                   </p>
                 </div>
               )}
@@ -296,6 +321,23 @@ export function DailyProgressModal({
                 />
               ))}
 
+              {view === "in_progress" && openAssigned.length > 0 && (
+                <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
+                  Assigned by Raj
+                </p>
+              )}
+
+              {view === "in_progress" &&
+                openAssigned.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    commentCount={commentCounts[task.id]}
+                    onOpen={() => onOpenAssigned?.(task)}
+                    task={task}
+                    waitingLabel={waitingLabel}
+                  />
+                ))}
+
               {view === "completed" && visibleApproved.length > 0 && (
                 <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
                   Assigned by Raj
@@ -306,6 +348,39 @@ export function DailyProgressModal({
                 visibleApproved.map((task) => (
                   <TaskRow
                     key={task.id}
+                    onOpen={() => setAssignedId(task.id)}
+                    task={task}
+                  />
+                ))}
+
+              {view === "assigned" && openAssigned.length > 0 && (
+                <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
+                  Still open
+                </p>
+              )}
+
+              {view === "assigned" &&
+                openAssigned.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    commentCount={commentCounts[task.id]}
+                    onOpen={() => onOpenAssigned?.(task)}
+                    task={task}
+                    waitingLabel={waitingLabel}
+                  />
+                ))}
+
+              {view === "assigned" && approvedTasks.length > 0 && (
+                <p className="pt-2 text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
+                  Approved
+                </p>
+              )}
+
+              {view === "assigned" &&
+                approvedTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    commentCount={commentCounts[task.id]}
                     onOpen={() => setAssignedId(task.id)}
                     task={task}
                   />
