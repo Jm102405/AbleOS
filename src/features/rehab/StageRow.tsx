@@ -49,6 +49,8 @@ type StageRowProps = {
   uploadState: UploadState | undefined;
   onUpload: (pageId: string, stageName: string, files: FileList) => void;
   onDone: (pageId: string) => void;
+  /** Adds to a stage that is already submitted, without reopening it. */
+  onAddPhotos?: (pageId: string, stageName: string, files: FileList) => void;
 };
 
 export function StageRow({
@@ -56,6 +58,7 @@ export function StageRow({
   uploadState,
   onUpload,
   onDone,
+  onAddPhotos,
 }: StageRowProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const us = uploadState || {
@@ -119,6 +122,59 @@ export function StageRow({
             {stage.rajApproved && " · Raj ok"}
           </span>
         </div>
+
+        {onAddPhotos && (
+          <div className="mt-3 pl-9">
+            <input
+              accept="image/*"
+              className="hidden"
+              multiple
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  onAddPhotos(stage.notionPageId, stage.stageName, files);
+                }
+                e.target.value = "";
+              }}
+              ref={fileInputRef}
+              type="file"
+            />
+
+            {us.uploading ? (
+              <div className="flex items-center gap-2 rounded-xl bg-[#F1F5F9] px-4 py-2.5">
+                <LoaderIcon
+                  className="animate-spin text-[#418BFF]"
+                  size={16}
+                  strokeWidth={2.5}
+                />
+                <span className="text-[16px] font-medium text-[#5B6B82]">
+                  {us.progress
+                    ? `Adding ${us.progress} to the folder…`
+                    : "Adding to the folder…"}
+                </span>
+              </div>
+            ) : (
+              <button
+                className="flex items-center gap-2 rounded-xl border border-[#DCE4EE] px-3.5 py-2 text-[16px] font-medium text-[#418BFF] transition-colors hover:bg-[#F1F5F9]"
+                onClick={() => fileInputRef.current?.click()}
+                type="button"
+              >
+                <UploadCloudIcon size={16} strokeWidth={2.5} />
+                Add more photos
+              </button>
+            )}
+
+            {us.error && (
+              <p className="mt-2 text-[16px] font-medium text-red-500">
+                {us.error}
+              </p>
+            )}
+
+            <p className="mt-2 text-[14px] font-medium text-[#A3B0C0]">
+              Goes in the same folder. Nothing gets re-approved.
+            </p>
+          </div>
+        )}
       </article>
     );
   }

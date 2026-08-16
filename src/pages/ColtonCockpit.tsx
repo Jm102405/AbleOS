@@ -149,6 +149,8 @@ export function ColtonCockpit() {
     pageId: string,
     stageName: string,
     files: FileList,
+    /** True when topping up a stage that is already submitted. */
+    addOnly = false,
   ) {
     const list = Array.from(files);
     if (list.length === 0) return;
@@ -223,12 +225,33 @@ export function ColtonCockpit() {
       }
 
       if (!folderUrl) throw new Error("Drive did not return a folder link.");
-
       updateOne(pageId, {
         uploading: false,
         progress: "",
         driveUrl: folderUrl,
       });
+
+      // Topping up a stage that is already submitted saves itself. Making
+      // someone press Done again would imply there is something to decide.
+      if (addOnly) {
+        const res = await apiFetch("/api/rehab-stages", {
+          method: "POST",
+          body: JSON.stringify({
+            notionPageId: pageId,
+            driveUrl: folderUrl,
+            addOnly: true,
+          }),
+        });
+
+        if (!res.ok) {
+          const detail = await res.text();
+          throw new Error(
+            `Save failed (${res.status}): ${detail.slice(0, 160)}`,
+          );
+        }
+
+        await loadStages();
+      }
     } catch (err) {
       console.error("Upload failed:", err);
       updateOne(pageId, {
@@ -431,6 +454,9 @@ export function ColtonCockpit() {
                         {phaseStages.map((stage) => (
                           <StageRow
                             key={stage.notionPageId}
+                            onAddPhotos={(pageId, stageName, files) =>
+                              handleUpload(pageId, stageName, files, true)
+                            }
                             onDone={handleDone}
                             onUpload={handleUpload}
                             stage={stage}

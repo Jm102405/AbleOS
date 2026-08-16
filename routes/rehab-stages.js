@@ -62,7 +62,7 @@ export default async function handler(req, res) {
                 .json({ error: err?.message || "Not authorised" });
         }
 
-        const { notionPageId, driveUrl } = req.body || {};
+        const { notionPageId, driveUrl, addOnly } = req.body || {};
 
         if (!notionPageId || !driveUrl) {
             return res
@@ -86,29 +86,59 @@ export default async function handler(req, res) {
             const phase = props["Phase"]?.select?.name || "";
 
             const skipsChain = DIRECT_TO_RAJ.has(stageName);
-            const approver = skipsChain ? "raj" : "jeremiah";
+            const alreadySubmitted = props["Photo Uploaded"]?.checkbox === true;
+
+            // Adding shots to a stage already through the chain must not
+            // drag it back through approval. The folder is the same, the
+            // link is the same - only the contents grew.
+            const topUp = Boolean(addOnly) && alreadySubmitted;
+
+            const jeremiahOk = props["Jeremiah Approved"]?.checkbox === true;
+            const karenOk = props["Karen Approved"]?.checkbox === true;
+
+            // A top-up tells whoever currently holds the stage. A real
+            // submission starts at the top of the chain.
+            let approver;
+            if (!topUp) {
+                approver = skipsChain ? "raj" : "jeremiah";
+            } else if (!jeremiahOk && !skipsChain) {
+                approver = "jeremiah";
+            } else if (!karenOk && !skipsChain) {
+                approver = "karen";
+            } else {
+                approver = "raj";
+            }
 
             await notion.pages.update({
                 page_id: notionPageId,
-                properties: {
-                    "Drive Photo Link": { url: driveUrl },
-                    "Photo Uploaded": { checkbox: true },
-                    // A re-upload after a decline starts the chain over. Stages
-                    // that skip the chain keep Jeremiah and Karen ticked.
-                    "Jeremiah Approved": { checkbox: skipsChain },
-                    "Karen Approved": { checkbox: skipsChain },
-                    "Raj Approved": { checkbox: false },
-                    Status: { select: { name: "In Progress" } },
-                },
+                properties: topUp
+                    ? // Nothing to change but the link, and even that is
+                      // unchanged - written for safety if it was ever null.
+                      { "Drive Photo Link": { url: driveUrl } }
+                    : {
+                          "Drive Photo Link": { url: driveUrl },
+                          "Photo Uploaded": { checkbox: true },
+                          // A re-upload after a decline starts the chain
+                          // over. Stages that skip the chain keep Jeremiah
+                          // and Karen ticked.
+                          "Jeremiah Approved": { checkbox: skipsChain },
+                          "Karen Approved": { checkbox: skipsChain },
+                          "Raj Approved": { checkbox: false },
+                          Status: { select: { name: "In Progress" } },
+                      },
             });
 
             const { error: notifyError } = await getSupabase()
                 .from("notifications")
                 .insert({
                     recipient: approver,
-                    type: "stage_awaiting_you",
-                    title: `${stageName} needs your approval`,
-                    body: `${side} - ${phase} - photos from ${profile.full_name}`,
+                    type: topUp ? "stage_photos_added" : "stage_awaiting_you",
+                    title: topUp
+                        ? `More photos on ${stageName}`
+                        : `${stageName} needs your approval`,
+                    body: topUp
+                        ? `${side} - ${phase} - added by ${profile.full_name}, nothing to re-approve`
+                        : `${side} - ${phase} - photos from ${profile.full_name}`,
                     link: `/${approver}?stage=${notionPageId}`,
                 });
 
@@ -117,8 +147,12 @@ export default async function handler(req, res) {
             }
 
             await sendPush(approver, {
-                title: `${stageName} needs your approval`,
-                body: `${side} - ${phase} - photos from ${profile.full_name}`,
+                title: topUp
+                    ? `More photos on ${stageName}`
+                    : `${stageName} needs your approval`,
+                body: topUp
+                    ? `${side} - ${phase} - added by ${profile.full_name}`
+                    : `${side} - ${phase} - photos from ${profile.full_name}`,
                 url: `/${approver}?stage=${notionPageId}`,
             });
 
