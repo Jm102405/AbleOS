@@ -7,6 +7,8 @@ type DriveFolder = {
   label: string;
   group: string;
   url: string;
+  /** Shown but not yet linked anywhere. */
+  comingSoon?: boolean;
 };
 
 /**
@@ -15,16 +17,17 @@ type DriveFolder = {
  */
 const DRIVE_FOLDERS: DriveFolder[] = [
   {
-    id: "htm-duplex-1920-27th",
-    label: "HTM Duplex - 1920 27th St.",
+    id: "able-main-brain",
+    label: "Able Main Brain",
     group: "Rehab",
-    url: "https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG",
+    comingSoon: true,
+    url: "PASTE_THE_URL_HERE",
   },
   {
-    id: "president-htm",
-    label: "President - Hometown Meadows",
-    group: "Executive",
-    url: "https://drive.google.com/drive/folders/1GntI2qxktCJEi2GAjyByBhYAJs6zf6tK",
+    id: "htm-duplex-1920-27th",
+    label: "HTM Duplex - 1920 27th St.",
+    group: "Operations",
+    url: "https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG",
   },
 ];
 
@@ -69,7 +72,7 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
         >
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
+            className="flex h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[#EEF2F6] shadow-[0_20px_40px_rgba(30,58,138,0.18)]"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
@@ -105,11 +108,20 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
                   <div className="mt-2 space-y-2">
                     {folders.map((folder) => (
                       <a
-                        className="flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)]"
-                        href={folder.url}
+                        className={`flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow ${
+                          folder.comingSoon
+                            ? "cursor-default opacity-70"
+                            : "hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)]"
+                        }`}
+                        href={folder.comingSoon ? undefined : folder.url}
                         key={folder.id}
+                        onClick={
+                          folder.comingSoon
+                            ? (event) => event.preventDefault()
+                            : undefined
+                        }
                         rel="noopener noreferrer"
-                        target="_blank"
+                        target={folder.comingSoon ? undefined : "_blank"}
                       >
                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EEF5FF] text-[#418BFF]">
                           <FolderIcon
@@ -121,6 +133,12 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
                         <span className="min-w-0 flex-1 truncate text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
                           {folder.label}
                         </span>
+
+                        {folder.comingSoon && (
+                          <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[14px] font-semibold text-[#5B6B82]">
+                            Coming soon
+                          </span>
+                        )}
                         <ExternalLinkIcon
                           aria-hidden="true"
                           className="shrink-0 text-[#93A3B8]"
