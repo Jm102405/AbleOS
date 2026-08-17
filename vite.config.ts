@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // We register the service worker ourselves in App.tsx, only on the
+      // cockpit domain — the public marketing site should never install as a PWA.
+      injectRegister: false,
       // "prompt" hands us control of when the new worker takes over, so an
       // update never interrupts a photo upload in progress.
       registerType: "prompt",

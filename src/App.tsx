@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./lib/AuthProvider";
 import { ProtectedRoute, HomeRedirect } from "./components/ProtectedRoute";
@@ -19,6 +20,15 @@ export function App() {
   const isMarketingDomain =
     typeof window !== "undefined" &&
     ["ablebuyshomes.com", "www.ablebuyshomes.com"].includes(window.location.hostname);
+
+  useEffect(() => {
+    // Only the cockpit app (and the Vercel preview fallback) should ever
+    // install as a PWA — the public marketing site must stay a plain website.
+    if (isMarketingDomain) return;
+    import("virtual:pwa-register").then(({ registerSW }) => {
+      registerSW({ immediate: true });
+    });
+  }, [isMarketingDomain]);
 
   return (
     <AuthProvider>

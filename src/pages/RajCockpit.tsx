@@ -384,7 +384,7 @@ export function RajCockpit() {
                 {/* Raj's own site. Sellers reach it by link or QR code. */}
                 <a
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-[#DCE4EE] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#418BFF] shadow-sm transition-colors hover:bg-[#F5F8FC]"
-                  href="/sell?from=cockpit"
+                  href="https://ablebuyshomes.com/?from=cockpit"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
