@@ -16,6 +16,10 @@ import { LandingPage } from "./pages/LandingPage";
 import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
+  const isMarketingDomain =
+    typeof window !== "undefined" &&
+    ["ablebuyshomes.com", "www.ablebuyshomes.com"].includes(window.location.hostname);
+
   return (
     <AuthProvider>
       <UpdateBanner />
@@ -107,7 +111,7 @@ export function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<HomeRedirect />} />
+          <Route path="/" element={isMarketingDomain ? <LandingPage /> : <HomeRedirect />} />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </BrowserRouter>
