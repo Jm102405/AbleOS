@@ -407,7 +407,7 @@ export function ColtonCockpit() {
               No photo, no next stage, no draw.
             </p>
             <p className="mt-1 text-[16px] font-medium text-white/85">
-              Upload phase-complete photos before requesting advance.
+              Upload phase-complete photos before requesting advance..
             </p>
           </div>
         </motion.section>
