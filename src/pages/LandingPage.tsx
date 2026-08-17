@@ -6,7 +6,6 @@
 // and colours from reaching any cockpit.
 
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { ArrowLeftIcon } from "lucide-react";
 import { useAuth } from "../lib/AuthProvider";
 import { Nav } from "../features/landing/components/Nav";
@@ -36,14 +35,19 @@ export function LandingPage() {
   return (
     <div className="landing min-h-screen w-full bg-brand-cream font-landing text-brand-ink selection:bg-brand-azure/25 selection:text-brand-deep">
       {/* Only Raj. A customer has no cockpit to go back to. */}
-      {profile?.cockpit === "raj" && (
-        <Link
-          className="fixed bottom-5 left-5 z-[60] inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 font-display text-[0.82rem] font-bold text-brand-ink shadow-[0_14px_32px_-12px_rgba(22,78,124,0.45)] backdrop-blur-xl transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(22,78,124,0.55)]"
-          to="/raj"
+      {profile?.cockpit === "raj" &&
+        new URLSearchParams(window.location.search).get("from") === "cockpit" && (
+        <button
+          type="button"
+          onClick={() => {
+            window.close();
+            window.location.href = "/raj";
+          }}
+          className="fixed bottom-5 left-5 z-[60] inline-flex items-center gap-2 rounded-full bg-[#0F1E33] px-4 py-2.5 text-[16px] font-semibold text-white shadow-[0_12px_30px_-12px_rgba(15,30,51,0.8)] transition-colors hover:bg-[#1B2E48]"
         >
           <ArrowLeftIcon aria-hidden="true" size={16} strokeWidth={2.5} />
           Back to Cockpit
-        </Link>
+        </button>
       )}
 
       <Nav />

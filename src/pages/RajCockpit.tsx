@@ -51,7 +51,6 @@ function formatDate(value: string) {
   });
 }
 
-
 /** Github Password(Able): Able@2026$ */
 
 /** Returns null for empty or zero cost, so "no cost" renders as nothing. */
@@ -329,7 +328,7 @@ export function RajCockpit() {
                   >
                     Pipeline
                   </Link>
-                  </nav>
+                </nav>
                 <NotificationBell />
                 <UserMenu />
               </div>
@@ -383,13 +382,14 @@ export function RajCockpit() {
                 </button>
 
                 {/* Raj's own site. Sellers reach it by link or QR code. */}
-                <Link
-                  className="flex items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-5 py-2.5 text-[16px] font-medium text-[#418BFF] transition-colors hover:bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2"
-                  to="/sell"
+                <a
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#DCE4EE] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#418BFF] shadow-sm transition-colors hover:bg-[#F5F8FC]"
+                  href="/sell?from=cockpit"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <GlobeIcon aria-hidden="true" size={15} strokeWidth={2.5} />
-                  View My Website
-                </Link>
+                  <GlobeIcon className="h-4 w-4" /> View My Website
+                </a>
               </div>
             </div>
           </motion.section>
