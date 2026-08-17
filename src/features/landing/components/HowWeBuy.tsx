@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { structures } from '../data/buyBox';
 
-const markets = ['Florida — statewide', 'Arkansas', 'Texas'];
+const markets = ['Arkansas', 'Texas'];
 
 const ease = [0.23, 1, 0.32, 1] as const;
 

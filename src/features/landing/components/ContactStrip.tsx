@@ -17,7 +17,7 @@ const items = [
 {
   Icon: MapPinIcon,
   label: 'Where We Buy',
-  body: <p className="text-base font-medium text-brand-ink">Arkansas · Florida · Texas</p>
+  body: <p className="text-base font-medium text-brand-ink">Arkansas · Texas</p>
 },
 {
   Icon: ShieldCheckIcon,

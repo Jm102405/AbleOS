@@ -62,7 +62,7 @@ export function Footer() {
                   underwriting@ablebuyshomes.com
                 </a>
               </li>
-              <li>Arkansas · Florida · Texas</li>
+              <li>Arkansas · Texas</li>
               <li>Same-day response on every deal</li>
             </ul>
           </div>
@@ -71,8 +71,8 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row">
           <p>
             © 2026 Able Buys Homes. Creative financing specialists — direct buyer of mobile home
-            parks, RV parks, multifamily, single-family portfolios, and care facilities in Arkansas,
-            Florida, and Texas.
+            parks, RV parks, multifamily, single-family portfolios, and care facilities in Arkansas
+            and Texas.
           </p>
         </div>
       </div>

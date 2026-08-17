@@ -55,7 +55,7 @@ export function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-blue opacity-70" />
               <span className="relative inline-flex h-[7px] w-[7px] rounded-full bg-brand-blue" />
             </span>
-            Creative Financing Specialists · Active in AR · FL · TX
+            Creative Financing Specialists · Active in AR · TX
           </motion.div>
 
           <motion.h1
