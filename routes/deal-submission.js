@@ -1,0 +1,190 @@
+// routes/deal-submission.js
+// The only endpoint in this system with no login behind it. A customer
+// fills the form on the website and it lands in Raj's review queue.
+//
+// POST /api/deal-submission
+//
+// Because it is public, the defences matter more than the feature:
+//   - a honeypot field no human ever fills
+//   - hard length caps on everything
+//   - a per-address rate limit, using a hash so nobody is tracked
+//   - it can only ever create an unconfirmed draft
+
+import { createClient } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
+
+/** Submissions allowed from one address per hour. */
+const RATE_LIMIT = 5;
+
+let cachedClient = null;
+
+function getClient() {
+    if (cachedClient) return cachedClient;
+
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SECRET_KEY;
+
+    if (!url) throw new Error("SUPABASE_URL is not set");
+    if (!key) throw new Error("SUPABASE_SECRET_KEY is not set");
+
+    cachedClient = createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    return cachedClient;
+}
+
+function clean(value, max) {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return trimmed.slice(0, max);
+}
+
+function num(value) {
+    if (value === null || value === undefined || String(value).trim() === "") {
+        return null;
+    }
+    const parsed = Number(String(value).replace(/[^0-9.]/g, ""));
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+/**
+ * Salted so the hash can't be reversed against a list of addresses. Reuses
+ * the intake secret rather than adding another one to rotate.
+ */
+function hashIp(req) {
+    const forwarded = req.headers["x-forwarded-for"];
+    const ip = String(forwarded || "").split(",")[0].trim() || "unknown";
+    const salt = process.env.DEAL_INTAKE_SECRET || "able-os";
+    return createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32);
+}
+
+export default async function handler(req, res) {
+    if (req.method !== "POST") {
+        res.setHeader("Allow", "POST");
+        return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Hidden field, styled off-screen on the form. A person never sees it;
+    // most bots fill everything. Answer as if it worked so they don't retry.
+    if (clean(req.body?.website, 200)) {
+        return res.status(200).json({ ok: true });
+    }
+
+    const contactName = clean(req.body?.name, 120);
+    const address = clean(req.body?.address, 300);
+    const email = clean(req.body?.email, 200);
+    const phone = clean(req.body?.phone, 40);
+
+    if (!contactName) {
+        return res.status(400).json({ error: "Please tell us your name" });
+    }
+    if (!address) {
+        return res.status(400).json({ error: "Please give the property address" });
+    }
+    if (!email && !phone) {
+        return res
+            .status(400)
+            .json({ error: "Please leave an email address or a phone number" });
+    }
+
+    try {
+        const supabase = getClient();
+        const ipHash = hashIp(req);
+
+        /* ---- Rate limit ---- */
+        const anHourAgo = new Date(Date.now() - 3600000).toISOString();
+
+        const { count } = await supabase
+            .from("pipeline_deals")
+            .select("id", { count: "exact", head: true })
+            .eq("submitter_ip_hash", ipHash)
+            .eq("origin", "website")
+            .gte("created_at", anHourAgo);
+
+        if ((count ?? 0) >= RATE_LIMIT) {
+            return res.status(429).json({
+                error: "That's a few submissions in a short time. Try again shortly.",
+            });
+        }
+
+        // Fold the dropdown answers into the notes. One readable block beats
+        // four more columns nobody queries, and nothing the seller told us
+        // gets dropped.
+        const extras = [
+            ["Submitted as", clean(req.body?.role, 60)],
+            ["Property type", clean(req.body?.assetType, 80)],
+            ["Current financing", clean(req.body?.currentFinancing, 60)],
+            ["Seller open to", clean(req.body?.sellerOpenTo, 60)],
+        ].filter(([, value]) => Boolean(value));
+
+        const typed = clean(req.body?.notes, 2000);
+
+        const composed = [
+            ...extras.map(([label, value]) => `${label}: ${value}`),
+            typed ? `\n${typed}` : null,
+        ]
+            .filter(Boolean)
+            .join("\n");
+
+        const notes = composed || null;
+        const askingPrice = num(req.body?.askingPrice);
+
+        const { data, error } = await supabase
+            .from("pipeline_deals")
+            .insert({
+                name: address,
+                address,
+                purchase_price: askingPrice,
+                notes,
+                contact_name: contactName,
+                contact_email: email,
+                contact_phone: phone,
+                submitter_ip_hash: ipHash,
+                stage: "docs_submitted",
+                origin: "website",
+                // Never confirmed from here. A stranger cannot put a deal on
+                // Raj's board - it waits in the same queue as everything else.
+                confirmed: false,
+            })
+            .select("id")
+            .single();
+
+        if (error) throw new Error(error.message);
+
+        /* ---- Tell underwriting ---- */
+        // Fired through n8n so the mailbox credentials stay in one place.
+        // A missing URL is not an error: the deal is already saved, and an
+        // email failing should never lose it.
+        const hook = process.env.N8N_DEAL_WEBHOOK_URL;
+
+        if (hook) {
+            try {
+                await fetch(hook, {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({
+                        id: data.id,
+                        name: contactName,
+                        email,
+                        phone,
+                        address,
+                        askingPrice,
+                        notes,
+                    }),
+                    signal: AbortSignal.timeout(8000),
+                });
+            } catch (err) {
+                console.error("Deal submission webhook failed:", err.message);
+            }
+        }
+
+        return res.status(201).json({ ok: true });
+    } catch (err) {
+        console.error("deal-submission error:", err);
+        return res
+            .status(500)
+            .json({ error: "Something went wrong. Please try again." });
+    }
+}

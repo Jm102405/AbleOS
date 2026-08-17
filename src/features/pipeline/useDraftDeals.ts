@@ -17,6 +17,9 @@ export type DraftDeal = {
   monthly_cash_flow: string | number | null;
   dscr: string | number | null;
   origin: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
   extracted: {
     is_deal?: boolean;
     confidence?: number;

@@ -19,6 +19,7 @@ import { NavCard } from "../components/NavCard";
 import {
   CameraIcon,
   FileTextIcon,
+  GlobeIcon,
   ShieldCheckIcon,
   TrendingUpIcon,
 } from "lucide-react";
@@ -371,14 +372,25 @@ export function RajCockpit() {
                   Vision · Acquisitions · Capital · Partnerships
                 </p>
               </div>
-              <button
-                className="flex shrink-0 items-center gap-2 rounded-xl bg-[#418BFF] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2"
-                onClick={() => setAssignOpen(true)}
-                type="button"
-              >
-                <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
-                Assign Task
-              </button>
+              <div className="flex shrink-0 flex-col items-stretch gap-2">
+                <button
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#418BFF] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#2F6FD8] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2"
+                  onClick={() => setAssignOpen(true)}
+                  type="button"
+                >
+                  <PlusIcon aria-hidden="true" size={15} strokeWidth={3} />
+                  Assign Task
+                </button>
+
+                {/* Raj's own site. Sellers reach it by link or QR code. */}
+                <Link
+                  className="flex items-center justify-center gap-2 rounded-xl border border-[#DCE4EE] px-5 py-2.5 text-[16px] font-medium text-[#418BFF] transition-colors hover:bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#418BFF] focus:ring-offset-2"
+                  to="/sell"
+                >
+                  <GlobeIcon aria-hidden="true" size={15} strokeWidth={2.5} />
+                  View My Website
+                </Link>
+              </div>
             </div>
           </motion.section>
           <motion.section

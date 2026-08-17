@@ -12,6 +12,7 @@ import { KarenCockpit } from "./pages/KarenCockpit";
 import { RexCockpit } from "./pages/RexCockpit";
 import { ElleryCockpit } from "./pages/ElleryCockpit";
 import { CorneliusCockpit } from "./pages/CorneliusCockpit";
+import { LandingPage } from "./pages/LandingPage";
 import { PipelineBoard } from "./pages/PipelineBoard";
 
 export function App() {
@@ -20,6 +21,8 @@ export function App() {
       <UpdateBanner />
       <BrowserRouter>
         <Routes>
+          {/* Public. No ProtectedRoute - a customer must never meet a login. */}
+          <Route path="/sell" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
 
           <Route

@@ -10,6 +10,7 @@ import approveStage from "../routes/approve-stage.js";
 import criticalDates from "../routes/critical-dates.js";
 import dailyTasks from "../routes/daily-tasks.js";
 import dealIntake from "../routes/deal-intake.js";
+import dealSubmission from "../routes/deal-submission.js";
 import deals from "../routes/deals.js";
 import documents from "../routes/documents.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
@@ -35,6 +36,7 @@ const ROUTES = {
     "critical-dates": criticalDates,
     "daily-tasks": dailyTasks,
     "deal-intake": dealIntake,
+    "deal-submission": dealSubmission,
     deals,
     documents,
     "drive-upload-url": driveUploadUrl,

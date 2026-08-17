@@ -228,7 +228,9 @@ export function DraftDealsCard({
                               {draft.email_subject || draft.name}
                             </span>
                             <span className="mt-0.5 block truncate text-[16px] text-[#5A6B85]">
-                              {draft.email_from || "Added by hand"}
+                              {draft.origin === "website"
+                                ? `${draft.contact_name ?? "Someone"} · from the website`
+                                : draft.email_from || "Added by hand"}
                             </span>
                             <span className="mt-1.5 block text-[14px] text-[#7A8AA3]">
                               {new Date(
@@ -255,6 +257,55 @@ export function DraftDealsCard({
                         monthly_cash_flow: form.monthlyCashFlow,
                       }}
                     />
+
+                    {(active.contact_name ||
+                      active.contact_email ||
+                      active.contact_phone) && (
+                      <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                        <div className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Who sent it
+                        </div>
+
+                        <dl className="mt-2 space-y-2 text-[16px]">
+                          {active.contact_name && (
+                            <div className="flex justify-between gap-4">
+                              <dt className="text-[#7A8AA3]">Name</dt>
+                              <dd className="text-right font-medium text-[#0F1E33]">
+                                {active.contact_name}
+                              </dd>
+                            </div>
+                          )}
+
+                          {active.contact_phone && (
+                            <div className="flex justify-between gap-4">
+                              <dt className="text-[#7A8AA3]">Phone</dt>
+                              <dd className="text-right">
+                                <a
+                                  className="font-medium text-[#418BFF] underline"
+                                  href={`tel:${active.contact_phone}`}
+                                >
+                                  {active.contact_phone}
+                                </a>
+                              </dd>
+                            </div>
+                          )}
+
+                          {active.contact_email && (
+                            <div className="flex justify-between gap-4">
+                              <dt className="text-[#7A8AA3]">Email</dt>
+                              <dd className="min-w-0 text-right">
+                                <a
+                                  className="break-words font-medium text-[#418BFF] underline"
+                                  href={`mailto:${active.contact_email}`}
+                                >
+                                  {active.contact_email}
+                                </a>
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+                      </div>
+                    )}
 
                     {active.extracted?.reasoning && (
                       <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">

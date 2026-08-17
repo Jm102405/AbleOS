@@ -1,5 +1,11 @@
 import React from "react";
-import { CalendarIcon, ExternalLinkIcon, FolderIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  CalendarIcon,
+  ExternalLinkIcon,
+  FolderIcon,
+  GlobeIcon,
+} from "lucide-react";
 
 const CALENDAR_URL = "https://calendar.google.com/calendar/r";
 
@@ -41,12 +47,15 @@ type QuickTilesProps = {
   onOpenDrive: () => void;
   driveSubtitle?: string;
   calendarSubtitle?: string;
+  /** Raj only. Nobody else has a website to look at. */
+  showWebsite?: boolean;
 };
 
 export function QuickTiles({
   onOpenDrive,
   driveSubtitle = "Deal documents",
   calendarSubtitle = "Open calendar",
+  showWebsite = false,
 }: QuickTilesProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
@@ -71,6 +80,16 @@ export function QuickTiles({
           title="Google Calendar"
         />
       </a>
+
+      {showWebsite && (
+        <Link className={TILE_CLASS} to="/sell">
+          <TileContent
+            icon={<GlobeIcon aria-hidden="true" size={20} strokeWidth={2.25} />}
+            subtitle="Where sellers submit deals"
+            title="View My Website"
+          />
+        </Link>
+      )}
     </div>
   );
 }
