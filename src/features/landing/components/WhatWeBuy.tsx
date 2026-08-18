@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   CaravanIcon,
@@ -6,12 +5,12 @@ import {
   Building2Icon,
   HousePlusIcon,
   HomeIcon,
-  HeartPulseIcon } from
+  HeartIcon } from
 'lucide-react';
 import { buyBox } from '../data/buyBox';
 import { ArrowButton } from './ArrowButton';
 
-const icons = [TruckIcon, CaravanIcon, Building2Icon, HousePlusIcon, HomeIcon, HeartPulseIcon];
+const icons = [TruckIcon, CaravanIcon, Building2Icon, HousePlusIcon, HomeIcon, HeartIcon];
 
 const ease = [0.23, 1, 0.32, 1] as const;
 
