@@ -4,9 +4,11 @@ type KpiTileProps = {
   tone: "primary" | "urgent" | "neutral";
   /** When set, the tile becomes a link that opens in a new tab. */
   href?: string;
+  /** When set, the tile becomes a button that opens something in-app. */
+  onClick?: () => void;
 };
 
-export function KpiTile({ label, value, tone, href }: KpiTileProps) {
+export function KpiTile({ label, value, tone, href, onClick }: KpiTileProps) {
   const valueStyle = {
     primary: "text-[#418BFF]",
     urgent: "text-[#D95717]",
@@ -15,6 +17,9 @@ export function KpiTile({ label, value, tone, href }: KpiTileProps) {
 
   const baseClasses =
     "block rounded-2xl border border-[#DCE4EE] bg-white px-4 py-4 shadow-[0_4px_12px_rgba(30,58,138,0.045)]";
+
+  const interactiveClasses =
+    "cursor-pointer transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)] focus:outline-none focus:ring-2 focus:ring-[#418BFF]";
 
   const content = (
     <>
@@ -29,10 +34,23 @@ export function KpiTile({ label, value, tone, href }: KpiTileProps) {
     </>
   );
 
+  // In-app taps win over external links, so a tile never does both.
+  if (onClick) {
+    return (
+      <button
+        className={`${baseClasses} ${interactiveClasses} w-full text-left`}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
+
   if (href) {
     return (
       <a
-        className={`${baseClasses} cursor-pointer transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)]`}
+        className={`${baseClasses} ${interactiveClasses}`}
         href={href}
         rel="noopener noreferrer"
         target="_blank"

@@ -2,7 +2,7 @@
 // Ellery's pipeline. A document sitting in one stage for more than five
 // days is the thing that costs money, so that's what the card counts.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FileTextIcon, PlusIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
@@ -57,10 +57,21 @@ function isStuck(doc: AbleDocument) {
 export function DocumentsCard({
   canMove = true,
   row = false,
+  open: openProp,
+  onOpenChange,
+  onCountChange,
+  initialFilter = "open",
 }: {
   canMove?: boolean;
   /** Render as a row inside a shared container rather than its own card. */
   row?: boolean;
+  /** Pass this to drive the modal from outside, e.g. from a KPI tile. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Reports how many documents exist, so a KPI can show the number. */
+  onCountChange?: (count: number) => void;
+  /** Which view the modal starts on. "all" shows finished documents too. */
+  initialFilter?: Filter;
 }) {
   const { documents, loading, error, moveStage, requestDocument } =
     useDocuments();
@@ -69,8 +80,24 @@ export function DocumentsCard({
   // which is exactly the list each should be choosing from.
   const { deals } = useDeals();
 
-  const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState<Filter>("open");
+  useEffect(() => {
+    if (!loading) onCountChange?.(documents.length);
+    // onCountChange is left out on purpose: an inline callback would
+    // re-fire this every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, documents.length]);
+
+  // Uncontrolled by default. When `open` is passed, the parent owns it and
+  // the row below still opens the same modal.
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+
+  function setOpen(next: boolean) {
+    setOwnOpen(next);
+    onOpenChange?.(next);
+  }
+
+  const [filter, setFilter] = useState<Filter>(initialFilter);
   const [active, setActive] = useState<AbleDocument | null>(null);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);

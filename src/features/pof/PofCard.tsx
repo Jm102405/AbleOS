@@ -3,7 +3,7 @@
 // letters. Raj additionally sets the amount, entity and close date the
 // letter is written against - that's what canSetDetails switches on.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BanknoteIcon, ExternalLinkIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
@@ -23,14 +23,30 @@ function waitingDays(since: string | null) {
 export function PofCard({
   canSetDetails = false,
   row = false,
+  open: openProp,
+  onOpenChange,
+  onCountChange,
 }: {
   canSetDetails?: boolean;
   /** Render as a row inside a shared container rather than its own card. */
   row?: boolean;
+  /** Pass this to drive the modal from outside, e.g. from a KPI tile. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Reports how many deals are still waiting, so a KPI can show the number. */
+  onCountChange?: (count: number) => void;
 }) {
   const { deals, loading, error, setDetails, recordIssued } = usePof();
 
-  const [open, setOpen] = useState(false);
+  // Uncontrolled by default. When `open` is passed, the parent owns it and
+  // the row below still opens the same modal.
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+
+  function setOpen(next: boolean) {
+    setOwnOpen(next);
+    onOpenChange?.(next);
+  }
   const [active, setActive] = useState<PofDeal | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -47,6 +63,13 @@ export function PofCard({
     () => deals.filter((d) => !d.pofIssuedAt).length,
     [deals],
   );
+
+  useEffect(() => {
+    if (!loading) onCountChange?.(waiting);
+    // onCountChange is left out on purpose: an inline callback would
+    // re-fire this every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, waiting]);
 
   function openDeal(deal: PofDeal) {
     setActive(deal);

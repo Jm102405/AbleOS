@@ -6,7 +6,8 @@ import { MobileScreenShell } from "../components/MobileScreenShell";
 import { UserMenu } from "../components/UserMenu";
 import { NavCard } from "../components/NavCard";
 import { FilterMenu } from "../components/FilterMenu";
-import { LeadsCard } from "../features/leads/LeadsCard";
+// Leads are hidden for now — uncomment this and the card below to restore.
+// import { LeadsCard } from "../features/leads/LeadsCard";
 import { DraftDealsCard } from "../features/pipeline/DraftDealsCard";
 import { DocumentsCard } from "../features/documents/DocumentsCard";
 import { PofCard } from "../features/pof/PofCard";
@@ -32,6 +33,12 @@ export function PipelineBoard() {
     React.useState<DealStage>("docs_submitted");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = React.useState(false);
+  const [pofOpen, setPofOpen] = React.useState(false);
+  const [docsOpen, setDocsOpen] = React.useState(false);
+
+  // The cards below own the data, so they hand their counts up for the tiles.
+  const [pofWaiting, setPofWaiting] = React.useState<number | null>(null);
+  const [docCount, setDocCount] = React.useState<number | null>(null);
 
   // A fixed list, not one derived from the deals. Claude's extracted
   // "source" is whatever the email happened to say - a sender name, a
@@ -172,27 +179,25 @@ export function PipelineBoard() {
     >
       <section
         aria-label="Pipeline metrics"
-        className="grid grid-cols-2 gap-3 pt-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3"
       >
         <KpiTile
           label="Deals in pipe"
+          onClick={() => setBrowserOpen(true)}
           tone="primary"
           value={loading ? "..." : String(metrics.active)}
         />
         <KpiTile
-          label="In review"
-          tone={metrics.inReview > 0 ? "urgent" : "neutral"}
-          value={loading ? "..." : String(metrics.inReview)}
+          label="Proof of funds"
+          onClick={() => setPofOpen(true)}
+          tone={pofWaiting && pofWaiting > 0 ? "urgent" : "neutral"}
+          value={pofWaiting === null ? "..." : String(pofWaiting)}
         />
         <KpiTile
-          label="Avg days in stage"
+          label="Documents"
+          onClick={() => setDocsOpen(true)}
           tone="neutral"
-          value={loading ? "..." : metrics.avgDays}
-        />
-        <KpiTile
-          label="Stalled 4+ days"
-          tone={metrics.stalled > 0 ? "urgent" : "neutral"}
-          value={loading ? "..." : String(metrics.stalled)}
+          value={docCount === null ? "..." : String(docCount)}
         />
       </section>
 
@@ -228,11 +233,25 @@ export function PipelineBoard() {
         <div className="mt-3 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_5px_14px_rgba(30,58,138,0.055)]">
           <DraftDealsCard onConfirmed={refresh} />
 
-          <LeadsCard divider />
+          {/* Hidden for now — kept here so it's one line to bring back. */}
+          {/* <LeadsCard divider /> */}
 
-          <PofCard row canSetDetails />
+          <PofCard
+            canSetDetails
+            onCountChange={setPofWaiting}
+            onOpenChange={setPofOpen}
+            open={pofOpen}
+            row
+          />
 
-          <DocumentsCard row canMove={false} />
+          <DocumentsCard
+            canMove={false}
+            initialFilter="all"
+            onCountChange={setDocCount}
+            onOpenChange={setDocsOpen}
+            open={docsOpen}
+            row
+          />
 
           <NavCard
             icon={<LayersIcon aria-hidden="true" size={17} strokeWidth={2.5} />}
