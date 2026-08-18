@@ -183,6 +183,29 @@ export function DailyTaskDetailModal({
                   {fullTime(task.created_at)}
                 </p>
 
+                {task.due_on && (
+                  <>
+                    <p className="mt-3 text-[16px] font-normal text-[#8291A5]">
+                      Due
+                    </p>
+                    <p
+                      className={`mt-0.5 text-[16px] font-medium ${
+                        !task.completed_at &&
+                        task.due_on < new Date().toISOString().slice(0, 10)
+                          ? "text-[#DC2626]"
+                          : "text-[#1A1A2E]"
+                      }`}
+                    >
+                      {new Date(
+                        `${task.due_on}T00:00:00`,
+                      ).toLocaleDateString(undefined, {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </>
+                )}
                 {task.completed_at && (
                   <>
                     <p className="mt-3 text-[16px] font-normal text-[#8291A5]">

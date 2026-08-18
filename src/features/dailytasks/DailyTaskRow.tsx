@@ -1,5 +1,12 @@
 import { CalendarIcon, ChevronRightIcon, PaperclipIcon } from "lucide-react";
 import type { DailyTask } from "./useDailyTasks";
+import { describeDue } from "./dueDate";
+/** Today as YYYY-MM-DD in the viewer's timezone. */
+function todayYmd() {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
 
 /** Colour by state. Green only once the work is actually finished. */
 type Tone = { bar: string; chip: string; label: string };
@@ -56,6 +63,9 @@ export function DailyTaskRow({ task, onOpen }: DailyTaskRowProps) {
   const dateLabel = task.completed_at
     ? `Done ${formatDate(task.completed_at)}`
     : `Started ${formatDate(task.created_at)}`;
+  // A finished task can't be late, so never flag it red.
+  const due =
+    task.state === "completed" ? null : describeDue(task.due_on, todayYmd());
 
   return (
     <button
@@ -100,6 +110,17 @@ export function DailyTaskRow({ task, onOpen }: DailyTaskRowProps) {
           {task.priority === "Urgent" && (
             <span className="rounded-full bg-[#DC2626] px-2.5 py-0.5 text-[14px] font-medium text-white">
               Urgent
+            </span>
+          )}
+          {due && (
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-[14px] font-medium ${
+                due.overdue
+                  ? "bg-[#FEE2E2] text-[#DC2626]"
+                  : "bg-[#F1F5F9] text-[#64748B]"
+              }`}
+            >
+              {due.label}
             </span>
           )}
         </span>

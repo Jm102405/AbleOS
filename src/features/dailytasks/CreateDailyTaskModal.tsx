@@ -12,6 +12,7 @@ type CreateDailyTaskModalProps = {
     title: string;
     description: string;
     priority: DailyTaskPriority;
+    due_on?: string;
     state?: "draft";
   }) => Promise<unknown>;
 };
@@ -25,6 +26,7 @@ export function CreateDailyTaskModal({
   const [description, setDescription] = React.useState("");
   const [priority, setPriority] =
     React.useState<DailyTaskPriority>("Not urgent");
+  const [dueOn, setDueOn] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState("");
 
@@ -33,6 +35,7 @@ export function CreateDailyTaskModal({
     setTitle("");
     setDescription("");
     setPriority("Not urgent");
+    setDueOn("");
     setError("");
   }, [open]);
 
@@ -62,6 +65,7 @@ export function CreateDailyTaskModal({
         title: cleanTitle,
         description: description.trim(),
         priority,
+        ...(dueOn ? { due_on: dueOn } : {}),
         ...(asDraft ? { state: "draft" as const } : {}),
       });
       onClose();
@@ -181,6 +185,19 @@ export function CreateDailyTaskModal({
                 </div>
               </div>
 
+              <label className="block" htmlFor="daily-task-due">
+                <span className="text-[16px] font-semibold tracking-[0.08em] text-[#8291A5]">
+                  Due date <span className="font-normal">(optional)</span>
+                </span>
+                <input
+                  className="mt-1.5 w-full rounded-xl border border-[#DCE4EE] bg-white px-3 py-2.5 text-[16px] font-medium text-[#1A1A2E] outline-none transition-colors focus:border-[#418BFF]"
+                  disabled={saving}
+                  id="daily-task-due"
+                  onChange={(event) => setDueOn(event.target.value)}
+                  type="date"
+                  value={dueOn}
+                />
+              </label>
               <p className="rounded-xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[16px] font-medium leading-snug text-[#8291A5]">
                 Starting it tells Raj and dates it automatically. A draft stays
                 here until you start it.

@@ -26,6 +26,8 @@ export type DailyTask = {
   completed_at: string | null;
   /** Date in the business timezone, so everyone agrees which day it was. */
   completed_on: string | null;
+  /** Date the task is due, in the business timezone. Null means no deadline. */
+  due_on: string | null;
   files: DailyTaskFile[];
 };
 
@@ -92,6 +94,8 @@ export function useDailyTasks({ owner }: Options = {}) {
       title: string;
       description: string;
       priority: DailyTaskPriority;
+      /** YYYY-MM-DD. Omit for no deadline. */
+      due_on?: string;
       /** Omit to start it straight away. */
       state?: "draft";
     }) => {

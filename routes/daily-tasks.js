@@ -187,6 +187,9 @@ export default async function handler(req, res) {
                 : null;
 
             const isDraft = req.body?.state === "draft";
+            // Expect YYYY-MM-DD. Anything else is stored as no deadline.
+            const dueRaw = cleanText(req.body?.due_on, 10);
+            const dueOn = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw || "") ? dueRaw : null;
             const priority = req.body?.priority || "Not urgent";
             if (!PRIORITIES.includes(priority)) {
                 return res
@@ -201,6 +204,7 @@ export default async function handler(req, res) {
                     title,
                     description,
                     priority,
+                    due_on: dueOn,
                     state: isDraft ? "draft" : "in_progress",
                     created_on: businessDate(),
                 })
@@ -244,10 +248,10 @@ export default async function handler(req, res) {
             const action = req.body?.action;
 
             if (!id) return res.status(400).json({ error: "id is required" });
-            if (!["complete", "reopen", "publish"].includes(action)) {
+            if (!["complete", "reopen", "publish", "due"].includes(action)) {
                 return res
                     .status(400)
-                    .json({ error: "action must be complete, reopen or publish" });
+                    .json({ error: "action must be complete, reopen, publish or due" });
             }
 
             const { data: existing, error: findError } = await supabase
@@ -272,8 +276,12 @@ export default async function handler(req, res) {
             const now = new Date();
             const note = req.body?.note ? cleanText(req.body.note, 2000) : null;
 
+            const dueRaw = cleanText(req.body?.due_on, 10);
+            const dueOn = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw || "") ? dueRaw : null;
             const patch =
-                action === "complete"
+                action === "due"
+                    ? { due_on: dueOn, updated_at: now.toISOString() }
+                    : action === "complete"
                     ? {
                         state: "completed",
                         completed_at: now.toISOString(),
