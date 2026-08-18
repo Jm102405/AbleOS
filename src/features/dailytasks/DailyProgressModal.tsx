@@ -31,6 +31,9 @@ type DailyProgressModalProps = {
   onOpenAssigned?: (task: Task) => void;
   commentCounts?: Record<string, number>;
   waitingLabel?: string;
+  /** Preset view/date-range when opened programmatically (e.g. from a KPI tile). */
+  initialView?: View;
+  initialMode?: Mode;
 };
 
 /**
@@ -96,6 +99,8 @@ export function DailyProgressModal({
   onOpenAssigned,
   commentCounts = {},
   waitingLabel,
+  initialView,
+  initialMode,
 }: DailyProgressModalProps) {
   const [view, setView] = React.useState<View>("in_progress");
   const [dailyId, setDailyId] = React.useState<string | null>(null);
@@ -105,12 +110,12 @@ export function DailyProgressModal({
 
   React.useEffect(() => {
     if (!open) return;
-    setView("in_progress");
-    setMode("today");
+    setView(initialView ?? "in_progress");
+    setMode(initialMode ?? "today");
     setDate(today);
     setDailyId(null);
     setAssignedId(null);
-  }, [open, today]);
+  }, [open, today, initialView, initialMode]);
 
   // Read from the live lists so the sheets stay current.
   const dailyDetail = tasks.find((task) => task.id === dailyId) ?? null;

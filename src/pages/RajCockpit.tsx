@@ -86,6 +86,12 @@ export function RajCockpit() {
   /* Dane's own daily work. Read-only from here. */
   const daneDaily = useDailyTasks({ owner: "dane" });
   const [progressOpen, setProgressOpen] = React.useState(false);
+  const [progressInitialView, setProgressInitialView] = React.useState<
+    "in_progress" | "completed" | "assigned" | undefined
+  >(undefined);
+  const [progressInitialMode, setProgressInitialMode] = React.useState<
+    "today" | "this_week" | "last_week" | "all" | "date" | undefined
+  >(undefined);
   const [driveOpen, setDriveOpen] = React.useState(false);
   const [approvingTask, setApprovingTask] = React.useState<string | null>(null);
   const [focusTaskId, setFocusTaskId] = React.useState<string | null>(null);
@@ -200,6 +206,8 @@ export function RajCockpit() {
     }
 
     if (target.daneTask) {
+      setProgressInitialView(undefined);
+      setProgressInitialMode(undefined);
       setProgressOpen(true);
       clear();
       return;
@@ -406,16 +414,26 @@ export function RajCockpit() {
             <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
               <StatCard
                 label="Gates awaiting you"
+                onClick={() => setGatesOpen(true)}
                 tone={gateCount ? "urgent" : "primary"}
                 value={gateCount !== null ? String(gateCount) : "..."}
               />
               <StatCard
                 label="Approval requests"
+                onClick={() => {
+                  setOrderFilter("Pending");
+                  setOrdersOpen(true);
+                }}
                 tone={orders.length ? "urgent" : "primary"}
                 value={ordersLoading ? "..." : String(pendingOrders.length)}
               />
               <StatCard
                 label="Dane's progress"
+                onClick={() => {
+                  setProgressInitialView("completed");
+                  setProgressInitialMode("all");
+                  setProgressOpen(true);
+                }}
                 tone="primary"
                 value={
                   daneDaily.loading || !tasksLoaded
@@ -431,6 +449,7 @@ export function RajCockpit() {
               />
               <StatCard
                 label="Gates approved"
+                onClick={() => setApprovedOpen(true)}
                 tone="success"
                 value={approvedCount !== null ? String(approvedCount) : "..."}
               />
@@ -585,7 +604,11 @@ export function RajCockpit() {
             <NavCard
               count={daneDaily.loading ? null : daneDaily.inProgress.length}
               icon={<TrendingUpIcon size={20} strokeWidth={2.25} />}
-              onClick={() => setProgressOpen(true)}
+              onClick={() => {
+                setProgressInitialView(undefined);
+                setProgressInitialMode(undefined);
+                setProgressOpen(true);
+              }}
               subtitle="What Dane is working on, and what he finished"
               title="Dane's Progress"
               tone="blue"
@@ -602,6 +625,8 @@ export function RajCockpit() {
               (task) => task.assigned_to === "dane" && task.approved_at,
             )}
             commentCounts={commentCounts}
+            initialMode={progressInitialMode}
+            initialView={progressInitialView}
             loading={daneDaily.loading}
             onClose={() => setProgressOpen(false)}
             onOpenAssigned={(task) => {

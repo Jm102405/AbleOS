@@ -321,16 +321,22 @@ export function DaneCockpit() {
           <div className="mt-1 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
             <InsightCard
               label="Tasks from Raj"
+              onClick={() => setTasksOpen(true)}
               tone="queued"
               value={tasksLoading ? "..." : String(openTaskCount)}
             />
             <InsightCard
               label="My tasks"
+              onClick={() => {
+                setDailyFilter("in_progress");
+                setDailyOpen(true);
+              }}
               tone="yellow"
               value={daily.loading ? "..." : String(daily.inProgress.length)}
             />
             <InsightCard
               label="Orders to Raj"
+              onClick={() => setOrdersOpen(true)}
               tone="critical"
               value={ordersLoading ? "..." : String(orders.length)}
             />
@@ -460,7 +466,10 @@ export function DaneCockpit() {
                 }
                 count={daily.loading ? null : daily.inProgress.length}
                 icon={<ListChecksIcon size={17} strokeWidth={2.5} />}
-                onClick={() => setDailyOpen(true)}
+                onClick={() => {
+                  setDailyFilter("in_progress");
+                  setDailyOpen(true);
+                }}
                 subtitle={`${daily.drafts.length} drafts · ${daily.completed.length} completed`}
                 title="My tasks"
                 tone="yellow"
@@ -752,12 +761,13 @@ type InsightCardProps = {
   label: string;
   value?: string;
   tone: "critical" | "queued" | "success";
+  onClick?: () => void;
 };
-
 function InsightCard({
   label,
   value,
   tone,
+  onClick,
 }: Omit<InsightCardProps, "tone"> & {
   tone: "critical" | "queued" | "success" | "yellow";
 }) {
@@ -767,9 +777,10 @@ function InsightCard({
     success: "text-[#16A34A] bg-[#EAF8EF]",
     yellow: "text-[#CA8A04] bg-[#FEF9C3]",
   };
-
-  return (
-    <article className="min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 text-center shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5">
+  const baseClasses =
+    "min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 text-center shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5";
+  const content = (
+    <>
       <p
         className={`inline-flex items-center justify-center rounded-lg px-2 py-1 text-[24px] font-semibold leading-none tracking-[-0.06em] sm:text-[27px] ${tones[tone]}`}
       >
@@ -782,10 +793,21 @@ function InsightCard({
       <p className="mt-3 text-[14px] font-semibold leading-tight tracking-[0.06em] text-[#718096]">
         {label}
       </p>
-    </article>
+    </>
   );
+  if (onClick) {
+    return (
+      <button
+        className={`${baseClasses} block w-full cursor-pointer transition-shadow hover:shadow-[0_6px_16px_rgba(30,58,138,0.09)]`}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
+  return <article className={baseClasses}>{content}</article>;
 }
-
 type SectionHeadingProps = {
   id: string;
   children: React.ReactNode;
