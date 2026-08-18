@@ -130,7 +130,27 @@ export default async function handler(req, res) {
 
         const notes = composed || null;
         const askingPrice = num(req.body?.askingPrice);
-
+        /* ---- Documents are required ---- */
+        // Trust only rows this server issued: the upload endpoint recorded them.
+        // Unclaimed means deal_id is still null, so a token cannot be replayed
+        // to attach someone else's files to a second deal.
+        const uploadToken = clean(req.body?.uploadToken, 40);
+        if (!uploadToken) {
+            return res
+                .status(400)
+                .json({ error: "Attach at least one document." });
+        }
+        const { data: pendingFiles, error: filesError } = await supabase
+            .from("deal_submission_files")
+            .select("id")
+            .eq("submission_token", uploadToken)
+            .is("deal_id", null);
+        if (filesError) throw new Error(filesError.message);
+        if (!pendingFiles || pendingFiles.length === 0) {
+            return res
+                .status(400)
+                .json({ error: "Attach at least one document." });
+        }
         const { data, error } = await supabase
             .from("pipeline_deals")
             .insert({
@@ -152,7 +172,17 @@ export default async function handler(req, res) {
             .single();
 
         if (error) throw new Error(error.message);
-
+        /* ---- Claim the uploaded files ---- */
+        // The deal is saved either way; a failure here leaves the files
+        // orphaned rather than losing the lead.
+        const { error: claimError } = await supabase
+            .from("deal_submission_files")
+            .update({ deal_id: data.id })
+            .eq("submission_token", uploadToken)
+            .is("deal_id", null);
+        if (claimError) {
+            console.error("Could not attach files to the deal:", claimError);
+        }
         /* ---- Tell underwriting ---- */
         // Fired through n8n so the mailbox credentials stay in one place.
         // A missing URL is not an error: the deal is already saved, and an

@@ -11,6 +11,7 @@ import criticalDates from "../routes/critical-dates.js";
 import dailyTasks from "../routes/daily-tasks.js";
 import dealIntake from "../routes/deal-intake.js";
 import dealSubmission from "../routes/deal-submission.js";
+import dealUploadUrl from "../routes/deal-upload-url.js";
 import deals from "../routes/deals.js";
 import documents from "../routes/documents.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
@@ -37,6 +38,7 @@ const ROUTES = {
     "daily-tasks": dailyTasks,
     "deal-intake": dealIntake,
     "deal-submission": dealSubmission,
+    "deal-upload-url": dealUploadUrl,
     deals,
     documents,
     "drive-upload-url": driveUploadUrl,
