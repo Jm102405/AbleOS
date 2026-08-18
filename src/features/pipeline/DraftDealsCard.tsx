@@ -2,13 +2,51 @@
 // The inbox queue. Each email is a draft until someone reads it, fills in
 // what the email didn't say, and confirms it onto the board.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "../../lib/apiFetch";
 import { AnimatePresence, motion } from "framer-motion";
 import { InboxIcon, XIcon } from "lucide-react";
 import { NavCard } from "../../components/NavCard";
 import { BuyBoxBadge } from "./BuyBoxBadge";
 import { DEAL_STAGES, STAGE_LABELS, type DealStage } from "./types";
 import { useDraftDeals, type DraftDeal } from "./useDraftDeals";
+
+type DealFile = {
+  id: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  url: string | null;
+};
+
+/** Signed links expire, so they are fetched fresh each time a draft opens. */
+function useDealFiles(dealId: string | null) {
+  const [files, setFiles] = useState<DealFile[]>([]);
+  useEffect(() => {
+    if (!dealId) {
+      setFiles([]);
+      return;
+    }
+    let cancelled = false;
+    apiFetch(`/api/deal-files?deal_id=${encodeURIComponent(dealId)}`)
+      .then((res) => (res.ok ? res.json() : { files: [] }))
+      .then((body) => {
+        if (!cancelled) setFiles(body?.files ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setFiles([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dealId]);
+  return files;
+}
+
+function prettySize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 type Form = {
   name: string;
@@ -77,6 +115,7 @@ export function DraftDealsCard({
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const dealFiles = useDealFiles(active?.id ?? null);
 
   function openDraft(draft: DraftDeal) {
     setActive(draft);
@@ -333,6 +372,40 @@ export function DraftDealsCard({
                         <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-line text-[16px] leading-relaxed text-[#3A4A62]">
                           {active.email_excerpt}
                         </p>
+                      </div>
+                    )}
+
+                    {dealFiles.length > 0 && (
+                      <div className="rounded-2xl border border-[#DCE4EE] bg-white p-4">
+                        <div className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                          Attachments
+                        </div>
+                        <ul className="mt-2 space-y-2">
+                          {dealFiles.map((file) => (
+                            <li
+                              key={file.id}
+                              className="flex items-center justify-between gap-3"
+                            >
+                              <span className="min-w-0 flex-1 truncate text-[16px] text-[#0F1E33]">
+                                {file.url ? (
+                                  <a
+                                    className="font-medium text-[#418BFF] underline"
+                                    href={file.url}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                  >
+                                    {file.file_name}
+                                  </a>
+                                ) : (
+                                  file.file_name
+                                )}
+                              </span>
+                              <span className="shrink-0 text-[14px] text-[#7A8AA3]">
+                                {prettySize(file.size_bytes)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 
