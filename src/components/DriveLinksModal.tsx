@@ -16,18 +16,30 @@ type DriveFolder = {
  * by Drive sharing, not by hiding the URL.
  */
 const DRIVE_FOLDERS: DriveFolder[] = [
+  // Able Builds rehab at Hometown Meadows, Nashville AR. Colton/JJ on Side A,
+  // Jeremiah/Zo on Side B. This is the active rehab, so it sits under Rehab.
   {
-    id: "able-main-brain",
-    label: "Able Main Brain",
+    id: "htm-duplex",
+    label: "HTM Duplex (Hometown Meadows)",
     group: "Rehab",
+    url: "https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG",
+  },
+  // Lubbock duplex under AHTX. Fully leased, $1,650/side, no rehab work - a
+  // different property entirely from HTM, which is why it has its own folder.
+  {
+    id: "1920-27th-st",
+    label: "1920 27th St Duplex · AHTX",
+    group: "Operations",
     comingSoon: true,
     url: "PASTE_THE_URL_HERE",
   },
+  // The knowledge layer, not a property, so it belongs in neither section.
   {
-    id: "htm-duplex-1920-27th",
-    label: "HTM Duplex - 1920 27th St.",
-    group: "Operations",
-    url: "https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG",
+    id: "able-main-brain",
+    label: "Able Main Brain",
+    group: "Knowledge",
+    comingSoon: true,
+    url: "PASTE_THE_URL_HERE",
   },
 ];
 
