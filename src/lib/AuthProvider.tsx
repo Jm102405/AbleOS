@@ -39,11 +39,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   const loadProfile = React.useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, cockpit, is_admin")
-      .eq("id", userId)
-      .single();
+    function fetchOnce() {
+      return supabase
+        .from("profiles")
+        .select("id, full_name, cockpit, is_admin")
+        .eq("id", userId)
+        .single();
+    }
+
+    let { data, error } = await fetchOnce();
+
+    // A stale access token surfaces here as a JWT decode error, which is not
+    // the same thing as "this account has no cockpit". Refresh and retry once
+    // before showing the user a dead end.
+    const tokenProblem =
+      error?.code === "PGRST301" || /jwt/i.test(error?.message ?? "");
+
+    if (tokenProblem) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (refreshed.session) ({ data, error } = await fetchOnce());
+    }
 
     if (error) {
       console.error("Failed to load profile:", error);
