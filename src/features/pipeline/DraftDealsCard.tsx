@@ -437,6 +437,8 @@ export function DraftDealsCard({
                           <option value="rex">Rex</option>
                           <option value="chirag">Chirag</option>
                           <option value="direct">Direct / inbound</option>
+                          <option value="direct_message">Direct Message</option>
+                          <option value="website">From the Website</option>
                           <option value="other">Other</option>
                         </select>
                       </label>

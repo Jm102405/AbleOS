@@ -164,6 +164,9 @@ export default async function handler(req, res) {
                 submitter_ip_hash: ipHash,
                 stage: "docs_submitted",
                 origin: "website",
+                // Pre-filled so nobody has to attribute it by hand - the form
+                // is the source, and the review screen can still change it.
+                bird_dog: "website",
                 // Never confirmed from here. A stranger cannot put a deal on
                 // Raj's board - it waits in the same queue as everything else.
                 confirmed: false,

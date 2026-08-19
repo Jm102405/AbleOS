@@ -49,6 +49,8 @@ export function PipelineBoard() {
       { value: "rex", label: "Rex" },
       { value: "chirag", label: "Chirag" },
       { value: "direct", label: "Direct / inbound" },
+      { value: "direct_message", label: "Direct Message" },
+      { value: "website", label: "From the Website" },
       { value: "other", label: "Other" },
       { value: "none", label: "Not set" },
     ],
