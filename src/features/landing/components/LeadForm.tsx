@@ -399,7 +399,7 @@ export function LeadForm({
                 />
                 <p className="text-[0.8rem] text-brand-ink/55">
                   Rent roll, T12, OM or photos. Images and PDFs, up to 15 MB
-                  each.
+                  each. Note it above and we&apos;ll send a secure upload link.
                 </p>
                 {files.length > 0 && (
                   <ul className="mt-0.5 space-y-1">
