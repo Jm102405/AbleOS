@@ -122,6 +122,9 @@ export function DaneCockpit() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [dailyDetailId, setDailyDetailId] = React.useState<string | null>(null);
   const [dailyFilter, setDailyFilter] = React.useState("All");
+  const [subsOpen, setSubsOpen] = React.useState(false);
+  // The subscriptions card owns the data, so it hands its count up here.
+  const [subsCount, setSubsCount] = React.useState<number | null>(null);
   const [completing, setCompleting] = React.useState<DailyTask | null>(null);
 
   const openTaskCount = tasks.filter((task) => task.status !== "Done").length;
@@ -318,7 +321,7 @@ export function DaneCockpit() {
             Your numbers
           </h2>
 
-          <div className="mt-1 grid grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
+          <div className="mt-1 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-5">
             <InsightCard
               label="Tasks from Raj"
               onClick={() => setTasksOpen(true)}
@@ -326,19 +329,44 @@ export function DaneCockpit() {
               value={tasksLoading ? "..." : String(openTaskCount)}
             />
             <InsightCard
-              label="My tasks"
-              onClick={() => {
-                setDailyFilter("in_progress");
-                setDailyOpen(true);
-              }}
-              tone="yellow"
-              value={daily.loading ? "..." : String(daily.inProgress.length)}
-            />
-            <InsightCard
               label="Orders to Raj"
               onClick={() => setOrdersOpen(true)}
               tone="critical"
               value={ordersLoading ? "..." : String(orders.length)}
+            />
+            <InsightCard
+              label="Subscriptions"
+              onClick={() => setSubsOpen(true)}
+              tone="critical"
+              value={subsCount === null ? "..." : String(subsCount)}
+            />
+            {/* The three below all open My tasks, each on its own filter. */}
+            <InsightCard
+              label="Backlog"
+              onClick={() => {
+                setDailyFilter("backlog");
+                setDailyOpen(true);
+              }}
+              tone="neutral"
+              value={daily.loading ? "..." : String(daily.backlog.length)}
+            />
+            <InsightCard
+              label="To do"
+              onClick={() => {
+                setDailyFilter("todo");
+                setDailyOpen(true);
+              }}
+              tone="yellow"
+              value={daily.loading ? "..." : String(daily.todo.length)}
+            />
+            <InsightCard
+              label="In progress"
+              onClick={() => {
+                setDailyFilter("in_progress");
+                setDailyOpen(true);
+              }}
+              tone="queued"
+              value={daily.loading ? "..." : String(daily.inProgress.length)}
             />
           </div>
         </motion.section>
@@ -449,6 +477,33 @@ export function DaneCockpit() {
               </div>
             </GateQueueModal>
 
+            <section aria-labelledby="orders-heading" className="pt-3">
+              <h2 className="sr-only" id="orders-heading">
+                Orders to Raj
+              </h2>
+              <NavCard
+                action={
+                  <button
+                    aria-label="Add an order"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#418BFF] px-2.5 py-1.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8]"
+                    onClick={() => setAddOrderOpen(true)}
+                    type="button"
+                  >
+                    <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
+                    {/* Label drops on narrow screens so the card title keeps
+                        its single line. The aria-label carries the meaning. */}
+                    <span className="hidden sm:inline">Add</span>
+                  </button>
+                }
+                count={ordersLoading ? null : orders.length}
+                icon={<FileTextIcon size={17} strokeWidth={2.5} />}
+                onClick={() => setOrdersOpen(true)}
+                subtitle="Requests you have sent to Raj"
+                title="Orders to Raj"
+                tone="orange"
+              />  
+            </section>
+
             <section aria-labelledby="daily-heading" className="pt-3">
               <h2 className="sr-only" id="daily-heading">
                 My tasks
@@ -456,12 +511,13 @@ export function DaneCockpit() {
               <NavCard
                 action={
                   <button
+                    aria-label="New task"
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#418BFF] px-2.5 py-1.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8]"
                     onClick={() => setCreateOpen(true)}
                     type="button"
                   >
                     <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
-                    New
+                    <span className="hidden sm:inline">New</span>
                   </button>
                 }
                 count={daily.loading ? null : daily.inProgress.length}
@@ -470,7 +526,7 @@ export function DaneCockpit() {
                   setDailyFilter("in_progress");
                   setDailyOpen(true);
                 }}
-                subtitle={`${daily.drafts.length} drafts · ${daily.completed.length} completed`}
+                subtitle={`${daily.backlog.length} backlog · ${daily.todo.length} to do`}
                 title="My tasks"
                 tone="yellow"
               />
@@ -485,9 +541,14 @@ export function DaneCockpit() {
                   options={[
                     { key: "All", label: "All", count: daily.tasks.length },
                     {
-                      key: "draft",
-                      label: "Drafts",
-                      count: daily.drafts.length,
+                      key: "backlog",
+                      label: "Backlog",
+                      count: daily.backlog.length,
+                    },
+                    {
+                      key: "todo",
+                      label: "To Do",
+                      count: daily.todo.length,
                     },
                     {
                       key: "in_progress",
@@ -523,12 +584,19 @@ export function DaneCockpit() {
                 )}
 
                 {(dailyFilter === "All"
-                  ? [...daily.drafts, ...daily.inProgress, ...daily.completed]
-                  : dailyFilter === "draft"
-                    ? daily.drafts
-                    : dailyFilter === "in_progress"
-                      ? daily.inProgress
-                      : daily.completed
+                  ? [
+                      ...daily.backlog,
+                      ...daily.todo,
+                      ...daily.inProgress,
+                      ...daily.completed,
+                    ]
+                  : dailyFilter === "backlog"
+                    ? daily.backlog
+                    : dailyFilter === "todo"
+                      ? daily.todo
+                      : dailyFilter === "in_progress"
+                        ? daily.inProgress
+                        : daily.completed
                 ).map((task) => (
                   <DailyTaskRow
                     key={task.id}
@@ -543,30 +611,10 @@ export function DaneCockpit() {
               <h2 className="sr-only" id="subscriptions-heading">
                 Subscriptions
               </h2>
-              <SubscriptionsCard />
-            </section>
-
-            <section aria-labelledby="orders-heading" className="pt-3">
-              <h2 className="sr-only" id="orders-heading">
-                Orders to Raj
-              </h2>
-              <NavCard
-                action={
-                  <button
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#418BFF] px-2.5 py-1.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#2F6FD8]"
-                    onClick={() => setAddOrderOpen(true)}
-                    type="button"
-                  >
-                    <PlusIcon aria-hidden="true" size={12} strokeWidth={3} />
-                    Add
-                  </button>
-                }
-                count={ordersLoading ? null : orders.length}
-                icon={<FileTextIcon size={17} strokeWidth={2.5} />}
-                onClick={() => setOrdersOpen(true)}
-                subtitle="Requests you have sent to Raj"
-                title="Orders to Raj"
-                tone="orange"
+              <SubscriptionsCard
+                onCountChange={setSubsCount}
+                onOpenChange={setSubsOpen}
+                open={subsOpen}
               />
             </section>
 
@@ -678,7 +726,8 @@ export function DaneCockpit() {
           setCompleting(task);
         }}
         onReopen={(task) => daily.reopenTask(task.id)}
-        onStart={(task) => daily.publishTask(task.id)}
+        onSchedule={(task, dueOn) => daily.publishTask(task.id, dueOn)}
+        onStart={(task) => daily.startTask(task.id)}
         open={Boolean(dailyDetailId)}
         task={daily.tasks.find((task) => task.id === dailyDetailId) ?? null}
       />
@@ -760,7 +809,7 @@ export function DaneCockpit() {
 type InsightCardProps = {
   label: string;
   value?: string;
-  tone: "critical" | "queued" | "success";
+  tone: "critical" | "queued" | "success" | "neutral";
   onClick?: () => void;
 };
 function InsightCard({
@@ -769,13 +818,14 @@ function InsightCard({
   tone,
   onClick,
 }: Omit<InsightCardProps, "tone"> & {
-  tone: "critical" | "queued" | "success" | "yellow";
+  tone: "critical" | "queued" | "success" | "yellow" | "neutral";
 }) {
   const tones = {
     critical: "text-[#FF7832] bg-[#FFF1E9]",
     queued: "text-[#418BFF] bg-[#EEF5FF]",
     success: "text-[#16A34A] bg-[#EAF8EF]",
     yellow: "text-[#CA8A04] bg-[#FEF9C3]",
+    neutral: "text-[#526176] bg-[#F1F5F9]",
   };
   const baseClasses =
     "min-w-0 rounded-2xl border border-[#DCE4EE] bg-white px-3.5 py-4 text-center shadow-[0_4px_12px_rgba(30,58,138,0.045)] sm:px-4 sm:py-5";

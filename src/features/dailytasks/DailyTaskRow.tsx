@@ -12,10 +12,21 @@ function todayYmd() {
 type Tone = { bar: string; chip: string; label: string };
 
 const TONES: Record<DailyTask["state"], Tone> = {
+  // Pre-migration rows still say "draft". They mean backlog.
   draft: {
     bar: "bg-[#94A3B8]",
     chip: "bg-[#94A3B8] text-white",
-    label: "Draft",
+    label: "Backlog",
+  },
+  backlog: {
+    bar: "bg-[#94A3B8]",
+    chip: "bg-[#94A3B8] text-white",
+    label: "Backlog",
+  },
+  todo: {
+    bar: "bg-[#CA8A04]",
+    chip: "bg-[#CA8A04] text-white",
+    label: "To Do",
   },
   in_progress: {
     bar: "bg-[#418BFF]",

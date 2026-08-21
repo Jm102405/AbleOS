@@ -99,12 +99,30 @@ function when(date: string | null, prefix: string) {
   return `${prefix} ${parsed.toLocaleDateString()}`;
 }
 
-export function SubscriptionsCard() {
+export function SubscriptionsCard({
+  open: openProp,
+  onOpenChange,
+  onCountChange,
+}: {
+  /** Pass this to drive the modal from outside, e.g. from a KPI tile. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Reports how many need action, so a KPI can show the number. */
+  onCountChange?: (count: number) => void;
+} = {}) {
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [open, setOpen] = useState(false);
+  // Uncontrolled by default. When `open` is passed the parent owns it, and the
+  // row below still opens the same modal.
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+
+  function setOpen(next: boolean) {
+    setOwnOpen(next);
+    onOpenChange?.(next);
+  }
   const [filter, setFilter] = useState<Filter>("needs_action");
   const [active, setActive] = useState<Subscription | null>(null);
 
@@ -139,6 +157,13 @@ export function SubscriptionsCard() {
     () => subs.filter((s) => NEEDS_ACTION.includes(s.status)),
     [subs],
   );
+
+  useEffect(() => {
+    if (!loading) onCountChange?.(needsAction.length);
+    // onCountChange is left out on purpose: an inline callback would re-fire
+    // this every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, needsAction.length]);
 
   const options: FilterOption<Filter>[] = useMemo(() => {
     const count = (status: Status) =>

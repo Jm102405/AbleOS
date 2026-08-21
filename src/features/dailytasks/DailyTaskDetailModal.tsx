@@ -14,13 +14,18 @@ import { loadEvidenceUrls, type EvidenceFile } from "./evidence";
 import type { DailyTask, DailyTaskState } from "./useDailyTasks";
 
 const STATE_LABELS: Record<DailyTaskState, string> = {
-  draft: "Draft",
+  // Pre-migration rows still say "draft". They mean backlog.
+  draft: "Backlog",
+  backlog: "Backlog",
+  todo: "To Do",
   in_progress: "In progress",
   completed: "Completed",
 };
 
 const STATE_STYLES: Record<DailyTaskState, string> = {
   draft: "bg-[#F1F5F9] text-[#8291A5]",
+  backlog: "bg-[#F1F5F9] text-[#8291A5]",
+  todo: "bg-[#FEF9C3] text-[#CA8A04]",
   in_progress: "bg-[#EEF5FF] text-[#418BFF]",
   completed: "bg-[#EAF8EF] text-[#16A34A]",
 };
@@ -45,6 +50,8 @@ type DailyTaskDetailModalProps = {
   onComplete?: (task: DailyTask) => void;
   onReopen?: (task: DailyTask) => void;
   onStart?: (task: DailyTask) => void;
+  /** Backlog -> To Do. A date is required, which is why it is passed here. */
+  onSchedule?: (task: DailyTask, dueOn: string) => void;
 };
 
 export function DailyTaskDetailModal({
@@ -55,8 +62,16 @@ export function DailyTaskDetailModal({
   onComplete,
   onReopen,
   onStart,
+  onSchedule, 
 }: DailyTaskDetailModalProps) {
   const [files, setFiles] = React.useState<EvidenceFile[]>([]);
+  const [dueDraft, setDueDraft] = React.useState("");
+
+  // Reset whenever a different task opens, so a date typed for one task
+  // never carries over to the next.
+  React.useEffect(() => {
+    setDueDraft(task?.due_on ?? "");
+  }, [task?.id, task?.due_on]);
   const [loadingFiles, setLoadingFiles] = React.useState(true);
 
   const taskId = task?.id ?? null;
@@ -101,10 +116,12 @@ export function DailyTaskDetailModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, onClose, busy]);
 
-  const showStart = Boolean(onStart) && task?.state === "draft";
+  const inBacklog = task?.state === "backlog" || task?.state === "draft";
+  const showSchedule = Boolean(onSchedule) && inBacklog;
+  const showStart = Boolean(onStart) && task?.state === "todo";
   const showComplete = Boolean(onComplete) && task?.state === "in_progress";
   const showReopen = Boolean(onReopen) && task?.state === "completed";
-  const hasActions = showStart || showComplete || showReopen;
+  const hasActions = showSchedule || showStart || showComplete || showReopen;
 
   return (
     <AnimatePresence>
@@ -298,6 +315,45 @@ export function DailyTaskDetailModal({
             {/* Actions - absent entirely on Raj's read-only view */}
             {hasActions && (
               <div className="shrink-0 border-t border-[#DCE4EE] bg-white px-5 py-4">
+                {showSchedule && (
+                  <div>
+                    <label className="block">
+                      <span className="text-[14px] font-semibold uppercase tracking-wide text-[#7A8AA3]">
+                        Due date
+                      </span>
+                      <input
+                        className="mt-1 w-full rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[18px] text-[#0F1E33] focus:border-[#418BFF] focus:outline-none"
+                        onChange={(event) => setDueDraft(event.target.value)}
+                        type="date"
+                        value={dueDraft}
+                      />
+                    </label>
+
+                    <button
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
+                      disabled={busy || !dueDraft}
+                      onClick={() => onSchedule?.(task, dueDraft)}
+                      type="button"
+                    >
+                      {busy ? (
+                        <LoaderIcon
+                          className="animate-spin"
+                          size={16}
+                          strokeWidth={2.25}
+                        />
+                      ) : (
+                        <PlayIcon size={16} strokeWidth={2.25} />
+                      )}
+                      Move to To Do
+                    </button>
+
+                    <p className="mt-2 text-[14px] text-[#8291A5]">
+                      A date is what takes this out of the backlog. Pick one to
+                      commit to it.
+                    </p>
+                  </div>
+                )}
+
                 {showStart && (
                   <button
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] px-5 py-3 text-[16px] font-medium text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"

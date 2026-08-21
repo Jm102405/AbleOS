@@ -42,7 +42,9 @@ export function DailyTaskCard({
 
   const fileCount = task.files?.length ?? 0;
   const done = task.state === "completed";
-  const isDraft = task.state === "draft";
+  // Pre-migration rows still say "draft". They mean backlog.
+  const inBacklog = task.state === "backlog" || task.state === "draft";
+  const isTodo = task.state === "todo";
 
   async function toggleFiles() {
     const next = !expanded;
@@ -67,9 +69,14 @@ export function DailyTaskCard({
         <h3 className="min-w-0 flex-1 text-[18px] font-semibold leading-snug tracking-[-0.015em] text-[#1A1A2E]">
           {task.title}
         </h3>
-        {isDraft && (
+        {inBacklog && (
           <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[14px] font-semibold tracking-wide text-[#8291A5]">
-            Draft
+            Backlog
+          </span>
+        )}
+        {isTodo && (
+          <span className="shrink-0 rounded-full bg-[#FEF9C3] px-2 py-0.5 text-[14px] font-semibold tracking-wide text-[#CA8A04]">
+            To Do
           </span>
         )}
         <span
@@ -117,7 +124,9 @@ export function DailyTaskCard({
             </button>
           )}
 
-          {onStart && isDraft && (
+          {/* A backlog item needs a due date first, and only the detail sheet
+              can collect one - so Start appears once it reaches To Do. */}
+          {onStart && isTodo && (
             <button
               className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:opacity-60"
               disabled={busy}

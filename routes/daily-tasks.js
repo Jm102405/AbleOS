@@ -21,7 +21,9 @@ import { sendPush } from "../lib/sendPush.js";
 const BUSINESS_TZ = "America/Chicago";
 
 const PRIORITIES = ["Urgent", "Not urgent"];
-const STATES = ["draft", "in_progress", "completed"];
+// "draft" is the old name for "backlog". It stays readable until the existing
+// rows are migrated, then it can be dropped from this list.
+const STATES = ["draft", "backlog", "todo", "in_progress", "completed"];
 const OWNERS = ["dane", "karen", "jeremiah", "colton", "zo", "raj"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -102,7 +104,7 @@ export default async function handler(req, res) {
 
             // Drafts are private to whoever wrote them. Raj sees started work only.
             if (owner !== profile.cockpit) {
-                query = query.neq("state", "draft");
+                query = query.neq("state", "draft").neq("state", "backlog");
             }
 
             if (state) {
@@ -186,10 +188,13 @@ export default async function handler(req, res) {
                 ? cleanText(req.body.description, 2000)
                 : null;
 
-            const isDraft = req.body?.state === "draft";
             // Expect YYYY-MM-DD. Anything else is stored as no deadline.
             const dueRaw = cleanText(req.body?.due_on, 10);
             const dueOn = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw || "") ? dueRaw : null;
+            // A date is what separates real work from a parked idea, so it alone
+            // decides where a new task lands. Nothing starts as in_progress -
+            // beginning work is a deliberate act, made later.
+            const startingState = dueOn ? "todo" : "backlog";
             const priority = req.body?.priority || "Not urgent";
             if (!PRIORITIES.includes(priority)) {
                 return res
@@ -205,7 +210,7 @@ export default async function handler(req, res) {
                     description,
                     priority,
                     due_on: dueOn,
-                    state: isDraft ? "draft" : "in_progress",
+                    state: startingState,
                     created_on: businessDate(),
                 })
                 .select()
@@ -213,7 +218,7 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
-            if (!isDraft && profile.realCockpit !== WATCHER) {
+            if (startingState === "todo" && profile.realCockpit !== WATCHER) {
                 const link = `/${WATCHER}?danetask=${data.id}`;
 
                 const { error: notifyError } = await supabase
@@ -248,10 +253,10 @@ export default async function handler(req, res) {
             const action = req.body?.action;
 
             if (!id) return res.status(400).json({ error: "id is required" });
-            if (!["complete", "reopen", "publish", "due"].includes(action)) {
-                return res
-                    .status(400)
-                    .json({ error: "action must be complete, reopen, publish or due" });
+            if (!["complete", "reopen", "publish", "start", "due"].includes(action)) {
+                return res.status(400).json({
+                    error: "action must be complete, reopen, publish, start or due",
+                });
             }
 
             const { data: existing, error: findError } = await supabase
@@ -269,8 +274,18 @@ export default async function handler(req, res) {
                 return res.status(403).json({ error: "Not your task" });
             }
 
-            if (action === "publish" && existing.state !== "draft") {
-                return res.status(400).json({ error: "That task is not a draft" });
+            const inBacklog = ["draft", "backlog"].includes(existing.state);
+
+            if (action === "publish" && !inBacklog) {
+                return res
+                    .status(400)
+                    .json({ error: "That task is not in the backlog" });
+            }
+
+            if (action === "start" && existing.state !== "todo") {
+                return res
+                    .status(400)
+                    .json({ error: "That task is not ready to start" });
             }
 
             const now = new Date();
@@ -278,9 +293,23 @@ export default async function handler(req, res) {
 
             const dueRaw = cleanText(req.body?.due_on, 10);
             const dueOn = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw || "") ? dueRaw : null;
+            // Nothing leaves the backlog undated. The date is the commitment -
+            // that is the whole point of the gate.
+            if (action === "publish" && !dueOn && !existing.due_on) {
+                return res
+                    .status(400)
+                    .json({ error: "Set a due date before starting this task" });
+            }
+
             const patch =
                 action === "due"
-                    ? { due_on: dueOn, updated_at: now.toISOString() }
+                    ? {
+                        due_on: dueOn,
+                        // Putting a date on a parked task promotes it. Clearing
+                        // the date leaves it where it is - no silent demotion.
+                        ...(dueOn && inBacklog ? { state: "todo" } : {}),
+                        updated_at: now.toISOString(),
+                    }
                     : action === "complete"
                     ? {
                         state: "completed",
@@ -291,16 +320,22 @@ export default async function handler(req, res) {
                     }
                     : action === "publish"
                         ? {
-                            // Starting a draft resets the clock - the work begins now,
-                            // not whenever the note was first jotted down.
-                            state: "in_progress",
+                            // Leaving the backlog resets the clock - the work is
+                            // scheduled now, not whenever the note was jotted down.
+                            state: "todo",
+                            due_on: dueOn || existing.due_on,
                             created_at: now.toISOString(),
                             created_on: businessDate(now),
                             completed_at: null,
                             completed_on: null,
                             updated_at: now.toISOString(),
                         }
-                        : {
+                        : action === "start"
+                            ? {
+                                state: "in_progress",
+                                updated_at: now.toISOString(),
+                            }
+                            : {
                             state: "in_progress",
                             completed_at: null,
                             completed_on: null,

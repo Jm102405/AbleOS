@@ -13,7 +13,6 @@ type CreateDailyTaskModalProps = {
     description: string;
     priority: DailyTaskPriority;
     due_on?: string;
-    state?: "draft";
   }) => Promise<unknown>;
 };
 
@@ -50,7 +49,7 @@ export function CreateDailyTaskModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, onClose, saving]);
 
-  async function submit(asDraft: boolean) {
+  async function submit() {
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       setError("Give the task a name.");
@@ -65,8 +64,9 @@ export function CreateDailyTaskModal({
         title: cleanTitle,
         description: description.trim(),
         priority,
+        // No state is sent on purpose. The server puts a dated task in To Do
+        // and an undated one in the backlog.
         ...(dueOn ? { due_on: dueOn } : {}),
-        ...(asDraft ? { state: "draft" as const } : {}),
       });
       onClose();
     } catch (err) {
@@ -78,7 +78,7 @@ export function CreateDailyTaskModal({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    submit(false);
+    submit();
   }
 
   return (
@@ -199,8 +199,8 @@ export function CreateDailyTaskModal({
                 />
               </label>
               <p className="rounded-xl border border-dashed border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-[16px] font-medium leading-snug text-[#8291A5]">
-                Starting it tells Raj and dates it automatically. A draft stays
-                here until you start it.
+                With a due date this goes straight to To Do and Raj is told.
+                Without one it waits in the backlog until you give it a date.
               </p>
 
               {error ? (
@@ -210,14 +210,6 @@ export function CreateDailyTaskModal({
 
             <div className="shrink-0 border-t border-[#DCE4EE] px-5 py-4">
               <div className="flex gap-2.5">
-                <button
-                  className="flex-1 rounded-xl border border-[#DCE4EE] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-[#526176] transition-colors hover:bg-[#F1F5F9] disabled:opacity-60"
-                  disabled={saving}
-                  onClick={() => submit(true)}
-                  type="button"
-                >
-                  Save as draft
-                </button>
                 <button
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1E3A8A] px-3 py-2.5 text-[16px] font-semibold tracking-wide text-white transition-colors hover:bg-[#172F6E] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={saving}
@@ -230,7 +222,7 @@ export function CreateDailyTaskModal({
                       strokeWidth={2.5}
                     />
                   ) : null}
-                  Start task
+                  {dueOn ? "Add to To Do" : "Add to Backlog"}
                 </button>
               </div>
             </div>

@@ -2,7 +2,13 @@ import React from "react";
 import { apiFetch } from "../../lib/apiFetch";
 
 export type DailyTaskPriority = "Urgent" | "Not urgent";
-export type DailyTaskState = "draft" | "in_progress" | "completed";
+/** "draft" is the old name for "backlog", kept until the rows are migrated. */
+export type DailyTaskState =
+  | "draft"
+  | "backlog"
+  | "todo"
+  | "in_progress"
+  | "completed";
 
 export type DailyTaskFile = {
   id: string;
@@ -94,10 +100,11 @@ export function useDailyTasks({ owner }: Options = {}) {
       title: string;
       description: string;
       priority: DailyTaskPriority;
-      /** YYYY-MM-DD. Omit for no deadline. */
+      /**
+       * YYYY-MM-DD. A date sends the task to To Do; without one it goes to
+       * the backlog. The server decides - the caller does not pass a state.
+       */
       due_on?: string;
-      /** Omit to start it straight away. */
-      state?: "draft";
     }) => {
       const res = await apiFetch("/api/daily-tasks", {
         method: "POST",
@@ -157,13 +164,14 @@ export function useDailyTasks({ owner }: Options = {}) {
     [load],
   );
 
+  /** Backlog -> To Do. The server refuses without a due date. */
   const publishTask = React.useCallback(
-    async (id: string) => {
+    async (id: string, dueOn?: string) => {
       setBusyId(id);
       try {
         const res = await apiFetch("/api/daily-tasks", {
           method: "PATCH",
-          body: JSON.stringify({ id, action: "publish" }),
+          body: JSON.stringify({ id, action: "publish", due_on: dueOn }),
         });
         const body = await res.json().catch(() => ({}));
 
@@ -178,8 +186,36 @@ export function useDailyTasks({ owner }: Options = {}) {
     [load],
   );
 
-  const drafts = React.useMemo(
-    () => tasks.filter((task) => task.state === "draft"),
+  /** To Do -> In Progress. Starting work is always deliberate. */
+  const startTask = React.useCallback(
+    async (id: string) => {
+      setBusyId(id);
+      try {
+        const res = await apiFetch("/api/daily-tasks", {
+          method: "PATCH",
+          body: JSON.stringify({ id, action: "start" }),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(body?.error || "Could not start it");
+
+        await load();
+        return true;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  const backlog = React.useMemo(
+    // "draft" rows are pre-migration backlog items.
+    () => tasks.filter((t) => t.state === "backlog" || t.state === "draft"),
+    [tasks],
+  );
+
+  const todo = React.useMemo(
+    () => tasks.filter((task) => task.state === "todo"),
     [tasks],
   );
 
@@ -194,18 +230,22 @@ export function useDailyTasks({ owner }: Options = {}) {
   );
 
   return {
+    backlog,
     busyId,
     completeTask,
     completed,
     createTask,
-    drafts,
+    /** @deprecated Use `backlog`. Kept so existing screens keep working. */
+    drafts: backlog,
     error,
     inProgress,
     loading,
     publishTask,
     refresh: load,
     reopenTask,
+    startTask,
     tasks,
     today,
+    todo,
   };
 }
