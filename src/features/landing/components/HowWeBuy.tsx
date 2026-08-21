@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { structures } from '../data/buyBox';
 
@@ -57,9 +56,11 @@ export function HowWeBuy() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.4, ease }}
-            className="mt-14 flex flex-wrap items-center gap-3.5 border-t border-white/15 pt-10">
+            className="mt-14 flex flex-wrap items-center gap-x-3.5 gap-y-3 border-t border-white/15 pt-10">
             
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/50">
+            {/* Full width on phones, so the market pills always share the row
+                below it rather than the label pushing "Texas" down alone. */}
+            <span className="w-full text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/50 sm:w-auto">
               Where We Buy
             </span>
             {markets.map((m) =>

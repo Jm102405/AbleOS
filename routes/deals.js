@@ -42,8 +42,9 @@ const EXCLUDED_CATEGORY = "Orphaned - source tab";
  */
 const SHOW_NOTION_DEALS = false;
 
-// "dane" is here so you can test the board. Tighten to ["raj"] before handover.
-const ALLOWED_COCKPITS = ["raj", "dane", "rex", "ellery"];
+// Rex reads his own deals, Ellery needs them for documents, Raj owns the board.
+// Dane was here for testing only.
+const ALLOWED_COCKPITS = ["raj", "rex", "ellery"];
 
 // Rex works his own deals in the field but doesn't run the pipeline.
 const CAN_MOVE_STAGES = ["raj", "dane"];
