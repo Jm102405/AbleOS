@@ -186,6 +186,31 @@ export function useDailyTasks({ owner }: Options = {}) {
     [load],
   );
 
+  /**
+   * Soft delete. The row stays in the database so evidence and notifications
+   * keep making sense - it just disappears from every list.
+   */
+  const deleteTask = React.useCallback(
+    async (id: string) => {
+      setBusyId(id);
+      try {
+        const res = await apiFetch("/api/daily-tasks", {
+          method: "PATCH",
+          body: JSON.stringify({ id, action: "delete" }),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(body?.error || "Could not delete it");
+
+        setTasks((current) => current.filter((task) => task.id !== id));
+        return true;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [],
+  );
+
   /** To Do -> In Progress. Starting work is always deliberate. */
   const startTask = React.useCallback(
     async (id: string) => {
@@ -235,6 +260,7 @@ export function useDailyTasks({ owner }: Options = {}) {
     completeTask,
     completed,
     createTask,
+    deleteTask,
     /** @deprecated Use `backlog`. Kept so existing screens keep working. */
     drafts: backlog,
     error,

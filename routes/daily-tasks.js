@@ -100,6 +100,7 @@ export default async function handler(req, res) {
                 .from("daily_tasks")
                 .select("*")
                 .eq("owner_cockpit", owner)
+                .is("deleted_at", null)
                 .limit(200);
 
             // Drafts are private to whoever wrote them. Raj sees started work only.
@@ -157,6 +158,7 @@ export default async function handler(req, res) {
                 .from("daily_tasks")
                 .select("id", { count: "exact", head: true })
                 .eq("owner_cockpit", owner)
+                .is("deleted_at", null)
                 .eq("state", "in_progress");
 
             if (countError) throw countError;
@@ -253,10 +255,19 @@ export default async function handler(req, res) {
             const action = req.body?.action;
 
             if (!id) return res.status(400).json({ error: "id is required" });
-            if (!["complete", "reopen", "publish", "start", "due"].includes(action)) {
-                return res.status(400).json({
-                    error: "action must be complete, reopen, publish, start or due",
-                });
+            const ACTIONS = [
+                "complete",
+                "reopen",
+                "publish",
+                "start",
+                "due",
+                "delete",
+            ];
+
+            if (!ACTIONS.includes(action)) {
+                return res
+                    .status(400)
+                    .json({ error: `action must be one of ${ACTIONS.join(", ")}` });
             }
 
             const { data: existing, error: findError } = await supabase
@@ -272,6 +283,18 @@ export default async function handler(req, res) {
             // passes this because apiAuth swaps his cockpit.
             if (existing.owner_cockpit !== profile.cockpit) {
                 return res.status(403).json({ error: "Not your task" });
+            }
+
+            // Already gone. Treat it as missing rather than letting a stale
+            // screen mutate a deleted row.
+            if (existing.deleted_at) {
+                return res.status(404).json({ error: "Task not found" });
+            }
+
+            if (action === "delete" && existing.state === "completed") {
+                return res.status(400).json({
+                    error: "Completed work stays on the record. Reopen it first.",
+                });
             }
 
             const inBacklog = ["draft", "backlog"].includes(existing.state);
@@ -302,7 +325,15 @@ export default async function handler(req, res) {
             }
 
             const patch =
-                action === "due"
+                action === "delete"
+                    ? {
+                        // Soft: the row stays so evidence, notes and any
+                        // notification pointing at it remain coherent.
+                        deleted_at: now.toISOString(),
+                        deleted_by: profile.cockpit,
+                        updated_at: now.toISOString(),
+                    }
+                    : action === "due"
                     ? {
                         due_on: dueOn,
                         // Putting a date on a parked task promotes it. Clearing

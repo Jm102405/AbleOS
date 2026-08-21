@@ -8,6 +8,7 @@ import {
   LoaderIcon,
   PlayIcon,
   RotateCcwIcon,
+  Trash2Icon,
   XIcon,
 } from "lucide-react";
 import { loadEvidenceUrls, type EvidenceFile } from "./evidence";
@@ -52,6 +53,8 @@ type DailyTaskDetailModalProps = {
   onStart?: (task: DailyTask) => void;
   /** Backlog -> To Do. A date is required, which is why it is passed here. */
   onSchedule?: (task: DailyTask, dueOn: string) => void;
+  /** Soft delete. Never offered on completed work. */
+  onDelete?: (task: DailyTask) => void;
 };
 
 export function DailyTaskDetailModal({
@@ -62,15 +65,18 @@ export function DailyTaskDetailModal({
   onComplete,
   onReopen,
   onStart,
-  onSchedule, 
+  onSchedule,
+  onDelete,
 }: DailyTaskDetailModalProps) {
   const [files, setFiles] = React.useState<EvidenceFile[]>([]);
   const [dueDraft, setDueDraft] = React.useState("");
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   // Reset whenever a different task opens, so a date typed for one task
   // never carries over to the next.
   React.useEffect(() => {
     setDueDraft(task?.due_on ?? "");
+    setConfirmDelete(false);
   }, [task?.id, task?.due_on]);
   const [loadingFiles, setLoadingFiles] = React.useState(true);
 
@@ -121,7 +127,11 @@ export function DailyTaskDetailModal({
   const showStart = Boolean(onStart) && task?.state === "todo";
   const showComplete = Boolean(onComplete) && task?.state === "in_progress";
   const showReopen = Boolean(onReopen) && task?.state === "completed";
-  const hasActions = showSchedule || showStart || showComplete || showReopen;
+  // Completed work is the record Raj relies on, so it is never deletable here.
+  const showDelete =
+    Boolean(onDelete) && Boolean(task) && task?.state !== "completed";
+  const hasActions =
+    showSchedule || showStart || showComplete || showReopen || showDelete;
 
   return (
     <AnimatePresence>
@@ -213,13 +223,14 @@ export function DailyTaskDetailModal({
                           : "text-[#1A1A2E]"
                       }`}
                     >
-                      {new Date(
-                        `${task.due_on}T00:00:00`,
-                      ).toLocaleDateString(undefined, {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {new Date(`${task.due_on}T00:00:00`).toLocaleDateString(
+                        undefined,
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        },
+                      )}
                     </p>
                   </>
                 )}
@@ -404,6 +415,55 @@ export function DailyTaskDetailModal({
                     )}
                     Reopen
                   </button>
+                )}
+
+                {showDelete && (
+                  <div className="mt-3 border-t border-[#F1F5F9] pt-3">
+                    {confirmDelete ? (
+                      <div className="flex gap-2.5">
+                        <button
+                          className="flex-1 rounded-xl border border-[#DCE4EE] px-4 py-2.5 text-[16px] font-medium text-[#526176] transition-colors hover:bg-[#F1F5F9]"
+                          disabled={busy}
+                          onClick={() => setConfirmDelete(false)}
+                          type="button"
+                        >
+                          Keep it
+                        </button>
+                        <button
+                          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#DC2626] px-4 py-2.5 text-[16px] font-medium text-white transition-colors hover:bg-[#B91C1C] disabled:opacity-60"
+                          disabled={busy}
+                          onClick={() => onDelete?.(task)}
+                          type="button"
+                        >
+                          {busy ? (
+                            <LoaderIcon
+                              className="animate-spin"
+                              size={16}
+                              strokeWidth={2.25}
+                            />
+                          ) : (
+                            <Trash2Icon size={16} strokeWidth={2.25} />
+                          )}
+                          Delete
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[16px] font-medium text-[#DC2626] transition-colors hover:bg-[#FEF2F2] disabled:opacity-60"
+                        disabled={busy}
+                        onClick={() => {
+                          // A parked idea needs no ceremony. Anything Raj has
+                          // already been told about asks twice.
+                          if (inBacklog) onDelete?.(task);
+                          else setConfirmDelete(true);
+                        }}
+                        type="button"
+                      >
+                        <Trash2Icon size={16} strokeWidth={2.25} />
+                        Delete task
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}

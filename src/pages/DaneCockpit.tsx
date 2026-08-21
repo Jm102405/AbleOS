@@ -725,6 +725,11 @@ export function DaneCockpit() {
           setDailyDetailId(null);
           setCompleting(task);
         }}
+        onDelete={(task) => {
+          // Close first: the row it was rendered from is about to disappear.
+          setDailyDetailId(null);
+          daily.deleteTask(task.id);
+        }}
         onReopen={(task) => daily.reopenTask(task.id)}
         onSchedule={(task, dueOn) => daily.publishTask(task.id, dueOn)}
         onStart={(task) => daily.startTask(task.id)}
