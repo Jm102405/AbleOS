@@ -1,49 +1,24 @@
+// src/components/DriveLinksModal.tsx
+// Deep links out to Drive, grouped by section. Deliberately not a file
+// browser: one tap, the folder opens in Drive, done.
+//
+// The list lives in the drive_folders table, so new properties are a data
+// entry job rather than a code change. A row with no url yet shows as
+// "Coming soon" - never wire one to a legacy My Drive location.
+
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ExternalLinkIcon, FolderIcon, XIcon } from "lucide-react";
+import { apiFetch } from "../lib/apiFetch";
 
 type DriveFolder = {
   id: string;
   label: string;
-  group: string;
-  url: string;
-  /** Shown but not yet linked anywhere. */
-  comingSoon?: boolean;
+  section: string;
+  entity: string | null;
+  path_hint: string | null;
+  url: string | null;
 };
-
-/**
- * These links are readable in the bundle, which is fine - access is controlled
- * by Drive sharing, not by hiding the URL.
- */
-const DRIVE_FOLDERS: DriveFolder[] = [
-  // Able Builds rehab at Hometown Meadows, Nashville AR. Colton/JJ on Side A,
-  // Jeremiah/Zo on Side B. This is the active rehab, so it sits under Rehab.
-  {
-    id: "htm-duplex",
-    label: "HTM Duplex (Hometown Meadows)",
-    group: "Rehab",
-    url: "https://drive.google.com/drive/folders/1kCv-jjfoMz4A0VUFikvbb6CTnyAE7WRG",
-  },
-  // Lubbock duplex under AHTX. Fully leased, $1,650/side, no rehab work - a
-  // different property entirely from HTM, which is why it has its own folder.
-  {
-    id: "1920-27th-st",
-    label: "1920 27th St Duplex · AHTX",
-    group: "Operations",
-    comingSoon: true,
-    url: "PASTE_THE_URL_HERE",
-  },
-  // The knowledge layer, not a property, so it belongs in neither section.
-  {
-    id: "able-main-brain",
-    label: "Able Main Brain",
-    group: "Knowledge",
-    comingSoon: true,
-    url: "PASTE_THE_URL_HERE",
-  },
-];
-
-export const DRIVE_FOLDER_COUNT = DRIVE_FOLDERS.length;
 
 type DriveLinksModalProps = {
   open: boolean;
@@ -51,6 +26,42 @@ type DriveLinksModalProps = {
 };
 
 export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
+  const [folders, setFolders] = React.useState<DriveFolder[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    let live = true;
+    setLoading(true);
+
+    apiFetch("/api/drive-folders")
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!live) return;
+
+        if (!res.ok) {
+          setError(body?.error || "Could not load the folders");
+          setFolders([]);
+          return;
+        }
+
+        setError(null);
+        setFolders(Array.isArray(body.folders) ? body.folders : []);
+      })
+      .catch(() => {
+        if (live) setError("Could not reach the server");
+      })
+      .finally(() => {
+        if (live) setLoading(false);
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [open]);
+
   React.useEffect(() => {
     if (!open) return;
 
@@ -62,15 +73,17 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
+  // Sections appear in the order their first folder does, so sort_order in the
+  // database controls the whole layout.
   const groups = React.useMemo(() => {
     const map = new Map<string, DriveFolder[]>();
-    for (const folder of DRIVE_FOLDERS) {
-      const list = map.get(folder.group) ?? [];
+    for (const folder of folders) {
+      const list = map.get(folder.section) ?? [];
       list.push(folder);
-      map.set(folder.group, list);
+      map.set(folder.section, list);
     }
     return Array.from(map.entries());
-  }, []);
+  }, [folders]);
 
   return (
     <AnimatePresence>
@@ -112,56 +125,101 @@ export function DriveLinksModal({ open, onClose }: DriveLinksModalProps) {
             </div>
 
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-              {groups.map(([group, folders]) => (
-                <div key={group}>
-                  <p className="text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
-                    {group}
-                  </p>
-                  <div className="mt-2 space-y-2">
-                    {folders.map((folder) => (
-                      <a
-                        className={`flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow ${
-                          folder.comingSoon
-                            ? "cursor-default opacity-70"
-                            : "hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)]"
-                        }`}
-                        href={folder.comingSoon ? undefined : folder.url}
-                        key={folder.id}
-                        onClick={
-                          folder.comingSoon
-                            ? (event) => event.preventDefault()
-                            : undefined
-                        }
-                        rel="noopener noreferrer"
-                        target={folder.comingSoon ? undefined : "_blank"}
-                      >
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EEF5FF] text-[#418BFF]">
-                          <FolderIcon
-                            aria-hidden="true"
-                            size={16}
-                            strokeWidth={2.5}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
-                          {folder.label}
-                        </span>
-
-                        {folder.comingSoon && (
-                          <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[14px] font-semibold text-[#5B6B82]">
-                            Coming soon
-                          </span>
-                        )}
-                        <ExternalLinkIcon
-                          aria-hidden="true"
-                          className="shrink-0 text-[#93A3B8]"
-                          size={15}
-                          strokeWidth={2.5}
-                        />
-                      </a>
-                    ))}
-                  </div>
+              {loading && (
+                <div className="space-y-3">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-[62px] animate-pulse rounded-2xl bg-white"
+                    />
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {!loading && error && (
+                <div className="rounded-xl bg-[#FEF2F2] px-4 py-3 text-[16px] text-[#B91C1C]">
+                  {error}
+                </div>
+              )}
+
+              {!loading && !error && folders.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-10 text-center">
+                  <p className="text-[18px] font-semibold text-[#526176]">
+                    No folders yet
+                  </p>
+                  <p className="mt-1 text-[16px] text-[#8291A5]">
+                    Properties show up here as they come online.
+                  </p>
+                </div>
+              )}
+
+              {!loading &&
+                !error &&
+                groups.map(([section, sectionFolders]) => (
+                  <div key={section}>
+                    <p className="text-[16px] font-semibold tracking-[0.13em] text-[#8291A5]">
+                      {section}
+                    </p>
+                    <div className="mt-2 space-y-2">
+                      {sectionFolders.map((folder) => {
+                        const pending = !folder.url;
+
+                        return (
+                          <a
+                            className={`flex items-center gap-3 rounded-2xl border border-[#DCE4EE] bg-white px-4 py-3.5 shadow-[0_4px_12px_rgba(30,58,138,0.045)] transition-shadow ${
+                              pending
+                                ? "cursor-default opacity-70"
+                                : "hover:shadow-[0_8px_18px_rgba(30,58,138,0.1)]"
+                            }`}
+                            href={pending ? undefined : (folder.url as string)}
+                            key={folder.id}
+                            onClick={
+                              pending
+                                ? (event) => event.preventDefault()
+                                : undefined
+                            }
+                            rel="noopener noreferrer"
+                            target={pending ? undefined : "_blank"}
+                          >
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EEF5FF] text-[#418BFF]">
+                              <FolderIcon
+                                aria-hidden="true"
+                                size={16}
+                                strokeWidth={2.5}
+                              />
+                            </span>
+
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[18px] font-semibold tracking-[-0.015em] text-[#1A1A2E]">
+                                {folder.label}
+                              </span>
+                              {/* Only shown while pending, so whoever adds the
+                                  link knows which Shared Drive to look in. */}
+                              {pending && folder.path_hint && (
+                                <span className="mt-0.5 block truncate text-[14px] text-[#8291A5]">
+                                  {folder.path_hint}
+                                </span>
+                              )}
+                            </span>
+
+                            {pending && (
+                              <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[14px] font-semibold text-[#5B6B82]">
+                                Coming soon
+                              </span>
+                            )}
+
+                            <ExternalLinkIcon
+                              aria-hidden="true"
+                              className="shrink-0 text-[#93A3B8]"
+                              size={15}
+                              strokeWidth={2.5}
+                            />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
             </div>
           </motion.div>
         </motion.div>

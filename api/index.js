@@ -13,6 +13,7 @@ import dealIntake from "../routes/deal-intake.js";
 import dealSubmission from "../routes/deal-submission.js";
 import dealUploadUrl from "../routes/deal-upload-url.js";
 import dealFiles from "../routes/deal-files.js";
+import driveFolders from "../routes/drive-folders.js";
 import deals from "../routes/deals.js";
 import documents from "../routes/documents.js";
 import driveUploadUrl from "../routes/drive-upload-url.js";
@@ -40,7 +41,8 @@ const ROUTES = {
     "deal-intake": dealIntake,
     "deal-submission": dealSubmission,
     "deal-upload-url": dealUploadUrl,
-  "deal-files": dealFiles,
+    "deal-files": dealFiles,
+    "drive-folders": driveFolders,
     deals,
     documents,
     "drive-upload-url": driveUploadUrl,

@@ -49,6 +49,20 @@ const COCKPITS = [
     path: "/rex",
     initial: "R",
   },
+  {
+    key: "ellery",
+    name: "Ellery",
+    role: "Documents",
+    path: "/ellery",
+    initial: "E",
+  },
+  {
+    key: "cornelius",
+    name: "Cornelius",
+    role: "Proof of funds",
+    path: "/cornelius",
+    initial: "C",
+  },
 ];
 
 export function UserMenu() {
